@@ -1,11 +1,9 @@
-import React from 'react';
-import Container from '@material-ui/core/Container';
-import Typography from '@material-ui/core/Typography';
-import Box from '@material-ui/core/Box';
-import Link from '@material-ui/core/Link';
-import ProTip from './ProTip';
+import React from "react";
 import Dashboard from "./Dashboard";
+import ApolloClient from "apollo-boost";
+import { ApolloProvider } from "@apollo/react-hooks";
 
+/*
 function Copyright() {
     return (
         <Typography variant="body2" color="textSecondary" align="center">
@@ -18,14 +16,19 @@ function Copyright() {
         </Typography>
     );
 }
+*/
+const client = new ApolloClient({
+  uri: "http://localhost:3001/graphql"
+});
 
-export default function App() {
-    return (
-        <div >
-            <Dashboard/>
-{/*
-            <Copyright />
-*/}
-        </div>
-    );
-}
+const App = () => {
+  return (
+    <ApolloProvider client={client}>
+      <div>
+        <Dashboard />
+      </div>
+    </ApolloProvider>
+  );
+};
+
+export default App;

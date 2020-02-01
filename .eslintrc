@@ -5,8 +5,7 @@
   ],
   "plugins": [
     "import",
-    "prettier",
-    "standard"
+    "prettier"
   ],
   "parserOptions": {
     "ecmaVersion": 2017

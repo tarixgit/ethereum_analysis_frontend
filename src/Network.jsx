@@ -350,9 +350,28 @@ const data = {
 const options = {
   nodes: {
     shape: "dot",
-    size: 16
+    scaling: {
+      min: 10,
+      max: 30
+    },
+    // size: 16
+  },
+  edges: {
+    width: 0.15,
+    color: { inherit: "from" },
+    smooth: {
+      type: "continuous"
+    }
   },
   physics: {
+    stabilization: false,
+    barnesHut: {
+      gravitationalConstant: -80000,
+      springConstant: 0.001,
+      springLength: 200
+    }
+  },
+  /*physics: {
     forceAtlas2Based: {
       gravitationalConstant: -26,
       centralGravity: 0.005,
@@ -363,7 +382,14 @@ const options = {
     solver: "forceAtlas2Based",
     timestep: 0.35,
     stabilization: { iterations: 150 }
+  },*/
+/*
+  interaction: {
+    tooltipDelay: 200,
+    hideEdgesOnDrag: true,
+    hideEdgesOnZoom: true
   }
+*/
 };
 
 function useHookWithRefCallback() {

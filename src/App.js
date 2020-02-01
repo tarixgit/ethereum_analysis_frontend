@@ -1,7 +1,7 @@
-import React from "react";
-import Dashboard from "./Dashboard";
-import ApolloClient from "apollo-boost";
-import { ApolloProvider } from "@apollo/react-hooks";
+import React from 'react'
+import Dashboard from './Dashboard'
+import ApolloClient from 'apollo-boost'
+import { ApolloProvider } from '@apollo/react-hooks'
 
 /*
 function Copyright() {
@@ -18,8 +18,8 @@ function Copyright() {
 }
 */
 const client = new ApolloClient({
-  uri: "http://localhost:3001/graphql"
-});
+  uri: 'http://localhost:3001/graphql',
+})
 
 const App = () => {
   return (
@@ -28,7 +28,7 @@ const App = () => {
         <Dashboard />
       </div>
     </ApolloProvider>
-  );
-};
+  )
+}
 
-export default App;
+export default App

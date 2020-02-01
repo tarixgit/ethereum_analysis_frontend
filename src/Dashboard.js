@@ -23,6 +23,8 @@ import Chart from "./Chart";
 import Deposits from "./Deposits";
 import Orders from "./Orders";
 import Test from "./Test";
+import TextField from "@material-ui/core/TextField";
+import Network from "./Network";
 
 const drawerWidth = 240;
 
@@ -170,28 +172,12 @@ export default function Dashboard() {
       </Drawer>
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
-        <Container maxWidth="lg" className={classes.container}>
-          <Grid container spacing={3}>
-            {/* Chart */}
-            <Grid item xs={12} md={8} lg={9}>
-              <Paper className={fixedHeightPaper}>
-                <Chart />
-              </Paper>
-            </Grid>
-            {/* Recent Deposits */}
-            <Grid item xs={12} md={4} lg={3}>
-              <Paper className={fixedHeightPaper}>
-                <Deposits />
-              </Paper>
-            </Grid>
-            {/* Recent Orders */}
-            <Grid item xs={12}>
-              <Paper className={classes.paper}>
-                <Orders />
-                <Test />
-              </Paper>
-            </Grid>
-          </Grid>
+        <Container
+          maxWidth="lg"
+          className={classes.container}
+          style={{ height: "100%" }}
+        >
+          <Network />
         </Container>
       </main>
     </div>

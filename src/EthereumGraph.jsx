@@ -63,7 +63,9 @@ const TRANSACTION = gql`
 const EthereumGraph = classes => {
   let edges = []
   let nodes = []
-  const [address, setAddress] = useState('')
+  const [address, setAddress] = useState(
+    '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
+  )
   const [loadNetworkData, { loading, error, data }] = useLazyQuery(TRANSACTION)
   const changeAddress = useCallback(e => {
     const { value } = e.target

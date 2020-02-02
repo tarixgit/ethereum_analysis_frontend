@@ -5,6 +5,8 @@ import * as vis from 'vis-network'
 const options = {
   nodes: {
     shape: 'dot',
+    // height: '100%',    must be setted
+    // width: '100%'
     scaling: {
       min: 10,
       max: 30,
@@ -18,26 +20,26 @@ const options = {
       type: 'continuous',
     },
   },
-  physics: {
+  /*  physics: {
     stabilization: false,
     barnesHut: {
       gravitationalConstant: -80000,
       springConstant: 0.001,
       springLength: 200,
     },
-  },
-  /*physics: {
+  },*/
+  physics: {
     forceAtlas2Based: {
       gravitationalConstant: -26,
       centralGravity: 0.005,
       springLength: 230,
-      springConstant: 0.18
+      springConstant: 0.18,
     },
     maxVelocity: 146,
-    solver: "forceAtlas2Based",
+    solver: 'forceAtlas2Based',
     timestep: 0.35,
-    stabilization: { iterations: 150 }
-  },*/
+    stabilization: { iterations: 150 },
+  },
   /*
   interaction: {
     tooltipDelay: 200,

@@ -36,10 +36,11 @@ const options = {
       springConstant: 0.18,
     },
     maxVelocity: 146,
-    solver: 'forceAtlas2Based',
+    solver: 'forceAtlas2Based', // barnesHut
     timestep: 0.35,
     stabilization: { iterations: 150 },
   },
+  clustering: true,
   /*
   interaction: {
     tooltipDelay: 200,
@@ -74,6 +75,13 @@ const Network = ({ nodes, edges }) => {
   const [ref, network] = useHookWithRefCallback()
   if (!!network && nodes) {
     network.setData({ nodes, edges })
+    // const options = {
+    //   joinCondition: function(nodeOptions) {
+    //     return nodeOptions.group === 0
+    //   },
+    // }
+    //
+    // network.clustering.cluster(options)
   }
   return (
     <div ref={ref} style={{ height: '100%' }}>

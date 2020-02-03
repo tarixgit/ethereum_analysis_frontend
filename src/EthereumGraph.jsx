@@ -5,7 +5,7 @@ import Grid from '@material-ui/core/Grid'
 import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
 import Network from './Network'
-import { forEach, get, uniq, uniqBy } from 'lodash'
+import { forEach, get, uniq, uniqBy, map } from 'lodash'
 
 const TRANSACTION = gql`
   query MyQuery($address: String!) {
@@ -114,6 +114,10 @@ const EthereumGraph = classes => {
     })
   }
   nodes = uniqBy(nodes, 'id')
+  // let labels = map(nodes, 'group')
+  // labels = uniqBy(nodes, 'group')
+  // labels = map(labels, ({ group }) => ({ id: group, label: 'Group' + group }))
+  // nodes = [...labels, ...nodes]
   return (
     <Grid container spacing={3} style={{ height: '100%' }}>
       <Grid item xs={12}>

@@ -76,6 +76,12 @@ const EthereumGraph = classes => {
     }
     setAddress(value)
   })
+  const submit = useCallback(e => {
+    e.preventDefault()
+    loadNetworkData({
+      variables: { address: address.toLowerCase() },
+    })
+  })
 
   if (loading) return <p>Loading...</p>
   if (error) return <p>Error :(</p>
@@ -122,14 +128,16 @@ const EthereumGraph = classes => {
     <Grid container spacing={3} style={{ height: '100%' }}>
       <Grid item xs={12}>
         <Paper className={classes.paper}>
-          <TextField
-            id="address-input"
-            label="Address"
-            autoFocus
-            fullWidth
-            value={address}
-            onChange={changeAddress}
-          />
+          <form onSubmit={submit}>
+            <TextField
+              id="address-input"
+              label="Address"
+              autoFocus
+              fullWidth
+              value={address}
+              onChange={changeAddress}
+            />
+          </form>
         </Paper>
       </Grid>
       <Grid item xs={12} style={{ height: '100%' }}>

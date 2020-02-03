@@ -20,17 +20,17 @@ const options = {
       type: 'continuous',
     },
   },
-  /*  physics: {
+  physics: {
     stabilization: false,
     barnesHut: {
       gravitationalConstant: -80000,
       springConstant: 0.001,
       springLength: 200,
     },
-  },*/
-  physics: {
+  },
+  /*  physics: {
     forceAtlas2Based: {
-      gravitationalConstant: -26,
+      gravitationalConstant: -2006,
       centralGravity: 0.005,
       springLength: 230,
       springConstant: 0.18,
@@ -38,8 +38,8 @@ const options = {
     maxVelocity: 146,
     solver: 'forceAtlas2Based', // barnesHut
     timestep: 0.35,
-    stabilization: { iterations: 150 },
-  },
+    stabilization: false,
+  },*/
   clustering: true,
   /*
   interaction: {
@@ -91,18 +91,3 @@ const Network = ({ nodes, edges }) => {
 }
 
 export default Network
-
-/*
-*  <div
-        className={cn({
-          focused: !!selectedItems.length,
-          locked,
-        })}
-        ref={containerRef}
-        style={positionRelative}
-      >
-        {this.$el && createPortal(headers, this.$el.dom.background)}
-        {this.$el && this.renderGroups()}
-      </div>
-*
-* */

@@ -8,7 +8,7 @@ import Network from './Network'
 import { forEach, get, uniq, uniqBy, map } from 'lodash'
 
 const TRANSACTION = gql`
-  query MyQuery($address: String!) {
+  query Addresses($address: String!) {
     addresses(address: $address) {
       id
       scam
@@ -60,6 +60,96 @@ const TRANSACTION = gql`
   }
 `
 
+const TRANSACTION_MORE = gql`
+  query Address($addressId: ID!) {
+    address(id: $addressId) {
+      id
+      scam
+      hash
+      degree
+      alias
+      label {
+        color
+        name
+        id
+      }
+      transactionsInput {
+        amount
+        bid
+        id
+        fromAddress {
+          id
+          hash
+          scam
+          label {
+            color
+            name
+            id
+          }
+          degree
+          outdegree
+          alias
+        }
+      }
+      transactionsOutput {
+        amount
+        bid
+        id
+        toAddress {
+          id
+          hash
+          scam
+          label {
+            color
+            name
+            id
+          }
+          degree
+          outdegree
+          alias
+        }
+      }
+    }
+  }
+`
+
+const getNodesAndEdges = addressesWithIndo => {
+  let edges = []
+  let nodes = []
+  const mainAddressId = Number(addressesWithIndo.id)
+  const {
+    id,
+    hash,
+    alias,
+    label: { id: labelId },
+    transactionsInput,
+    transactionsOutput,
+  } = addressesWithIndo
+  nodes = [{ id: Number(id), label: alias || hash, group: labelId }]
+  edges = []
+  forEach(transactionsInput, ({ fromAddress }) => {
+    const {
+      id,
+      hash,
+      alias,
+      label: { id: labelId },
+    } = fromAddress
+    nodes.push({ id: Number(id), label: alias || hash, group: labelId })
+    edges.push({ from: Number(id), to: mainAddressId })
+  })
+  forEach(transactionsOutput, ({ toAddress }) => {
+    const {
+      id,
+      hash,
+      alias,
+      label: { id: labelId },
+    } = toAddress
+    nodes.push({ id: Number(id), label: alias || hash, group: labelId })
+    edges.push({ from: mainAddressId, to: Number(id) })
+  })
+  return { nodes, edges }
+}
+
 const EthereumGraph = classes => {
   let edges = []
   let nodes = []
@@ -67,6 +157,9 @@ const EthereumGraph = classes => {
     '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
   const [loadNetworkData, { loading, error, data }] = useLazyQuery(TRANSACTION)
+  const [loadMoreNetworkData, { data: dataAdd }] = useLazyQuery(
+    TRANSACTION_MORE
+  )
   const changeAddress = useCallback(e => {
     const { value } = e.target
     if (value.length >= 42) {
@@ -75,6 +168,11 @@ const EthereumGraph = classes => {
       })
     }
     setAddress(value)
+  })
+  const loadMore = useCallback(addressId => {
+    loadMoreNetworkData({
+      variables: { addressId: addressId },
+    })
   })
   const submit = useCallback(e => {
     e.preventDefault()
@@ -85,40 +183,19 @@ const EthereumGraph = classes => {
 
   if (loading) return <p>Loading...</p>
   if (error) return <p>Error :(</p>
-  const addressesWithIndo = get(data, 'addresses[0]', null)
-  if (addressesWithIndo) {
-    const mainAddressId = Number(addressesWithIndo.id)
-    const {
-      id,
-      hash,
-      alias,
-      label: { id: labelId },
-      transactionsInput,
-      transactionsOutput,
-    } = addressesWithIndo
-    nodes = [{ id: Number(id), label: alias || hash, group: labelId }]
-    edges = []
-    forEach(transactionsInput, ({ fromAddress }) => {
-      const {
-        id,
-        hash,
-        alias,
-        label: { id: labelId },
-      } = fromAddress
-      nodes.push({ id: Number(id), label: alias || hash, group: labelId })
-      edges.push({ from: Number(id), to: mainAddressId })
-    })
-    forEach(transactionsOutput, ({ toAddress }) => {
-      const {
-        id,
-        hash,
-        alias,
-        label: { id: labelId },
-      } = toAddress
-      nodes.push({ id: Number(id), label: alias || hash, group: labelId })
-      edges.push({ from: mainAddressId, to: Number(id) })
-    })
+  const addressesWithInfo = get(data, 'addresses[0]', null)
+  if (addressesWithInfo) {
+    const result = getNodesAndEdges(addressesWithInfo)
+    edges = result.edges
+    nodes = result.nodes
   }
+  const addressWithInfo = get(dataAdd, 'address', null)
+  if (addressWithInfo) {
+    const result = getNodesAndEdges(addressWithInfo)
+    edges = [...edges, ...result.edges]
+    nodes = [...nodes, ...result.nodes]
+  }
+
   nodes = uniqBy(nodes, 'id')
   // let labels = map(nodes, 'group')
   // labels = uniqBy(nodes, 'group')
@@ -141,7 +218,7 @@ const EthereumGraph = classes => {
         </Paper>
       </Grid>
       <Grid item xs={12} style={{ height: '100%' }}>
-        <Network nodes={nodes} edges={edges} />
+        <Network nodes={nodes} edges={edges} loadMore={loadMore} />
       </Grid>
     </Grid>
   )

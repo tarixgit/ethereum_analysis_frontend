@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 // import { createPortal } from 'react-dom'
 import * as vis from 'vis-network'
 
@@ -50,7 +50,7 @@ const options = {
 */
 }
 
-function useHookWithRefCallback() {
+function useHookWithRefCallback(onContext) {
   const ref = useRef(null)
   const [network, setNetwork] = useState(null)
   const setRef = useCallback(node => {
@@ -61,7 +61,10 @@ function useHookWithRefCallback() {
     if (node) {
       // Check if a node is actually passed. Otherwise node would be null.
       // You can now do what you need to, addEventListeners, measure, etc.
-      setNetwork(new vis.Network(node, { nodes: [], edges: [] }, options))
+      const net = new vis.Network(node, { nodes: [], edges: [] }, options)
+      net.on('oncontext', onContext)
+      //    $el.on("contextmenu", this.handleContext)
+      setNetwork(net)
     }
 
     // Save a reference to the node
@@ -71,18 +74,42 @@ function useHookWithRefCallback() {
   return [setRef, network]
 }
 
-const Network = ({ nodes, edges }) => {
-  const [ref, network] = useHookWithRefCallback()
-  if (!!network && nodes) {
-    network.setData({ nodes, edges })
-    // const options = {
-    //   joinCondition: function(nodeOptions) {
-    //     return nodeOptions.group === 0
-    //   },
-    // }
-    //
-    // network.clustering.cluster(options)
-  }
+const nodesSet = new vis.DataSet([])
+const edgesSet = new vis.DataSet([])
+
+const Network = ({ nodes, edges, loadMore }) => {
+  const onContextBounded = useCallback(
+    props => {
+      const { event, nodes, edges, what } = props
+      // if (what === 'item' && !this.isBackground(id)) {
+      // const item = nodesSet.get(id) || edgesSet.get(id)
+      const item = nodesSet.get(nodes[0])
+      console.log(nodesSet.get(nodes[0]))
+      loadMore(nodes[0])
+      // onItemClick({ event }, item)
+      // onContextClick(item, event.target)
+      event.preventDefault()
+      // }
+    },
+    [nodesSet, edgesSet]
+  )
+  const [ref, network] = useHookWithRefCallback(onContextBounded)
+  useEffect(() => {
+    if (!network || !nodes.length) return
+    nodesSet.update(nodes)
+    edgesSet.update(edges)
+    // setNodesSet(nodesSet)
+    // setEdgesSet(edgesSet)
+    network.setData({ nodes: nodesSet, edges: edgesSet })
+  }, [network, nodes, edges])
+  // const options = {
+  //   joinCondition: function(nodeOptions) {
+  //     return nodeOptions.group === 0
+  //   },
+  // }
+  //
+  // network.clustering.cluster(options)
+
   return (
     <div ref={ref} style={{ height: '100%' }}>
       {/*{network && createPortal(null, network.dom.background)}*/}

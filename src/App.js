@@ -2,7 +2,6 @@ import React from 'react'
 import Dashboard from './Dashboard'
 import ApolloClient from 'apollo-boost'
 import { ApolloProvider } from '@apollo/react-hooks'
-
 /*
 function Copyright() {
     return (
@@ -18,7 +17,7 @@ function Copyright() {
 }
 */
 const client = new ApolloClient({
-  uri: 'http://localhost:3001/graphql',
+  uri: process.env.REACT_APP_GRAPHQL,
 })
 
 const App = () => {

@@ -1,11 +1,22 @@
 import React, { useCallback, useState } from 'react'
-import { useLazyQuery } from '@apollo/react-hooks'
+import { useLazyQuery, useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import Grid from '@material-ui/core/Grid'
 import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
 import Network from './Network'
 import { forEach, get, uniq, uniqBy, map } from 'lodash'
+import { makeStyles } from '@material-ui/core/styles'
+
+const LABELS = gql`
+  query Labels {
+    labels {
+      id
+      name
+      color
+    }
+  }
+`
 
 const TRANSACTION = gql`
   query Addresses($address: String!) {
@@ -112,6 +123,13 @@ const TRANSACTION_MORE = gql`
     }
   }
 `
+const useStyles = makeStyles(theme => ({
+  iconSection: {
+    '& > span': {
+      margin: theme.spacing(2),
+    },
+  },
+}))
 
 const getNodesAndEdges = addressesWithIndo => {
   let edges = []
@@ -151,11 +169,14 @@ const getNodesAndEdges = addressesWithIndo => {
 }
 
 const EthereumGraph = classes => {
+  const classesIcon = useStyles()
   let edges = []
   let nodes = []
   const [address, setAddress] = useState(
     '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
+  //Labels
+  const { loading: labelLoading, data: labelsData, called } = useQuery(LABELS)
   const [loadNetworkData, { loading, error, data }] = useLazyQuery(TRANSACTION)
   const [loadMoreNetworkData, { data: dataAdd }] = useLazyQuery(
     TRANSACTION_MORE
@@ -197,11 +218,18 @@ const EthereumGraph = classes => {
     nodes = [...nodes, ...result.nodes]
   }
 
+  if (called && !labelLoading) {
+    const labels = get(labelsData, 'labels', null)
+    // const options = map(labels, {id, color} => {
+    //   id:
+    // })
+  }
   nodes = uniqBy(nodes, 'id')
   // let labels = map(nodes, 'group')
   // labels = uniqBy(nodes, 'group')
   // labels = map(labels, ({ group }) => ({ id: group, label: 'Group' + group }))
   // nodes = [...labels, ...nodes]
+
   return (
     <Grid container spacing={3} style={{ height: '100%' }}>
       <Grid item xs={12}>
@@ -218,8 +246,14 @@ const EthereumGraph = classes => {
           </form>
         </Paper>
       </Grid>
-      <Grid item xs={12} style={{ height: '100%' }}>
+      <Grid item xs={11} style={{ height: '100%' }}>
         <Network nodes={nodes} edges={edges} loadMore={loadMore} />
+      </Grid>
+      <Grid item xs={1}>
+        <div style={{ color: '#97c2fc' }}>Kein Typ</div>
+        <div style={{ color: '#ffff00' }}>Exchange</div>
+        <div style={{ color: '#fb7e81' }}>Onetime</div>
+        <div style={{ color: '#7be141' }}>Miner</div>
       </Grid>
     </Grid>
   )

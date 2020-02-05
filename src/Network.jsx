@@ -28,6 +28,18 @@ const options = {
       springLength: 200,
     },
   },
+  // groups: {
+  //   0: { color: { background: '#97c2fc' } },
+  //   1: { color: { background: '#004586' } },
+  //   2: { color: { background: '#669933' } },
+  //   3: { color: { background: '#fb2227' } },
+  //   4: { color: { background: '#33cc66' } },
+  //   5: { color: { background: '#993399' } },
+  //   6: { color: { background: '#ffff00' } },
+  //   7: { color: { background: '#339999' } },
+  //   8: { color: { background: '#006666' } },
+  //   9: { color: { background: '#ffff00' } },
+  // },
   /*  physics: {
     forceAtlas2Based: {
       gravitationalConstant: -2006,
@@ -99,6 +111,13 @@ const edgesSet = new vis.DataSet([])
 
 const Network = ({ nodes, edges, loadMore }) => {
   const [ref, network] = useHookWithRefCallback(nodesSet, edgesSet, loadMore)
+  // componentWillUnmount
+  useEffect(() => {
+    return () => {
+      nodesSet.clear()
+      edgesSet.clear()
+    }
+  }, [])
   nodesSet.update(nodes)
   edgesSet.update(edges)
   return (

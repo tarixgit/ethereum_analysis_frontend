@@ -44,7 +44,7 @@ export default function Dashboard() {
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
         <Container
-          maxWidth="lg"
+          maxWidth="xl"
           className={classes.container}
           style={{ height: '100%' }}
         >

@@ -40,7 +40,7 @@ const options = {
     timestep: 0.35,
     stabilization: false,
   },*/
-  clustering: true,
+  // clustering: true, // doenst work
   /*
   interaction: {
     tooltipDelay: 200,
@@ -50,9 +50,31 @@ const options = {
 */
 }
 
-function useHookWithRefCallback(onContext) {
+function useHookWithRefCallback(nodes, edges, loadMore) {
   const ref = useRef(null)
-  const [network, setNetwork] = useState(null)
+  let network = null
+
+  const onContextBounded = useCallback(
+    props => {
+      const { event, nodes, edges, pointer } = props
+
+      const nodeId = network.getNodeAt(pointer.DOM)
+      if (nodeId) {
+        network.selectNodes([nodeId])
+        loadMore(nodeId)
+      }
+      console.log(nodeId)
+      event.preventDefault()
+      // if (what === 'item' && !this.isBackground(id)) {
+      // const item = nodesSet.get(id) || edgesSet.get(id)
+      // const item = nodesSet.get(nodes[0]) // if null then item is array of all
+      // onItemClick({ event }, item)
+      // onContextClick(item, event.target)
+      // }
+    },
+    [network, nodes, edges, loadMore]
+  )
+
   const setRef = useCallback(node => {
     if (ref.current) {
       // Make sure to cleanup any events/references added to the last instance
@@ -61,10 +83,8 @@ function useHookWithRefCallback(onContext) {
     if (node) {
       // Check if a node is actually passed. Otherwise node would be null.
       // You can now do what you need to, addEventListeners, measure, etc.
-      const net = new vis.Network(node, { nodes: [], edges: [] }, options)
-      net.on('oncontext', onContext)
-      //    $el.on("contextmenu", this.handleContext)
-      setNetwork(net)
+      network = new vis.Network(node, { nodes, edges }, options)
+      network.on('oncontext', onContextBounded)
     }
 
     // Save a reference to the node
@@ -78,38 +98,9 @@ const nodesSet = new vis.DataSet([])
 const edgesSet = new vis.DataSet([])
 
 const Network = ({ nodes, edges, loadMore }) => {
-  const onContextBounded = useCallback(
-    props => {
-      const { event, nodes, edges, what } = props
-      // if (what === 'item' && !this.isBackground(id)) {
-      // const item = nodesSet.get(id) || edgesSet.get(id)
-      const item = nodesSet.get(nodes[0])
-      console.log(nodesSet.get(nodes[0]))
-      loadMore(nodes[0])
-      // onItemClick({ event }, item)
-      // onContextClick(item, event.target)
-      event.preventDefault()
-      // }
-    },
-    [nodesSet, edgesSet]
-  )
-  const [ref, network] = useHookWithRefCallback(onContextBounded)
-  useEffect(() => {
-    if (!network || !nodes.length) return
-    nodesSet.update(nodes)
-    edgesSet.update(edges)
-    // setNodesSet(nodesSet)
-    // setEdgesSet(edgesSet)
-    network.setData({ nodes: nodesSet, edges: edgesSet })
-  }, [network, nodes, edges])
-  // const options = {
-  //   joinCondition: function(nodeOptions) {
-  //     return nodeOptions.group === 0
-  //   },
-  // }
-  //
-  // network.clustering.cluster(options)
-
+  const [ref, network] = useHookWithRefCallback(nodesSet, edgesSet, loadMore)
+  nodesSet.update(nodes)
+  edgesSet.update(edges)
   return (
     <div ref={ref} style={{ height: '100%' }}>
       {/*{network && createPortal(null, network.dom.background)}*/}

@@ -170,6 +170,7 @@ const EthereumGraph = classes => {
     setAddress(value)
   })
   const loadMore = useCallback(addressId => {
+    if (!addressId) return
     loadMoreNetworkData({
       variables: { addressId: addressId },
     })

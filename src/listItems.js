@@ -7,23 +7,27 @@ import DashboardIcon from '@material-ui/icons/Dashboard'
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCart'
 import PeopleIcon from '@material-ui/icons/People'
 import BarChartIcon from '@material-ui/icons/BarChart'
-import LayersIcon from '@material-ui/icons/Layers'
 import AssignmentIcon from '@material-ui/icons/Assignment'
+import { Link } from 'react-router-dom'
 
-export const mainListItems = (
+export const mainListItems = classes => (
   <div>
-    <ListItem button>
-      <ListItemIcon>
-        <DashboardIcon />
-      </ListItemIcon>
-      <ListItemText primary="Ethereum Graph" />
-    </ListItem>
-    <ListItem button>
-      <ListItemIcon>
-        <ShoppingCartIcon />
-      </ListItemIcon>
-      <ListItemText primary="Classification" />
-    </ListItem>
+    <Link to="/" className={classes.links}>
+      <ListItem button>
+        <ListItemIcon>
+          <DashboardIcon />
+        </ListItemIcon>
+        <ListItemText primary="Ethereum Graph" />
+      </ListItem>
+    </Link>
+    <Link to="/class" className={classes.links}>
+      <ListItem button>
+        <ListItemIcon>
+          <ShoppingCartIcon />
+        </ListItemIcon>
+        <ListItemText primary="Classification" />
+      </ListItem>
+    </Link>
     <ListItem button>
       <ListItemIcon>
         <PeopleIcon />
@@ -39,7 +43,7 @@ export const mainListItems = (
   </div>
 )
 
-export const secondaryListItems = (
+export const secondaryListItems = () => (
   <div>
     <ListSubheader inset>Saved reports</ListSubheader>
     <ListItem button>

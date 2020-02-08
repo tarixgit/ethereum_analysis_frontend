@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import CustomAppBar from './CustomAppBar'
@@ -29,18 +29,18 @@ const useStyles = makeStyles(theme => ({
 
 export default function Dashboard() {
   const classes = useStyles()
-  const [open, setOpen] = React.useState(true)
+  /*  const [open, setOpen] = React.useState(true)
   const handleDrawerOpen = () => {
     setOpen(true)
   }
   const handleDrawerClose = () => {
     setOpen(false)
-  }
+  }*/
 
   return (
-    <div className={classes.root}>
-      <CustomAppBar open={open} handleDrawerOpen={handleDrawerOpen} />
-      <LeftPanel open={open} handleDrawerClose={handleDrawerClose} />
+    <Fragment>
+      {/*      <CustomAppBar open={open} handleDrawerOpen={handleDrawerOpen} />
+      <LeftPanel open={open} handleDrawerClose={handleDrawerClose} />*/}
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
         <Container
@@ -51,6 +51,6 @@ export default function Dashboard() {
           <EthereumGraph />
         </Container>
       </main>
-    </div>
+    </Fragment>
   )
 }

@@ -1,7 +1,12 @@
 import React from 'react'
-import Dashboard from './Dashboard'
+import { BrowserRouter, Switch, Route, Link } from 'react-router-dom'
 import ApolloClient from 'apollo-boost'
 import { ApolloProvider } from '@apollo/react-hooks'
+import Dashboard from './Dashboard'
+import Classification from './Classification'
+import CustomAppBar from './CustomAppBar'
+import LeftPanel from './LeftPanel'
+import { makeStyles } from '@material-ui/core/styles'
 /*
 function Copyright() {
     return (
@@ -16,16 +21,41 @@ function Copyright() {
     );
 }
 */
+const useStyles = makeStyles(theme => ({
+  root: {
+    display: 'flex',
+  },
+}))
+
 const client = new ApolloClient({
   uri: process.env.REACT_APP_GRAPHQL,
 })
 
 const App = () => {
+  const classes = useStyles()
+  const [open, setOpen] = React.useState(true)
+  const handleDrawerOpen = () => {
+    setOpen(true)
+  }
+  const handleDrawerClose = () => {
+    setOpen(false)
+  }
   return (
     <ApolloProvider client={client}>
-      <div>
-        <Dashboard />
-      </div>
+      <BrowserRouter>
+        <div className={classes.root}>
+          <CustomAppBar open={open} handleDrawerOpen={handleDrawerOpen} />
+          <LeftPanel open={open} handleDrawerClose={handleDrawerClose} />
+          <Switch>
+            <Route path="/class">
+              <Classification />
+            </Route>
+            <Route path="/">
+              <Dashboard />
+            </Route>
+          </Switch>
+        </div>
+      </BrowserRouter>
     </ApolloProvider>
   )
 }

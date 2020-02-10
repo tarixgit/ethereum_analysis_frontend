@@ -1,4 +1,7 @@
-import React, { useCallback, useState } from 'react'
+import React, { Fragment, useCallback, useState } from 'react'
+import { makeStyles } from '@material-ui/core/styles'
+import Container from '@material-ui/core/Container'
+import { useParams } from 'react-router-dom'
 import { useLazyQuery, useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import Grid from '@material-ui/core/Grid'
@@ -6,7 +9,28 @@ import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
 import Network from './Network'
 import { forEach, get, uniq, uniqBy, map } from 'lodash'
-import { makeStyles } from '@material-ui/core/styles'
+
+const useStyles = makeStyles(theme => ({
+  root: {
+    display: 'flex',
+  },
+  appBarSpacer: theme.mixins.toolbar,
+  content: {
+    flexGrow: 1,
+    height: '100vh',
+    overflow: 'visible', // scroll to visible for tests
+  },
+  container: {
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+  },
+  paper: {
+    padding: theme.spacing(2),
+    display: 'flex',
+    overflow: 'auto',
+    flexDirection: 'column',
+  },
+}))
 
 const LABELS = gql`
   query Labels {
@@ -123,13 +147,6 @@ const TRANSACTION_MORE = gql`
     }
   }
 `
-const useStyles = makeStyles(theme => ({
-  iconSection: {
-    '& > span': {
-      margin: theme.spacing(2),
-    },
-  },
-}))
 
 const getNodesAndEdges = addressesWithIndo => {
   let edges = []
@@ -168,12 +185,13 @@ const getNodesAndEdges = addressesWithIndo => {
   return { nodes, edges }
 }
 
-const EthereumGraph = classes => {
-  const classesIcon = useStyles()
+const EthereumGraph = () => {
+  const classes = useStyles()
+  const { hash } = useParams()
   let edges = []
   let nodes = []
   const [address, setAddress] = useState(
-    '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
+    hash || '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
   //Labels
   const { loading: labelLoading, data: labelsData, called } = useQuery(LABELS)
@@ -231,31 +249,42 @@ const EthereumGraph = classes => {
   // nodes = [...labels, ...nodes]
 
   return (
-    <Grid container spacing={3} style={{ height: '100%' }}>
-      <Grid item xs={12}>
-        <Paper className={classes.paper}>
-          <form onSubmit={submit}>
-            <TextField
-              id="address-input"
-              label="Address"
-              autoFocus
-              fullWidth
-              value={address}
-              onChange={changeAddress}
-            />
-          </form>
-        </Paper>
-      </Grid>
-      <Grid item xs={11} style={{ height: '100%' }}>
-        <Network nodes={nodes} edges={edges} loadMore={loadMore} />
-      </Grid>
-      <Grid item xs={1}>
-        <div style={{ color: '#97c2fc' }}>Kein Typ</div>
-        <div style={{ color: '#ffff00' }}>Exchange</div>
-        <div style={{ color: '#fb7e81' }}>Onetime</div>
-        <div style={{ color: '#7be141' }}>Miner</div>
-      </Grid>
-    </Grid>
+    <Fragment>
+      <main className={classes.content}>
+        <div className={classes.appBarSpacer} />
+        <Container
+          maxWidth="xl"
+          className={classes.container}
+          style={{ height: '100%' }}
+        >
+          <Grid container spacing={3} style={{ height: '100%' }}>
+            <Grid item xs={12}>
+              <Paper>
+                <form onSubmit={submit}>
+                  <TextField
+                    id="address-input"
+                    label="Address"
+                    autoFocus
+                    fullWidth
+                    value={address}
+                    onChange={changeAddress}
+                  />
+                </form>
+              </Paper>
+            </Grid>
+            <Grid item xs={11} style={{ height: '100%' }}>
+              <Network nodes={nodes} edges={edges} loadMore={loadMore} />
+            </Grid>
+            <Grid item xs={1}>
+              <div style={{ color: '#97c2fc' }}>Kein Typ</div>
+              <div style={{ color: '#ffff00' }}>Exchange</div>
+              <div style={{ color: '#fb7e81' }}>Onetime</div>
+              <div style={{ color: '#7be141' }}>Miner</div>
+            </Grid>
+          </Grid>
+        </Container>
+      </main>
+    </Fragment>
   )
 }
 

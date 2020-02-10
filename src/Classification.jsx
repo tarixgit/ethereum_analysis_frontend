@@ -9,6 +9,7 @@ import { gql } from 'apollo-boost'
 import { useMutation } from '@apollo/react-hooks'
 import Paper from '@material-ui/core/Paper'
 import ImportAddressTable from './ImportAddressTable'
+import FeatureTable from './FeatureTable'
 
 const LOAD_DATA = gql`
   mutation loadData {
@@ -94,6 +95,7 @@ const Classification = () => {
         ) : (
           <div>
             {activeStep === 0 && <ImportAddressTable loadData={loadData} />}
+            {activeStep === 1 && <FeatureTable loadData={loadData} />}
             <Typography className={classes.instructions}>
               {getStepContent(activeStep)}
             </Typography>

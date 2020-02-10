@@ -2,7 +2,7 @@ import React from 'react'
 import { BrowserRouter, Switch, Route, Link } from 'react-router-dom'
 import ApolloClient from 'apollo-boost'
 import { ApolloProvider } from '@apollo/react-hooks'
-import Dashboard from './Dashboard'
+import EthereumGraph from './EthereumGraph'
 import Classification from './Classification'
 import CustomAppBar from './CustomAppBar'
 import LeftPanel from './LeftPanel'
@@ -50,8 +50,11 @@ const App = () => {
             <Route path="/class">
               <Classification />
             </Route>
+            <Route path="/:hash">
+              <EthereumGraph />
+            </Route>
             <Route path="/">
-              <Dashboard />
+              <EthereumGraph />
             </Route>
           </Switch>
         </div>

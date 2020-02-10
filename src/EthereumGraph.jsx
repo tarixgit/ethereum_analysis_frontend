@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useState } from 'react'
+import React, { Fragment, useCallback, useEffect, useState } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import { useParams } from 'react-router-dom'
@@ -199,27 +199,44 @@ const EthereumGraph = () => {
   const [loadMoreNetworkData, { data: dataAdd }] = useLazyQuery(
     TRANSACTION_MORE
   )
-  const changeAddress = useCallback(e => {
-    const { value } = e.target
-    if (value.length >= 42) {
+  useEffect(() => {
+    if (hash) {
       loadNetworkData({
-        variables: { address: value.toLowerCase() },
+        variables: { address: hash.toLowerCase() },
       })
     }
-    setAddress(value)
-  })
-  const loadMore = useCallback(addressId => {
-    if (!addressId) return
-    loadMoreNetworkData({
-      variables: { addressId: addressId },
-    })
-  })
-  const submit = useCallback(e => {
-    e.preventDefault()
-    loadNetworkData({
-      variables: { address: address.toLowerCase() },
-    })
-  })
+  }, [hash, loadNetworkData])
+
+  const changeAddress = useCallback(
+    e => {
+      const { value } = e.target
+      if (value.length >= 42) {
+        loadNetworkData({
+          variables: { address: value.toLowerCase() },
+        })
+      }
+      setAddress(value)
+    },
+    [loadNetworkData, setAddress]
+  )
+  const submit = useCallback(
+    e => {
+      e.preventDefault()
+      loadNetworkData({
+        variables: { address: address.toLowerCase() },
+      })
+    },
+    [loadNetworkData]
+  )
+  const loadMore = useCallback(
+    addressId => {
+      if (!addressId) return
+      loadMoreNetworkData({
+        variables: { addressId: addressId },
+      })
+    },
+    [loadMoreNetworkData]
+  )
 
   if (loading) return <p>Loading...</p>
   if (error) return <p>Error :(</p>

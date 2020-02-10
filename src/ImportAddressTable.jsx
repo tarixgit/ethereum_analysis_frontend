@@ -14,6 +14,7 @@ import { map, get } from 'lodash'
 import Button from '@material-ui/core/Button'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
+import { Link } from 'react-router-dom'
 
 const LOAD_IMPORT_ADDRESSES = gql`
   query MyQuery {
@@ -129,6 +130,10 @@ const useStyles = makeStyles(theme => ({
     top: 20,
     width: 1,
   },
+  links: {
+    color: 'inherit',
+    textDecoration: 'none',
+  },
 }))
 
 const ImportAddressTable = ({ loadData }) => {
@@ -224,7 +229,11 @@ const ImportAddressTable = ({ loadData }) => {
                   <TableCell component="th" scope="row" padding="none">
                     {row.id}
                   </TableCell>
-                  <TableCell align="right">{row.hash}</TableCell>
+                  <TableCell align="right">
+                    <Link to={`/${row.hash}`} className={classes.links}>
+                      <Button color="primary">{row.hash}</Button>
+                    </Link>
+                  </TableCell>
                   <TableCell>{row.name}</TableCell>
                   <TableCell>{row.coin}</TableCell>
                   <TableCell>{row.category}</TableCell>

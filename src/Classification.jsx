@@ -5,6 +5,19 @@ import StepLabel from '@material-ui/core/StepLabel'
 import Stepper from '@material-ui/core/Stepper'
 import Typography from '@material-ui/core/Typography'
 import Step from '@material-ui/core/Step'
+import { gql } from 'apollo-boost'
+import { useMutation } from '@apollo/react-hooks'
+import Paper from '@material-ui/core/Paper'
+import ImportAddressTable from './ImportAddressTable'
+
+const LOAD_DATA = gql`
+  mutation loadData {
+    loadData {
+      success
+      message
+    }
+  }
+`
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -48,7 +61,7 @@ const Classification = () => {
   const classes = useStyles()
   const [activeStep, setActiveStep] = React.useState(0)
   const steps = getSteps()
-
+  const [loadData] = useMutation(LOAD_DATA)
   const handleNext = () => {
     setActiveStep(prevActiveStep => prevActiveStep + 1)
   }
@@ -80,11 +93,7 @@ const Classification = () => {
           </div>
         ) : (
           <div>
-            {activeStep === 0 && (
-              <Button variant="contained" color="primary">
-                Load
-              </Button>
-            )}
+            {activeStep === 0 && <ImportAddressTable loadData={loadData} />}
             <Typography className={classes.instructions}>
               {getStepContent(activeStep)}
             </Typography>

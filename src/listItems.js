@@ -25,9 +25,15 @@ export const mainListItems = classes => (
         <ListItemIcon>
           <ShoppingCartIcon />
         </ListItemIcon>
-        <ListItemText primary="Classification" />
+        <ListItemText primary="Classification data" />
       </ListItem>
     </Link>
+    <ListItem button>
+      <ListItemIcon>
+        <PeopleIcon />
+      </ListItemIcon>
+      <ListItemText primary="Classification test" />
+    </ListItem>
     <ListItem button>
       <ListItemIcon>
         <PeopleIcon />

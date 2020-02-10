@@ -10,7 +10,7 @@ import TablePagination from '@material-ui/core/TablePagination'
 import TableRow from '@material-ui/core/TableRow'
 import TableSortLabel from '@material-ui/core/TableSortLabel'
 import Paper from '@material-ui/core/Paper'
-import { map, get } from 'lodash'
+import { map, get, truncate } from 'lodash'
 import Button from '@material-ui/core/Button'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
@@ -106,11 +106,11 @@ EnhancedTableHead.propTypes = {
 
 const useStyles = makeStyles(theme => ({
   root: {
-    // width: '100%',
-    paddingTop: '19px',
-    paddingLeft: '19px',
-    paddingRight: '19px',
-    margin: '10px',
+    width: `calc(100%-${2 * theme.spacing(2)}px)`,
+    paddingTop: theme.spacing(2),
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+    margin: theme.spacing(1),
   },
   paper: {
     width: '100%',
@@ -231,7 +231,13 @@ const ImportAddressTable = ({ loadData }) => {
                   </TableCell>
                   <TableCell align="right">
                     <Link to={`/${row.hash}`} className={classes.links}>
-                      <Button color="primary">{row.hash}</Button>
+                      <Button color="primary">
+                        {get(row, 'hash', '').length > 42
+                          ? `${truncate(row.hash, {
+                              length: 42,
+                            })}`
+                          : row.hash}
+                      </Button>
                     </Link>
                   </TableCell>
                   <TableCell>{row.name}</TableCell>

@@ -84,36 +84,34 @@ const Classification = () => {
           </Step>
         ))}
       </Stepper>
-      <div>
-        {activeStep === steps.length ? (
+      {activeStep === steps.length ? (
+        <div>
+          <Typography className={classes.instructions}>
+            All steps completed
+          </Typography>
+          <Button onClick={handleReset}>Reset</Button>
+        </div>
+      ) : (
+        <div>
+          {activeStep === 0 && <ImportAddressTable loadData={loadData} />}
+          {activeStep === 1 && <FeatureTable loadData={loadData} />}
+          <Typography className={classes.instructions}>
+            {getStepContent(activeStep)}
+          </Typography>
           <div>
-            <Typography className={classes.instructions}>
-              All steps completed
-            </Typography>
-            <Button onClick={handleReset}>Reset</Button>
+            <Button
+              disabled={activeStep === 0}
+              onClick={handleBack}
+              className={classes.backButton}
+            >
+              Back
+            </Button>
+            <Button variant="contained" color="primary" onClick={handleNext}>
+              {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+            </Button>
           </div>
-        ) : (
-          <div>
-            {activeStep === 0 && <ImportAddressTable loadData={loadData} />}
-            {activeStep === 1 && <FeatureTable loadData={loadData} />}
-            <Typography className={classes.instructions}>
-              {getStepContent(activeStep)}
-            </Typography>
-            <div>
-              <Button
-                disabled={activeStep === 0}
-                onClick={handleBack}
-                className={classes.backButton}
-              >
-                Back
-              </Button>
-              <Button variant="contained" color="primary" onClick={handleNext}>
-                {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </main>
   )
 }

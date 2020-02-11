@@ -57,11 +57,7 @@ const TRANSACTION = gql`
       hash
       degree
       alias
-      label {
-        color
-        name
-        id
-      }
+      labelId
       transactionsInput {
         amount
         bid
@@ -70,11 +66,7 @@ const TRANSACTION = gql`
           id
           hash
           scam
-          label {
-            color
-            name
-            id
-          }
+          labelId
           degree
           outdegree
           alias
@@ -88,11 +80,7 @@ const TRANSACTION = gql`
           id
           hash
           scam
-          label {
-            color
-            name
-            id
-          }
+          labelId
           degree
           outdegree
           alias
@@ -110,11 +98,7 @@ const TRANSACTION_MORE = gql`
       hash
       degree
       alias
-      label {
-        color
-        name
-        id
-      }
+      labelId
       transactionsInput {
         amount
         bid
@@ -123,11 +107,7 @@ const TRANSACTION_MORE = gql`
           id
           hash
           scam
-          label {
-            color
-            name
-            id
-          }
+          labelId
           degree
           outdegree
           alias
@@ -141,11 +121,7 @@ const TRANSACTION_MORE = gql`
           id
           hash
           scam
-          label {
-            color
-            name
-            id
-          }
+          labelId
           degree
           outdegree
           alias
@@ -163,29 +139,19 @@ const getNodesAndEdges = addressesWithIndo => {
     id,
     hash,
     alias,
-    label: { id: labelId },
+    labelId,
     transactionsInput,
     transactionsOutput,
   } = addressesWithIndo
   nodes = [{ id: Number(id), label: alias || hash, group: labelId }]
   edges = []
   forEach(transactionsInput, ({ fromAddress }) => {
-    const {
-      id,
-      hash,
-      alias,
-      label: { id: labelId },
-    } = fromAddress
+    const { id, hash, alias, labelId } = fromAddress
     nodes.push({ id: Number(id), label: alias || hash, group: labelId })
     edges.push({ from: Number(id), to: mainAddressId })
   })
   forEach(transactionsOutput, ({ toAddress }) => {
-    const {
-      id,
-      hash,
-      alias,
-      label: { id: labelId },
-    } = toAddress
+    const { id, hash, alias, labelId } = toAddress
     nodes.push({ id: Number(id), label: alias || hash, group: labelId })
     edges.push({ from: mainAddressId, to: Number(id) })
   })

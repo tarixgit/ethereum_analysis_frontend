@@ -38,24 +38,28 @@ const headCells = [
     disablePadding: true,
     label: 'Ids',
   },
-  { id: 'hash', numeric: false, disablePadding: false, label: 'Hash' },
-  { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
-  { id: 'coin', numeric: false, disablePadding: false, label: 'Währung' },
-  { id: 'category', numeric: false, disablePadding: false, label: 'Category' },
+  { id: 'f0', numeric: false, disablePadding: false, label: 'Feature 0' },
   {
-    id: 'subcategory',
+    id: 'f1',
     numeric: false,
     disablePadding: false,
-    label: 'Subcategory',
+    label: 'Feature 1',
   },
-  { id: 'url', numeric: false, disablePadding: false, label: 'url' },
+  { id: 'f2', numeric: false, disablePadding: false, label: 'Feature 2' },
   {
-    id: 'reporter',
+    id: 'f3',
     numeric: false,
     disablePadding: false,
-    label: 'Quelle',
+    label: 'Feature 3',
   },
-  { id: 'status', numeric: false, disablePadding: false, label: 'Status' },
+  { id: 'f4', numeric: false, disablePadding: false, label: 'Feature 4' },
+  {
+    id: 'f5',
+    numeric: false,
+    disablePadding: false,
+    label: 'Feature 5',
+  },
+  { id: 'f6', numeric: false, disablePadding: false, label: 'Feature 6' },
 ]
 
 const EnhancedTableHead = props => {
@@ -138,8 +142,13 @@ const FeatureTable = ({ loadData }) => {
   const [selected, setSelected] = React.useState([])
   const [page, setPage] = React.useState(0)
   const [rowsPerPage, setRowsPerPage] = React.useState(5)
-  const { data, loading } = useQuery(LOAD_IMPORT_ADDRESSES)
-  const rows = get(data, 'importAddresses', [])
+  // const { data, loading } = useQuery(LOAD_IMPORT_ADDRESSES)
+  // const rows = get(data, 'importAddresses', [])
+  const rows = [
+    { id: 1, f0: 20, f1: 10, f2: 5, f3: 1, f4: 3, f5: 1, f6: 9 },
+    { id: 2, f0: 11, f1: 50, f2: 5, f3: 1, f4: 3, f5: 1, f6: 9 },
+    { id: 3, f0: 22, f1: 26, f2: 5, f3: 1, f4: 3, f5: 1, f6: 9 },
+  ]
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc'
@@ -224,14 +233,13 @@ const FeatureTable = ({ loadData }) => {
                   <TableCell component="th" scope="row" padding="none">
                     {row.id}
                   </TableCell>
-                  <TableCell align="right">{row.hash}</TableCell>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.coin}</TableCell>
-                  <TableCell>{row.category}</TableCell>
-                  <TableCell>{row.subcategory}</TableCell>
-                  <TableCell>{row.url}</TableCell>
-                  <TableCell>{row.reporter}</TableCell>
-                  <TableCell align="right">{row.status}</TableCell>
+                  <TableCell align="right">{row.f1}</TableCell>
+                  <TableCell>{row.f2}</TableCell>
+                  <TableCell>{row.f3}</TableCell>
+                  <TableCell>{row.f4}</TableCell>
+                  <TableCell>{row.f5}</TableCell>
+                  <TableCell>{row.f6}</TableCell>
+                  <TableCell>{row.f0}</TableCell>
                 </TableRow>
               ))}
               {emptyRows > 0 && (

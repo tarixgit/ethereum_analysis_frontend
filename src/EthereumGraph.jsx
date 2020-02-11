@@ -14,6 +14,10 @@ const useStyles = makeStyles(theme => ({
   root: {
     display: 'flex',
   },
+  networkContainer: {
+    //height: `calc(100% - ${2 * theme.mixins.toolbar.minHeight}px)`,  162px  - pading -
+    // height: 'calc(100% - 162px)',
+  },
   appBarSpacer: theme.mixins.toolbar,
   content: {
     flexGrow: 1,
@@ -21,6 +25,9 @@ const useStyles = makeStyles(theme => ({
     overflow: 'visible', // scroll to visible for tests
   },
   container: {
+    height: `calc(100% - ${theme.mixins.toolbar.minHeight}px - ${theme.spacing(
+      1
+    )}px)`,
     paddingTop: theme.spacing(2),
     paddingBottom: theme.spacing(2),
   },
@@ -190,6 +197,7 @@ const EthereumGraph = () => {
   const { hash } = useParams()
   let edges = []
   let nodes = []
+  let labelsList = []
   const [address, setAddress] = useState(
     hash || '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
@@ -254,10 +262,7 @@ const EthereumGraph = () => {
   }
 
   if (called && !labelLoading) {
-    const labels = get(labelsData, 'labels', null)
-    // const options = map(labels, {id, color} => {
-    //   id:
-    // })
+    labelsList = get(labelsData, 'labels', null)
   }
   nodes = uniqBy(nodes, 'id')
   // let labels = map(nodes, 'group')
@@ -269,12 +274,8 @@ const EthereumGraph = () => {
     <Fragment>
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
-        <Container
-          maxWidth="xl"
-          className={classes.container}
-          style={{ height: '100%' }}
-        >
-          <Grid container spacing={3} style={{ height: '100%' }}>
+        <Container maxWidth="xl" className={classes.container}>
+          <Grid container spacing={2} style={{ height: '100%' }}>
             <Grid item xs={12}>
               <Paper>
                 <form onSubmit={submit}>
@@ -289,14 +290,13 @@ const EthereumGraph = () => {
                 </form>
               </Paper>
             </Grid>
-            <Grid item xs={11} style={{ height: '100%' }}>
-              <Network nodes={nodes} edges={edges} loadMore={loadMore} />
-            </Grid>
-            <Grid item xs={1}>
-              <div style={{ color: '#97c2fc' }}>Kein Typ</div>
-              <div style={{ color: '#ffff00' }}>Exchange</div>
-              <div style={{ color: '#fb7e81' }}>Onetime</div>
-              <div style={{ color: '#7be141' }}>Miner</div>
+            <Grid item xs={12} className={classes.networkContainer}>
+              <Network
+                nodes={nodes}
+                edges={edges}
+                loadMore={loadMore}
+                labels={labelsList}
+              />
             </Grid>
           </Grid>
         </Container>

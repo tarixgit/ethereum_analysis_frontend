@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 // import { createPortal } from 'react-dom'
 import * as vis from 'vis-network'
+import { map, sortBy } from 'lodash'
+import { makeStyles } from '@material-ui/core/styles'
 
 const options = {
   nodes: {
@@ -27,6 +29,10 @@ const options = {
       springConstant: 0.001,
       springLength: 200,
     },
+  },
+  interaction: {
+    dragNodes: false,
+    navigationButtons: true,
   },
   // groups: {
   //   0: { color: { background: '#97c2fc' } },
@@ -61,9 +67,15 @@ const options = {
   }
 */
 }
+const useStyles = makeStyles(theme => ({
+  root: {
+    height: '100%',
+  },
+}))
 
 function useHookWithRefCallback(nodes, edges, loadMore) {
   const ref = useRef(null)
+  const [networkForAnswer, setNetworkForAnswer] = useState()
   let network = null
 
   const onContextBounded = useCallback(
@@ -75,7 +87,6 @@ function useHookWithRefCallback(nodes, edges, loadMore) {
         network.selectNodes([nodeId])
         loadMore(nodeId)
       }
-      console.log(nodeId)
       event.preventDefault()
       // if (what === 'item' && !this.isBackground(id)) {
       // const item = nodesSet.get(id) || edgesSet.get(id)
@@ -97,20 +108,51 @@ function useHookWithRefCallback(nodes, edges, loadMore) {
       // You can now do what you need to, addEventListeners, measure, etc.
       network = new vis.Network(node, { nodes, edges }, options)
       network.on('oncontext', onContextBounded)
+      setNetworkForAnswer(network)
     }
 
     // Save a reference to the node
     ref.current = node
   }, [])
 
-  return [setRef, network]
+  return [setRef, ref, networkForAnswer]
 }
 
 const nodesSet = new vis.DataSet([])
 const edgesSet = new vis.DataSet([])
+const getLabelNodes = (labels, refObject) => {
+  const container = refObject.current
+  const x = container.clientWidth - container.clientWidth / 2 - 30
+  const y = -container.clientHeight + 150
+  const step = 100
+  return map(sortBy(labels, ['id']), ({ id, name }, index) => ({
+    id: 1000000 + id,
+    x: x,
+    y: y + index * step,
+    label: name,
+    group: id,
+    fixed: true,
+    physics: false,
+  }))
+}
 
-const Network = ({ nodes, edges, loadMore }) => {
-  const [ref, network] = useHookWithRefCallback(nodesSet, edgesSet, loadMore)
+const Network = ({ nodes, edges, loadMore, labels }) => {
+  let [nodeLabels, setNodeLabels] = useState([])
+  const classes = useStyles()
+  const [ref, refObject, network] = useHookWithRefCallback(
+    nodesSet,
+    edgesSet,
+    loadMore
+  )
+  useEffect(() => {
+    const fitOption = {
+      nodes: nodesSet.getIds(),
+    }
+    if (network) network.fit(fitOption) // TODO hack setTimeout
+    if (nodes.length && labels.length && network) {
+      setNodeLabels(getLabelNodes(labels, refObject))
+    }
+  }, [nodes, network])
   // componentWillUnmount
   useEffect(() => {
     return () => {
@@ -118,10 +160,12 @@ const Network = ({ nodes, edges, loadMore }) => {
       edgesSet.clear()
     }
   }, [])
-  nodesSet.update(nodes)
+
+  nodesSet.update([...nodes, ...nodeLabels])
   edgesSet.update(edges)
+
   return (
-    <div ref={ref} style={{ height: '100%' }}>
+    <div ref={ref} className={classes.root}>
       {/*{network && createPortal(null, network.dom.background)}*/}
     </div>
   )

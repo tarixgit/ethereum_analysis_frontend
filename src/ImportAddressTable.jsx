@@ -106,7 +106,7 @@ EnhancedTableHead.propTypes = {
 
 const useStyles = makeStyles(theme => ({
   root: {
-    width: `calc(100%-${2 * theme.spacing(2)}px)`,
+    width: `calc(100% - ${2 * theme.spacing(2)}px)`,
     paddingTop: theme.spacing(2),
     paddingLeft: theme.spacing(2),
     paddingRight: theme.spacing(2),

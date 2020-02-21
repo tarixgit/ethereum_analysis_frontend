@@ -8,14 +8,15 @@ import Grid from '@material-ui/core/Grid'
 import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
 import Network from './Network'
-import { forEach, get, uniq, uniqBy, map } from 'lodash'
+import { forEach, get, uniqBy, map, mapKeys, mapValues, keyBy } from 'lodash'
+import { networkOptions } from './config'
 
 const useStyles = makeStyles(theme => ({
   root: {
     display: 'flex',
   },
   networkContainer: {
-    //height: `calc(100% - ${2 * theme.mixins.toolbar.minHeight}px)`,  162px  - pading -
+    height: `calc(100% - ${2 * theme.mixins.toolbar.minHeight}px)`, //  162px  - pading -
     // height: 'calc(100% - 162px)',
   },
   appBarSpacer: theme.mixins.toolbar,
@@ -37,6 +38,28 @@ const useStyles = makeStyles(theme => ({
     overflow: 'auto',
     flexDirection: 'column',
   },
+  labelWrapper: {
+    display: 'flex',
+  },
+  labelItem: {
+    display: 'flex',
+    flexGrow: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  ...mapValues(
+    mapKeys(networkOptions.groups, (val, key) => `circle${key}`),
+    ({ color: { border, background } }) => ({
+      borderRadius: '50%',
+      borderWidth: '1px',
+      borderStyle: 'solid',
+      height: '25px',
+      width: '25px',
+      marginRight: '2px',
+      border,
+      background,
+    })
+  ),
 }))
 
 const LABELS = gql`
@@ -168,7 +191,12 @@ const EthereumGraph = () => {
     hash || '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
   //Labels
-  const { loading: labelLoading, data: labelsData, called } = useQuery(LABELS)
+  const {
+    loading: labelLoading,
+    data: labelsData,
+    called,
+    errorLabels,
+  } = useQuery(LABELS)
   const [loadNetworkData, { loading, error, data }] = useLazyQuery(TRANSACTION)
   const [loadMoreNetworkData, { data: dataAdd }] = useLazyQuery(
     TRANSACTION_MORE
@@ -212,17 +240,18 @@ const EthereumGraph = () => {
     [loadMoreNetworkData]
   )
 
-  if (loading) return <p>Loading...</p>
-  if (error) return <p>Error :(</p>
+  if (labelLoading) return <p>labelLoading...</p>
+  if (errorLabels) return <p>Error :(</p>
   const addressesWithInfo = get(data, 'addresses[0]', null)
   if (addressesWithInfo) {
     const result = getNodesAndEdges(addressesWithInfo)
     edges = result.edges
     nodes = result.nodes
   }
-  const addressWithInfo = get(dataAdd, 'address', null)
-  if (addressWithInfo) {
-    const result = getNodesAndEdges(addressWithInfo)
+  // nachladen
+  const addressAdditional = get(dataAdd, 'address', null)
+  if (addressAdditional) {
+    const result = getNodesAndEdges(addressAdditional)
     edges = [...edges, ...result.edges]
     nodes = [...nodes, ...result.nodes]
   }
@@ -231,10 +260,14 @@ const EthereumGraph = () => {
     labelsList = get(labelsData, 'labels', null)
   }
   nodes = uniqBy(nodes, 'id')
-  // let labels = map(nodes, 'group')
-  // labels = uniqBy(nodes, 'group')
-  // labels = map(labels, ({ group }) => ({ id: group, label: 'Group' + group }))
-  // nodes = [...labels, ...nodes]
+  const labelsListKeyed = keyBy(labelsList, 'id')
+  const order = [0, 3, 6, 1, 5, 2, 7, 8, 4, 9]
+  const labels = map(order, id => (
+    <div className={classes.labelItem}>
+      <div className={classes[`circle${labelsListKeyed[id].id}`]} />
+      {labelsListKeyed[id].name}
+    </div>
+  ))
 
   return (
     <Fragment>
@@ -256,6 +289,11 @@ const EthereumGraph = () => {
                 </form>
               </Paper>
             </Grid>
+            <Grid item xs={12} className={classes.labelWrapper}>
+              {labels}
+            </Grid>
+            {error ? <p>Error :(</p> : null}
+            {/* loading=> speening wheel*/}
             <Grid item xs={12} className={classes.networkContainer}>
               <Network
                 nodes={nodes}

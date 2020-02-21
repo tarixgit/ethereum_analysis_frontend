@@ -52,8 +52,6 @@ const useStyles = makeStyles(theme => ({
 
 const CustomAppBar = ({ handleDrawerOpen, open }) => {
   const classes = useStyles()
-  const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight)
-
   return (
     <div>
       <AppBar

@@ -135,7 +135,7 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-const FeatureTable = ({ loadData }) => {
+const FeatureTable = ({ buildFeatures }) => {
   const classes = useStyles()
   const [order, setOrder] = React.useState('asc')
   const [orderBy, setOrderBy] = React.useState('calories')
@@ -200,8 +200,8 @@ const FeatureTable = ({ loadData }) => {
   return (
     <Paper elevation={3} className={classes.root}>
       <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
-        <Button variant="contained" color="primary" onClick={loadData}>
-          Import new data
+        <Button variant="contained" color="primary" onClick={buildFeatures}>
+          Build features
         </Button>
       </div>
       <Paper elevation={0} className={classes.paper}>

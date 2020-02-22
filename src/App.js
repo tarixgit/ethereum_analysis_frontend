@@ -40,6 +40,8 @@ const App = () => {
   const handleDrawerClose = () => {
     setOpen(false)
   }
+  // TODO Powered by Etherscan.io APIs
+  // TODO Powered by etherscamdb APIs
   return (
     <ApolloProvider client={client}>
       <BrowserRouter>

@@ -12,8 +12,17 @@ import ImportAddressTable from './ImportAddressTable'
 import FeatureTable from './FeatureTable'
 
 const LOAD_DATA = gql`
-  mutation loadData {
+  mutation LoadData {
     loadData {
+      success
+      message
+    }
+  }
+`
+
+const BUILD_FEATURES = gql`
+  mutation BuildFeatures {
+    buildFeatures {
       success
       message
     }
@@ -63,6 +72,7 @@ const Classification = () => {
   const [activeStep, setActiveStep] = React.useState(0)
   const steps = getSteps()
   const [loadData] = useMutation(LOAD_DATA)
+  const [buildFeatures] = useMutation(BUILD_FEATURES)
   const handleNext = () => {
     setActiveStep(prevActiveStep => prevActiveStep + 1)
   }
@@ -94,7 +104,7 @@ const Classification = () => {
       ) : (
         <div>
           {activeStep === 0 && <ImportAddressTable loadData={loadData} />}
-          {activeStep === 1 && <FeatureTable loadData={loadData} />}
+          {activeStep === 1 && <FeatureTable buildFeatures={buildFeatures} />}
           <Typography className={classes.instructions}>
             {getStepContent(activeStep)}
           </Typography>

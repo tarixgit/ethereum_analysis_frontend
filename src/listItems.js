@@ -25,15 +25,17 @@ export const mainListItems = classes => (
         <ListItemIcon>
           <ShoppingCartIcon />
         </ListItemIcon>
-        <ListItemText primary="Classification data" />
+        <ListItemText primary="Data Analyse" />
       </ListItem>
     </Link>
-    <ListItem button>
-      <ListItemIcon>
-        <PeopleIcon />
-      </ListItemIcon>
-      <ListItemText primary="Classification test" />
-    </ListItem>
+    <Link to="/model" className={classes.links}>
+      <ListItem button>
+        <ListItemIcon>
+          <PeopleIcon />
+        </ListItemIcon>
+        <ListItemText primary="Test of address" />
+      </ListItem>
+    </Link>
     <ListItem button>
       <ListItemIcon>
         <PeopleIcon />

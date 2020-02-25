@@ -7,6 +7,7 @@ import Classification from './Classification'
 import CustomAppBar from './CustomAppBar'
 import LeftPanel from './LeftPanel'
 import { makeStyles } from '@material-ui/core/styles'
+import ClassificationTest from './ClassificationTest'
 /*
 function Copyright() {
     return (
@@ -51,6 +52,9 @@ const App = () => {
           <Switch>
             <Route path="/class">
               <Classification />
+            </Route>
+            <Route path="/model">
+              <ClassificationTest />
             </Route>
             <Route path="/:hash">
               <EthereumGraph />

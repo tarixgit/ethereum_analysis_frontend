@@ -59,7 +59,7 @@ const headCells = [
     id: 'numberOfOneTime',
     numeric: false,
     disablePadding: false,
-    label: 'n.OfOneTime',
+    label: 'n.OneTime',
   },
   {
     id: 'numberOfExchange',

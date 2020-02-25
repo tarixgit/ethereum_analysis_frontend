@@ -81,7 +81,7 @@ const regressionOptions = {
   replacement: false,
   nEstimators: 200,
 }
-ß
+
 const ClassificationModel = (callback, deps) => {
   const classes = useStyles()
   const [address, setAddress] = useState(

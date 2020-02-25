@@ -1,12 +1,17 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import { makeStyles } from '@material-ui/core/styles'
 import Paper from '@material-ui/core/Paper'
-import { map, get, truncate } from 'lodash'
+import { map, get, truncate, compact } from 'lodash'
 import Button from '@material-ui/core/Button'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import TextField from '@material-ui/core/TextField'
+import { RandomForestClassifier as RFClassifier } from 'ml-random-forest'
+import { RandomForestRegression as RFRegression } from 'ml-random-forest'
+import LogisticRegression from 'ml-logistic-regression'
+import { Matrix } from 'ml-matrix'
+import KNN from 'ml-knn'
 
 const LOAD_ADDRESS_FEATURES = gql`
   query AddressFeatures($offset: Int!, $limit: Int!) {
@@ -63,11 +68,33 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-const ClassificationModel = ({ buildFeatures }) => {
+const options = {
+  seed: 3,
+  maxFeatures: 0.8,
+  replacement: true,
+  nEstimators: 25,
+}
+
+const regressionOptions = {
+  seed: 3,
+  maxFeatures: 2,
+  replacement: false,
+  nEstimators: 200,
+}
+ß
+const ClassificationModel = (callback, deps) => {
   const classes = useStyles()
   const [address, setAddress] = useState(
     '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
+  const [classifier, setClassifier] = useState(null)
+  const [regression, setRegression] = useState(null)
+  const [knn, setKNN] = useState(null)
+  const [output, setOutput] = useState(null)
+  const [result, setResult] = useState('')
+  const [regressionResult, setRegressionResult] = useState('')
+  const [knnResult, setKnnResult] = useState('')
+
   const { data, loading } = useQuery(LOAD_ADDRESS_FEATURES, {
     variables: { offset: 0, limit: 10000 },
   })
@@ -78,13 +105,68 @@ const ClassificationModel = ({ buildFeatures }) => {
     setAddress(value)
   }
 
+  const buildModels = useCallback(() => {
+    const trainingSet = map(
+      rows,
+      ({
+        numberOfNone,
+        numberOfOneTime,
+        numberOfExchange,
+        numberOfMiningPool,
+        numberOfMiner,
+        numberOfSmContract,
+        numberOfERC20,
+        numberOfERC721,
+        numberOfTrace,
+        medianOfEthProTrans,
+        averageOfEthProTrans,
+      }) => [
+        numberOfNone || 0,
+        numberOfOneTime || 0,
+        numberOfExchange || 0,
+        numberOfMiningPool || 0,
+        numberOfMiner || 0,
+        numberOfSmContract || 0,
+        numberOfERC20 || 0,
+        numberOfERC721 || 0,
+        numberOfTrace || 0,
+        medianOfEthProTrans || 0,
+        averageOfEthProTrans || 0,
+      ]
+    )
+    const predictions = map(rows, ({ scam }) => (scam ? 1 : 0))
+    const newClassifierRF = new RFClassifier(options)
+    newClassifierRF.train(trainingSet, predictions)
+    // const newRegressionRf = new RFRegression(regressionOptions)
+    // newRegressionRf.train(trainingSet, predictions)
+    setClassifier(newClassifierRF)
+    // setRegression(newRegressionRf)
+    // const logreg = new LogisticRegression({
+    //   numSteps: 1000,
+    //   learningRate: 5e-3,
+    // })
+    // const X = new Matrix(trainingSet)
+    // const Y = Matrix.columnVector(predictions)
+    // logreg.train(X, Y)
+    // setRegression(logreg)
+    const knn = new KNN(trainingSet, predictions)
+    setKNN(knn)
+  }, [rows])
+
   const checkAddress = useCallback(() => {
-    // run test
-  })
+    // TODO API call to build new feature for new address
+    const testData = [
+      [1, 1, 2, 0, 0, 0, 0, 0, 0, 0.766776805, 0.766619305],
+      [855, 10, 46, 39, 116, 0, 0, 0, 0, 1, 4.05057682316517],
+    ]
+    const expected = [1, 0]
+    setResult(classifier.predict(testData))
+    setKnnResult(knn.predict(testData))
+  }, [classifier])
   return (
     <Paper elevation={3} className={classes.root}>
       <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
-        <Button variant="contained" color="primary" onClick={buildFeatures}>
+        <Button variant="contained" color="primary" onClick={buildModels}>
           Train
         </Button>
       </div>
@@ -107,7 +189,36 @@ const ClassificationModel = ({ buildFeatures }) => {
           </Button>
         </div>
         <div>Output:</div>
-        <div>{}</div>
+        <div>
+          <TextField
+            id="address-input"
+            label="Result of rf classifcier"
+            fullWidth
+            multiline
+            rows="4"
+            value={result}
+          />
+        </div>
+        <div>
+          <TextField
+            id="address-input"
+            label="Result of KNN"
+            fullWidth
+            multiline
+            rows="4"
+            value={knnResult}
+          />
+        </div>
+        <div>
+          <TextField
+            id="address-input"
+            label="Result of regression"
+            fullWidth
+            multiline
+            rows="4"
+            value={regressionResult}
+          />
+        </div>
       </Paper>
     </Paper>
   )

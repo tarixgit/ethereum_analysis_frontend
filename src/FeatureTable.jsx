@@ -10,29 +10,33 @@ import TablePagination from '@material-ui/core/TablePagination'
 import TableRow from '@material-ui/core/TableRow'
 import TableSortLabel from '@material-ui/core/TableSortLabel'
 import Paper from '@material-ui/core/Paper'
-import { map, get } from 'lodash'
+import { map, get, truncate } from 'lodash'
 import Button from '@material-ui/core/Button'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
+import { Link } from 'react-router-dom'
 
 const LOAD_ADDRESS_FEATURES = gql`
-  query AddressFeatures {
-    addressFeatures {
-      id
-      hash
-      scam
-      numberOfNone
-      numberOfOneTime
-      numberOfExchange
-      numberOfMiningPool
-      numberOfMiner
-      numberOfSmContract
-      numberOfERC20
-      numberOfERC721
-      numberOfTrace
-      numberOfTransaction
-      medianOfEthProTrans
-      averageOfEthProTrans
+  query AddressFeatures($offset: Int!, $limit: Int!) {
+    addressFeatures(offset: $offset, limit: $limit) {
+      rows {
+        id
+        hash
+        scam
+        numberOfNone
+        numberOfOneTime
+        numberOfExchange
+        numberOfMiningPool
+        numberOfMiner
+        numberOfSmContract
+        numberOfERC20
+        numberOfERC721
+        numberOfTrace
+        numberOfTransaction
+        medianOfEthProTrans
+        averageOfEthProTrans
+      }
+      count
     }
   }
 `
@@ -44,28 +48,79 @@ const headCells = [
     disablePadding: true,
     label: 'Ids',
   },
-  { id: 'f0', numeric: false, disablePadding: false, label: 'Feature 0' },
+  { id: 'hash', numeric: false, disablePadding: true, label: 'hash' },
   {
-    id: 'f1',
+    id: 'numberOfNone',
     numeric: false,
     disablePadding: false,
-    label: 'Feature 1',
+    label: 'n.None',
   },
-  { id: 'f2', numeric: false, disablePadding: false, label: 'Feature 2' },
   {
-    id: 'f3',
+    id: 'numberOfOneTime',
     numeric: false,
     disablePadding: false,
-    label: 'Feature 3',
+    label: 'n.OfOneTime',
   },
-  { id: 'f4', numeric: false, disablePadding: false, label: 'Feature 4' },
   {
-    id: 'f5',
+    id: 'numberOfExchange',
     numeric: false,
     disablePadding: false,
-    label: 'Feature 5',
+    label: 'n.Exch.',
   },
-  { id: 'f6', numeric: false, disablePadding: false, label: 'Feature 6' },
+  {
+    id: 'numberOfMiningPool',
+    numeric: false,
+    disablePadding: false,
+    label: 'n.MiningP',
+  },
+  {
+    id: 'numberOfMiner',
+    numeric: false,
+    disablePadding: false,
+    label: 'n.Miner',
+  },
+  {
+    id: 'numberOfSmContract',
+    numeric: false,
+    disablePadding: false,
+    label: 'n.S.Contr',
+  },
+  {
+    id: 'numberOfERC20',
+    numeric: false,
+    disablePadding: false,
+    label: 'n.ERC20',
+  },
+  {
+    id: 'numberOfERC721',
+    numeric: false,
+    disablePadding: false,
+    label: 'n.ERC721',
+  },
+  {
+    id: 'numberOfTrace',
+    numeric: false,
+    disablePadding: false,
+    label: 'n.Trace',
+  },
+  {
+    id: 'numberOfTransaction',
+    numeric: false,
+    disablePadding: false,
+    label: 'n.Trans.',
+  },
+  {
+    id: 'medianOfEthProTrans',
+    numeric: false,
+    disablePadding: false,
+    label: 'medianOfEth',
+  },
+  {
+    id: 'averageOfEthProTrans',
+    numeric: false,
+    disablePadding: false,
+    label: 'Avg.OfEth',
+  },
 ]
 
 const EnhancedTableHead = props => {
@@ -121,6 +176,9 @@ const useStyles = makeStyles(theme => ({
     paddingRight: '19px',
     margin: '10px',
   },
+  button: {
+    padding: 0,
+  },
   paper: {
     width: '100%',
     marginBottom: theme.spacing(2),
@@ -148,13 +206,11 @@ const FeatureTable = ({ buildFeatures }) => {
   const [selected, setSelected] = React.useState([])
   const [page, setPage] = React.useState(0)
   const [rowsPerPage, setRowsPerPage] = React.useState(5)
-  // const { data, loading } = useQuery(LOAD_ADDRESS_FEATURES)
-  // const rows = get(data, 'addressFeatures', [])
-  const rows = [
-    { id: 1, f0: 20, f1: 10, f2: 5, f3: 1, f4: 3, f5: 1, f6: 9 },
-    { id: 2, f0: 11, f1: 50, f2: 5, f3: 1, f4: 3, f5: 1, f6: 9 },
-    { id: 3, f0: 22, f1: 26, f2: 5, f3: 1, f4: 3, f5: 1, f6: 9 },
-  ]
+  const { data, loading } = useQuery(LOAD_ADDRESS_FEATURES, {
+    variables: { offset: page * rowsPerPage, limit: rowsPerPage },
+  })
+  const rows = get(data, 'addressFeatures.rows', [])
+  const count = get(data, 'addressFeatures.count', -1)
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc'
@@ -200,8 +256,7 @@ const FeatureTable = ({ buildFeatures }) => {
     setPage(0)
   }
 
-  const emptyRows =
-    rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage)
+  const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length)
 
   return (
     <Paper elevation={3} className={classes.root}>
@@ -239,13 +294,31 @@ const FeatureTable = ({ buildFeatures }) => {
                   <TableCell component="th" scope="row" padding="none">
                     {row.id}
                   </TableCell>
-                  <TableCell align="right">{row.f1}</TableCell>
-                  <TableCell>{row.f2}</TableCell>
-                  <TableCell>{row.f3}</TableCell>
-                  <TableCell>{row.f4}</TableCell>
-                  <TableCell>{row.f5}</TableCell>
-                  <TableCell>{row.f6}</TableCell>
-                  <TableCell>{row.f0}</TableCell>
+                  <TableCell padding="none">
+                    <Link to={`/${row.hash}`} className={classes.links}>
+                      <Button
+                        color="primary"
+                        className={classes.button}
+                        size="small"
+                      >
+                        {truncate(row.hash, {
+                          length: 10,
+                        })}
+                      </Button>
+                    </Link>
+                  </TableCell>
+                  <TableCell>{row.numberOfNone}</TableCell>
+                  <TableCell>{row.numberOfOneTime}</TableCell>
+                  <TableCell>{row.numberOfExchange}</TableCell>
+                  <TableCell>{row.numberOfMiningPool}</TableCell>
+                  <TableCell>{row.numberOfMiner}</TableCell>
+                  <TableCell>{row.numberOfSmContract}</TableCell>
+                  <TableCell>{row.numberOfERC20}</TableCell>
+                  <TableCell>{row.numberOfERC721}</TableCell>
+                  <TableCell>{row.numberOfTrace}</TableCell>
+                  <TableCell>{row.numberOfTransaction}</TableCell>
+                  <TableCell>{row.medianOfEthProTrans}</TableCell>
+                  <TableCell>{row.averageOfEthProTrans}</TableCell>
                 </TableRow>
               ))}
               {emptyRows > 0 && (
@@ -259,7 +332,7 @@ const FeatureTable = ({ buildFeatures }) => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={rows.length}
+          count={count}
           rowsPerPage={rowsPerPage}
           page={page}
           onChangePage={handleChangePage}

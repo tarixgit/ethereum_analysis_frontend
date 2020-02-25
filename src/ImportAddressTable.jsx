@@ -265,7 +265,7 @@ const ImportAddressTable = ({ loadData }) => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={Math.round(count / rowsPerPage)}
+          count={count}
           rowsPerPage={rowsPerPage}
           page={page}
           onChangePage={handleChangePage}

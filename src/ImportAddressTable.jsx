@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import { makeStyles } from '@material-ui/core/styles'
 import Table from '@material-ui/core/Table'
@@ -17,17 +17,20 @@ import { gql } from 'apollo-boost'
 import { Link } from 'react-router-dom'
 
 const LOAD_IMPORT_ADDRESSES = gql`
-  query MyQuery {
-    importAddresses {
-      category
-      hash
-      coin
-      id
-      name
-      reporter
-      status
-      subcategory
-      url
+  query ImportAddresses($offset: Int!, $limit: Int!) {
+    importAddresses(offset: $offset, limit: $limit) {
+      rows {
+        category
+        hash
+        coin
+        id
+        name
+        reporter
+        status
+        subcategory
+        url
+      }
+      count
     }
   }
 `
@@ -138,13 +141,16 @@ const useStyles = makeStyles(theme => ({
 
 const ImportAddressTable = ({ loadData }) => {
   const classes = useStyles()
-  const [order, setOrder] = React.useState('asc')
-  const [orderBy, setOrderBy] = React.useState('calories')
-  const [selected, setSelected] = React.useState([])
-  const [page, setPage] = React.useState(0)
-  const [rowsPerPage, setRowsPerPage] = React.useState(5)
-  const { data, loading } = useQuery(LOAD_IMPORT_ADDRESSES)
-  const rows = get(data, 'importAddresses', [])
+  const [order, setOrder] = useState('asc')
+  const [orderBy, setOrderBy] = useState('calories')
+  const [selected, setSelected] = useState([])
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(10)
+  const { data, loading } = useQuery(LOAD_IMPORT_ADDRESSES, {
+    variables: { offset: page * rowsPerPage, limit: rowsPerPage },
+  })
+  const rows = get(data, 'importAddresses.rows', [])
+  const count = get(data, 'importAddresses.count', -1)
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc'
@@ -190,8 +196,7 @@ const ImportAddressTable = ({ loadData }) => {
     setPage(0)
   }
 
-  const emptyRows =
-    rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage)
+  const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length)
 
   return (
     <Paper elevation={3} className={classes.root}>
@@ -260,7 +265,7 @@ const ImportAddressTable = ({ loadData }) => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={rows.length}
+          count={Math.round(count / rowsPerPage)}
           rowsPerPage={rowsPerPage}
           page={page}
           onChangePage={handleChangePage}

@@ -15,18 +15,24 @@ import Button from '@material-ui/core/Button'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 
-const LOAD_IMPORT_ADDRESSES = gql`
-  query MyQuery {
-    importAddresses {
-      category
-      hash
-      coin
+const LOAD_ADDRESS_FEATURES = gql`
+  query AddressFeatures {
+    addressFeatures {
       id
-      name
-      reporter
-      status
-      subcategory
-      url
+      hash
+      scam
+      numberOfNone
+      numberOfOneTime
+      numberOfExchange
+      numberOfMiningPool
+      numberOfMiner
+      numberOfSmContract
+      numberOfERC20
+      numberOfERC721
+      numberOfTrace
+      numberOfTransaction
+      medianOfEthProTrans
+      averageOfEthProTrans
     }
   }
 `
@@ -142,8 +148,8 @@ const FeatureTable = ({ buildFeatures }) => {
   const [selected, setSelected] = React.useState([])
   const [page, setPage] = React.useState(0)
   const [rowsPerPage, setRowsPerPage] = React.useState(5)
-  // const { data, loading } = useQuery(LOAD_IMPORT_ADDRESSES)
-  // const rows = get(data, 'importAddresses', [])
+  // const { data, loading } = useQuery(LOAD_ADDRESS_FEATURES)
+  // const rows = get(data, 'addressFeatures', [])
   const rows = [
     { id: 1, f0: 20, f1: 10, f2: 5, f3: 1, f4: 3, f5: 1, f6: 9 },
     { id: 2, f0: 11, f1: 50, f2: 5, f3: 1, f4: 3, f5: 1, f6: 9 },

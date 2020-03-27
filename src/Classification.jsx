@@ -12,7 +12,7 @@ import ImportAddressTable from './ImportAddressTable'
 import FeatureTable from './FeatureTable'
 import ClassificationModel from './ClassificationModel'
 
-const LOAD_DATA = gql`
+const IMPORT_DATA = gql`
   mutation LoadData {
     loadData {
       success
@@ -23,7 +23,7 @@ const LOAD_DATA = gql`
 
 const BUILD_FEATURES = gql`
   mutation BuildFeatures {
-    buildFeatures {
+    recalcFeatures {
       success
       message
     }
@@ -72,8 +72,15 @@ const Classification = () => {
   const classes = useStyles()
   const [activeStep, setActiveStep] = React.useState(0)
   const steps = getSteps()
-  const [loadData] = useMutation(LOAD_DATA)
-  const [buildFeatures] = useMutation(BUILD_FEATURES)
+  const [importData] = useMutation(IMPORT_DATA)
+  const [buildFeatures, { loading }] = useMutation(BUILD_FEATURES, {
+    cachePolicy: 'no-cache',
+    ignoreResults: true,
+    optimisticResponse: {
+      success: true,
+      message: 'ok',
+    },
+  })
   const handleNext = () => {
     setActiveStep(prevActiveStep => prevActiveStep + 1)
   }
@@ -104,8 +111,13 @@ const Classification = () => {
         </div>
       ) : (
         <div>
-          {activeStep === 0 && <ImportAddressTable loadData={loadData} />}
-          {activeStep === 1 && <FeatureTable buildFeatures={buildFeatures} />}
+          {activeStep === 0 && <ImportAddressTable importData={importData} />}
+          {activeStep === 1 && (
+            <FeatureTable
+              buildFeatures={buildFeatures}
+              buildRunning={loading}
+            />
+          )}
           {activeStep === 2 && <ClassificationModel />}
           <Typography className={classes.instructions}>
             {getStepContent(activeStep)}

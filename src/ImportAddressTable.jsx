@@ -16,6 +16,10 @@ import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import { Link } from 'react-router-dom'
 
+// .MuiTableCell-sizeSmall {
+//   padding: 3px 1px 3px 1px;
+// }
+
 const LOAD_IMPORT_ADDRESSES = gql`
   query ImportAddresses($offset: Int!, $limit: Int!) {
     importAddresses(offset: $offset, limit: $limit) {
@@ -139,7 +143,7 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-const ImportAddressTable = ({ loadData }) => {
+const ImportAddressTable = ({ importData }) => {
   const classes = useStyles()
   const [order, setOrder] = useState('asc')
   const [orderBy, setOrderBy] = useState('calories')
@@ -201,9 +205,12 @@ const ImportAddressTable = ({ loadData }) => {
   return (
     <Paper elevation={3} className={classes.root}>
       <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
-        <Button variant="contained" color="primary" onClick={loadData}>
-          Import new data
+        <Button variant="contained" color="primary" onClick={importData}>
+          Import blacklist data
         </Button>
+      </div>
+      <div>
+        <span>Blacklist and whitelist together</span>
       </div>
       <Paper elevation={0} className={classes.paper}>
         <TableContainer>

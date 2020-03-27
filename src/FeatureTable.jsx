@@ -199,7 +199,7 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-const FeatureTable = ({ buildFeatures }) => {
+const FeatureTable = ({ buildFeatures, buildRunning }) => {
   const classes = useStyles()
   const [order, setOrder] = React.useState('asc')
   const [orderBy, setOrderBy] = React.useState('calories')
@@ -261,7 +261,12 @@ const FeatureTable = ({ buildFeatures }) => {
   return (
     <Paper elevation={3} className={classes.root}>
       <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
-        <Button variant="contained" color="primary" onClick={buildFeatures}>
+        <Button
+          variant="contained"
+          color="primary"
+          disbaled={buildRunning}
+          onClick={buildFeatures}
+        >
           Build features
         </Button>
       </div>

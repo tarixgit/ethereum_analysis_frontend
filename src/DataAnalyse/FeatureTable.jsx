@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import PropTypes from 'prop-types'
 import { makeStyles } from '@material-ui/core/styles'
 import Table from '@material-ui/core/Table'
@@ -15,6 +15,7 @@ import Button from '@material-ui/core/Button'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import { Link } from 'react-router-dom'
+import download from 'downloadjs'
 
 const LOAD_ADDRESS_FEATURES = gql`
   query AddressFeatures($offset: Int!, $limit: Int!) {
@@ -206,12 +207,37 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
   const [selected, setSelected] = React.useState([])
   const [page, setPage] = React.useState(0)
   const [rowsPerPage, setRowsPerPage] = React.useState(5)
-  const { data, loading } = useQuery(LOAD_ADDRESS_FEATURES, {
-    variables: { offset: page * rowsPerPage, limit: rowsPerPage },
-  })
+  const { data, loading: exportAddFeatureRunning } = useQuery(
+    LOAD_ADDRESS_FEATURES,
+    {
+      variables: { offset: page * rowsPerPage, limit: rowsPerPage },
+    }
+  )
   const rows = get(data, 'addressFeatures.rows', [])
   const count = get(data, 'addressFeatures.count', -1)
-
+  const exportAddFeatures = useCallback(() => {
+    const headers = 'test'
+    const exportAddress = 'test jawohl'
+    // TODO move to separate function
+    download(
+      `data:text/csv;charset=utf-8,\ufeff${encodeURI(
+        `${headers}\r\n${exportAddress}`
+      )}`,
+      `addressFeature-${new Date().toISOString()}.csv`,
+      'text/csv'
+    )
+  })
+  const exportTransFeatures = useCallback(() => {
+    const headers = 'test'
+    const exportAddress = 'test jawohl'
+    download(
+      `data:text/csv;charset=utf-8,\ufeff${encodeURI(
+        `${headers}\r\n${exportAddress}`
+      )}`,
+      `addressFeature-${new Date().toISOString()}.csv`,
+      'text/csv'
+    )
+  })
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc'
     setOrder(isAsc ? 'desc' : 'asc')
@@ -257,7 +283,7 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
   }
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length)
-
+  // TODO Menu stat 3 Buttons
   return (
     <Paper elevation={3} className={classes.root}>
       <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
@@ -268,6 +294,22 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
           onClick={buildFeatures}
         >
           Build features
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          disbaled={exportAddFeatureRunning}
+          onClick={exportAddFeatures}
+        >
+          Export address features
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          // disbaled={exportTransFeatureRunning}
+          onClick={exportTransFeatures}
+        >
+          Export trans. features
         </Button>
       </div>
       <Paper elevation={0} className={classes.paper}>

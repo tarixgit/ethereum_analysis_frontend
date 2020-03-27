@@ -34,14 +34,21 @@ const useStyles = makeStyles(theme => ({
   root: {
     display: 'flex',
   },
+  stepperHeader: {
+    display: 'flex',
+    alignItems: 'center',
+  },
   appBarSpacer: theme.mixins.toolbar,
   content: {
     flexGrow: 1,
     height: '100vh',
     overflow: 'visible', // scroll to visible for tests
   },
-  backButton: {
-    marginRight: theme.spacing(1),
+  stepButton: {
+    flex: 1,
+  },
+  stepper: {
+    flex: 15,
   },
   instructions: {
     marginTop: theme.spacing(1),
@@ -66,7 +73,7 @@ const getStepContent = stepIndex => {
 
 const Classification = () => {
   const classes = useStyles()
-  const [activeStep, setActiveStep] = React.useState(0)
+  const [activeStep, setActiveStep] = React.useState(1)
   const steps = getSteps()
   const [importData] = useMutation(IMPORT_DATA)
   const [buildFeatures, { loading }] = useMutation(BUILD_FEATURES, {
@@ -91,13 +98,37 @@ const Classification = () => {
   return (
     <main className={classes.content}>
       <div className={classes.appBarSpacer} />
-      <Stepper activeStep={activeStep} alternativeLabel>
-        {steps.map(label => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
+      <div className={classes.stepperHeader}>
+        <Button
+          className={classes.stepButton}
+          variant="contained"
+          color="primary"
+          disabled={activeStep === 0}
+          onClick={handleBack}
+        >
+          Back
+        </Button>
+        <Stepper
+          className={classes.stepper}
+          activeStep={activeStep}
+          alternativeLabel
+        >
+          {steps.map(label => (
+            <Step key={label}>
+              <StepLabel>{label}</StepLabel>
+            </Step>
+          ))}
+        </Stepper>
+
+        <Button
+          className={classes.stepButton}
+          variant="contained"
+          color="primary"
+          onClick={handleNext}
+        >
+          {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+        </Button>
+      </div>
       {activeStep === steps.length ? (
         <div>
           <Typography className={classes.instructions}>
@@ -118,18 +149,6 @@ const Classification = () => {
           <Typography className={classes.instructions}>
             {getStepContent(activeStep)}
           </Typography>
-          <div>
-            <Button
-              disabled={activeStep === 0}
-              onClick={handleBack}
-              className={classes.backButton}
-            >
-              Back
-            </Button>
-            <Button variant="contained" color="primary" onClick={handleNext}>
-              {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
-            </Button>
-          </div>
         </div>
       )}
     </main>

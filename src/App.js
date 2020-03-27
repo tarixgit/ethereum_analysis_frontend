@@ -2,12 +2,12 @@ import React from 'react'
 import { BrowserRouter, Switch, Route } from 'react-router-dom'
 import ApolloClient from 'apollo-boost'
 import { ApolloProvider } from '@apollo/react-hooks'
-import EthereumGraph from './EthereumGraph'
-import Classification from './Classification'
+import EthereumGraph from './Graph/EthereumGraph'
+import Classification from './DataAnalyse/Classification'
 import CustomAppBar from './CustomAppBar'
-import LeftPanel from './LeftPanel'
+import LeftPanel from './LeftPanel/LeftPanel'
 import { makeStyles } from '@material-ui/core/styles'
-import ClassificationTest from './ClassificationTest'
+import ClassificationTest from './AddressTest/ClassificationTest'
 /*
 function Copyright() {
     return (

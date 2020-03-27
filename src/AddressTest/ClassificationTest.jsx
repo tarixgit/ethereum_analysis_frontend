@@ -1,6 +1,6 @@
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles'
-import ClassificationModel from './ClassificationModel'
+import ClassificationModel from '../DataAnalyse/ClassificationModel'
 
 const useStyles = makeStyles(theme => ({
   root: {

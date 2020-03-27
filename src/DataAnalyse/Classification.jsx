@@ -49,20 +49,16 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-const getSteps = () => [
-  'Laden die Daten',
-  'Bauen von Features',
-  'Bauen vom Model',
-]
+const getSteps = () => ['Black & white addresses', 'Features', 'Model']
 
 const getStepContent = stepIndex => {
   switch (stepIndex) {
     case 0:
-      return 'Laden die Daten vom https://etherscamdb.info'
+      return 'Data is from https://etherscamdb.info'
     case 1:
-      return 'Bauen von Features'
+      return 'Features Analyse'
     case 2:
-      return 'Bauen vom Model'
+      return 'Model training and testing'
     default:
       return 'Unknown stepIndex'
   }

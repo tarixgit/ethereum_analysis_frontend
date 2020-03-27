@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useState } from 'react'
 import PropTypes from 'prop-types'
 import { makeStyles } from '@material-ui/core/styles'
 import Table from '@material-ui/core/Table'
@@ -10,12 +10,13 @@ import TablePagination from '@material-ui/core/TablePagination'
 import TableRow from '@material-ui/core/TableRow'
 import TableSortLabel from '@material-ui/core/TableSortLabel'
 import Paper from '@material-ui/core/Paper'
-import { map, get, truncate } from 'lodash'
+import { map, get, truncate, slice } from 'lodash'
 import Button from '@material-ui/core/Button'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import { Link } from 'react-router-dom'
 import download from 'downloadjs'
+import { FormattedNumber, useIntl } from 'react-intl'
 
 const LOAD_ADDRESS_FEATURES = gql`
   query AddressFeatures($offset: Int!, $limit: Int!) {
@@ -200,43 +201,49 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
+const exportToCSV = (headCells, rows, formatNumber) => {
+  const headers = map(headCells, 'id').join(';')
+  const rowsString = map(rows, row =>
+    map(headCells, ({ id }) => formatNumber(row[id])).join(';')
+  ).join('\r\n')
+
+  download(
+    `data:text/csv;charset=utf-8,\ufeff${encodeURI(
+      `${headers}\r\n${rowsString}`
+    )}`,
+    `addressFeature-${new Date().toISOString()}.csv`,
+    'text/csv'
+  )
+}
+
 const FeatureTable = ({ buildFeatures, buildRunning }) => {
   const classes = useStyles()
-  const [order, setOrder] = React.useState('asc')
-  const [orderBy, setOrderBy] = React.useState(null) // sorting option
-  const [selected, setSelected] = React.useState([])
-  const [page, setPage] = React.useState(0)
-  const [rowsPerPage, setRowsPerPage] = React.useState(5)
-  const { data, loading: exportAddFeatureRunning } = useQuery(
-    LOAD_ADDRESS_FEATURES,
-    {
-      variables: { offset: page * rowsPerPage, limit: rowsPerPage },
-    }
-  )
-  const rows = get(data, 'addressFeatures.rows', [])
-  const count = get(data, 'addressFeatures.count', -1)
-  const exportAddFeatures = useCallback(() => {
-    const headers = 'test'
-    const exportAddress = 'test jawohl'
-    // TODO move to separate function
-    download(
-      `data:text/csv;charset=utf-8,\ufeff${encodeURI(
-        `${headers}\r\n${exportAddress}`
-      )}`,
-      `addressFeature-${new Date().toISOString()}.csv`,
-      'text/csv'
-    )
+  const { formatNumber } = useIntl()
+  const [order, setOrder] = useState('asc')
+  const [orderBy, setOrderBy] = useState('id') // sorting option
+  const [selected, setSelected] = useState([])
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(5)
+  const {
+    data,
+    refetch,
+    loading: exportAddFeatureRunning,
+    networkStatus,
+  } = useQuery(LOAD_ADDRESS_FEATURES, {
+    variables: { offset: page * rowsPerPage, limit: rowsPerPage },
   })
-  const exportTransFeatures = useCallback(() => {
-    const headers = 'test'
-    const exportAddress = 'test jawohl'
-    download(
-      `data:text/csv;charset=utf-8,\ufeff${encodeURI(
-        `${headers}\r\n${exportAddress}`
-      )}`,
-      `addressFeature-${new Date().toISOString()}.csv`,
-      'text/csv'
-    )
+  let rows = get(data, 'addressFeatures.rows', [])
+  rows = slice(rows, 0, rowsPerPage) // hack because of export/refetching
+  const count = get(data, 'addressFeatures.count', -1)
+  const exportAddFeatures = useCallback(async () => {
+    const { data: dataToExport } = await refetch({ offset: 0, limit: 10000 })
+    const rows = get(dataToExport, 'addressFeatures.rows', [])
+    exportToCSV(headCells, rows, formatNumber)
+  })
+  const exportTransFeatures = useCallback(async () => {
+    const { data } = await refetch({ offset: 0, limit: 10000 })
+    const rows = get(data, 'addressFeatures.rows', [])
+    exportToCSV(headCells, rows, formatNumber)
   })
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc'
@@ -290,7 +297,7 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
         <Button
           variant="contained"
           color="primary"
-          disbaled={buildRunning}
+          disabled={buildRunning}
           onClick={buildFeatures}
         >
           Build features
@@ -298,7 +305,7 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
         <Button
           variant="contained"
           color="primary"
-          disbaled={exportAddFeatureRunning}
+          disabled={exportAddFeatureRunning}
           onClick={exportAddFeatures}
         >
           Export address features
@@ -365,8 +372,12 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
                   <TableCell>{row.numberOfERC721}</TableCell>
                   <TableCell>{row.numberOfTrace}</TableCell>
                   <TableCell>{row.numberOfTransaction}</TableCell>
-                  <TableCell>{row.medianOfEthProTrans}</TableCell>
-                  <TableCell>{row.averageOfEthProTrans}</TableCell>
+                  <TableCell>
+                    <FormattedNumber value={row.medianOfEthProTrans} />
+                  </TableCell>
+                  <TableCell>
+                    <FormattedNumber value={row.averageOfEthProTrans} />
+                  </TableCell>
                 </TableRow>
               ))}
               {emptyRows > 0 && (

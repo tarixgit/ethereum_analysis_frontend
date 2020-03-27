@@ -1,5 +1,6 @@
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles'
+import Container from '@material-ui/core/Container'
 import Button from '@material-ui/core/Button'
 import StepLabel from '@material-ui/core/StepLabel'
 import Stepper from '@material-ui/core/Stepper'
@@ -7,10 +8,10 @@ import Typography from '@material-ui/core/Typography'
 import Step from '@material-ui/core/Step'
 import { gql } from 'apollo-boost'
 import { useMutation } from '@apollo/react-hooks'
-import Paper from '@material-ui/core/Paper'
 import ImportAddressTable from './ImportAddressTable'
 import FeatureTable from './FeatureTable'
 import ClassificationModel from './ClassificationModel'
+import Grid from '@material-ui/core/Grid'
 
 const IMPORT_DATA = gql`
   mutation LoadData {
@@ -42,17 +43,20 @@ const useStyles = makeStyles(theme => ({
   content: {
     flexGrow: 1,
     height: '100vh',
-    overflow: 'visible', // scroll to visible for tests
-  },
-  stepButton: {
-    flex: 1,
-  },
-  stepper: {
-    flex: 15,
+    overflow: 'auto',
+    // overflowY: 'visible', // scroll to visible for tests
   },
   instructions: {
     marginTop: theme.spacing(1),
     marginBottom: theme.spacing(1),
+  },
+  container: {
+    paddingTop: theme.spacing(1),
+    paddingBottom: theme.spacing(1),
+  },
+  nextButton: {
+    display: 'flex',
+    flexDirection: 'row-reverse',
   },
 }))
 
@@ -73,7 +77,7 @@ const getStepContent = stepIndex => {
 
 const Classification = () => {
   const classes = useStyles()
-  const [activeStep, setActiveStep] = React.useState(1)
+  const [activeStep, setActiveStep] = React.useState(0)
   const steps = getSteps()
   const [importData] = useMutation(IMPORT_DATA)
   const [buildFeatures, { loading }] = useMutation(BUILD_FEATURES, {
@@ -98,59 +102,57 @@ const Classification = () => {
   return (
     <main className={classes.content}>
       <div className={classes.appBarSpacer} />
-      <div className={classes.stepperHeader}>
-        <Button
-          className={classes.stepButton}
-          variant="contained"
-          color="primary"
-          disabled={activeStep === 0}
-          onClick={handleBack}
-        >
-          Back
-        </Button>
-        <Stepper
-          className={classes.stepper}
-          activeStep={activeStep}
-          alternativeLabel
-        >
-          {steps.map(label => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+      <Container maxWidth="xl" className={classes.container}>
+        {/*<div className={classes.stepperHeader}>*/}
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Grid container justify="space-between" alignItems="center">
+              <Grid item xs={3} md={2} lg={1}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  disabled={activeStep === 0}
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+              </Grid>
+              <Grid item xs={6} md={8} lg={10}>
+                <Stepper activeStep={activeStep} alternativeLabel>
+                  {steps.map(label => (
+                    <Step key={label}>
+                      <StepLabel>{label}</StepLabel>
+                    </Step>
+                  ))}
+                </Stepper>
+              </Grid>
+              <Grid item xs={3} md={2} lg={1} className={classes.nextButton}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleNext}
+                >
+                  {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+                </Button>
+              </Grid>
+            </Grid>
+          </Grid>
 
-        <Button
-          className={classes.stepButton}
-          variant="contained"
-          color="primary"
-          onClick={handleNext}
-        >
-          {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
-        </Button>
-      </div>
-      {activeStep === steps.length ? (
-        <div>
-          <Typography className={classes.instructions}>
-            All steps completed
-          </Typography>
-          <Button onClick={handleReset}>Reset</Button>
-        </div>
-      ) : (
-        <div>
-          {activeStep === 0 && <ImportAddressTable importData={importData} />}
-          {activeStep === 1 && (
-            <FeatureTable
-              buildFeatures={buildFeatures}
-              buildRunning={loading}
-            />
-          )}
-          {activeStep === 2 && <ClassificationModel />}
-          <Typography className={classes.instructions}>
-            {getStepContent(activeStep)}
-          </Typography>
-        </div>
-      )}
+          <Grid item xs={12}>
+            {activeStep === 0 && <ImportAddressTable importData={importData} />}
+            {activeStep === 1 && (
+              <FeatureTable
+                buildFeatures={buildFeatures}
+                buildRunning={loading}
+              />
+            )}
+            {activeStep === 2 && <ClassificationModel />}
+            <Typography className={classes.instructions}>
+              {getStepContent(activeStep)}
+            </Typography>
+          </Grid>
+        </Grid>
+      </Container>
     </main>
   )
 }

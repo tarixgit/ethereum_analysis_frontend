@@ -39,18 +39,19 @@ const LOAD_ADDRESS_FEATURES = gql`
 `
 const useStyles = makeStyles(theme => ({
   root: {
-    // width: '100%',
-    paddingTop: '19px',
-    paddingLeft: '19px',
-    paddingRight: '19px',
-    margin: '10px',
+    padding: theme.spacing(2),
+    display: 'flex',
+    overflow: 'auto',
+    flexDirection: 'column',
   },
   button: {
     padding: 0,
   },
   paper: {
-    width: '100%',
-    marginBottom: theme.spacing(2),
+    padding: theme.spacing(2),
+    display: 'flex',
+    overflow: 'auto',
+    flexDirection: 'column',
   },
   table: {
     minWidth: 750,

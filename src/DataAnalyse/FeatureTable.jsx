@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import { makeStyles } from '@material-ui/core/styles'
 import Table from '@material-ui/core/Table'
@@ -12,7 +12,7 @@ import TableSortLabel from '@material-ui/core/TableSortLabel'
 import Paper from '@material-ui/core/Paper'
 import { map, get, truncate, slice } from 'lodash'
 import Button from '@material-ui/core/Button'
-import { useQuery } from '@apollo/react-hooks'
+import { useLazyQuery, useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import { Link } from 'react-router-dom'
 import download from 'downloadjs'
@@ -42,6 +42,26 @@ const LOAD_ADDRESS_FEATURES = gql`
     }
   }
 `
+
+//transactionFeatures
+
+const LOAD_TRANSACTION_FEATURES = gql`
+  query TransactionFeatures {
+    transactionFeatures {
+      id
+      amount
+      timestamp
+      to
+      scam
+    }
+  }
+`
+const headTransactionCells = [
+  { id: 'id' },
+  { id: 'scam' },
+  { id: 'amount' },
+  { id: 'timestamp' },
+]
 
 const headCells = [
   {
@@ -233,6 +253,16 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
   } = useQuery(LOAD_ADDRESS_FEATURES, {
     variables: { offset: page * rowsPerPage, limit: rowsPerPage },
   })
+  const [
+    getTransactionFeatures,
+    {
+      data: transFeatures,
+      refetch: refetchTransFeatures,
+      loading: exportTransFeatureRunning,
+      called,
+    },
+  ] = useLazyQuery(LOAD_TRANSACTION_FEATURES)
+
   let rows = get(data, 'addressFeatures.rows', [])
   rows = slice(rows, 0, rowsPerPage) // hack because of export/refetching
   const count = get(data, 'addressFeatures.count', -1)
@@ -241,10 +271,19 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
     const rows = get(dataToExport, 'addressFeatures.rows', [])
     exportToCSV(headCells, rows, formatNumber)
   })
+
+  useEffect(() => {
+    // TODO every time download?
+    // TODO Hash of Address is wrong in export
+    if (called) {
+      exportToCSV(headTransactionCells, transFeatures, formatNumber)
+    }
+  }, [transFeatures, getTransactionFeatures])
   const exportTransFeatures = useCallback(async () => {
-    const { data } = await refetch({ offset: 0, limit: 10000 })
-    const rows = get(data, 'addressFeatures.rows', [])
-    exportToCSV(headCells, rows, formatNumber)
+    await getTransactionFeatures()
+    // const { data } = await getTransactionFeatures()
+    // const rows = get(data, 'addressFeatures.rows', [])
+    // exportToCSV(headCells, rows, formatNumber)
   })
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc'
@@ -314,7 +353,7 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
         <Button
           variant="contained"
           color="primary"
-          // disbaled={exportTransFeatureRunning}
+          disbaled={exportTransFeatureRunning}
           onClick={exportTransFeatures}
         >
           Export trans. features

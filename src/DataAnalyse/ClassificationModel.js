@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import { makeStyles } from '@material-ui/core/styles'
 import Paper from '@material-ui/core/Paper'
-import { map, get, truncate, compact } from 'lodash'
+import { map, get, takeRight, take, shuffle, truncate, compact } from 'lodash'
 import Button from '@material-ui/core/Button'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
@@ -10,7 +10,7 @@ import TextField from '@material-ui/core/TextField'
 import { RandomForestClassifier as RFClassifier } from 'ml-random-forest'
 import { RandomForestRegression as RFRegression } from 'ml-random-forest'
 import LogisticRegression from 'ml-logistic-regression'
-import { Matrix } from 'ml-matrix'
+import { Matrix } from 'ml-matrix' //"ml-matrix": "5.3.0",
 import KNN from 'ml-knn'
 
 const LOAD_ADDRESS_FEATURES = gql`
@@ -29,9 +29,11 @@ const LOAD_ADDRESS_FEATURES = gql`
         numberOfERC20
         numberOfERC721
         numberOfTrace
-        numberOfTransaction
         medianOfEthProTrans
         averageOfEthProTrans
+        numberOfTransInput
+        numberOfTransOutput
+        numberOfTransactions
       }
       count
     }
@@ -70,100 +72,148 @@ const useStyles = makeStyles(theme => ({
 }))
 
 const options = {
-  seed: 3,
-  maxFeatures: 0.8,
-  replacement: true,
+  seed: 3, // for random function(MersenneTwister) for bagging
+  maxFeatures: 0.8, // part of features used for bagging
+  replacement: true, // for bagging
   nEstimators: 25,
 }
-
+// todo needed useSampleBagging to true - hillft gegen overfiting, default false
+// featureBagging alwazs run, cause we have nEstimators
 const regressionOptions = {
   seed: 3,
-  maxFeatures: 2,
-  replacement: false,
-  nEstimators: 200,
+  maxFeatures: 1,
+  replacement: true,
+  nEstimators: 1,
 }
 
+const fitAndGetFeatures = data => {
+  return map(data, item => {
+    const {
+      numberOfNone,
+      numberOfOneTime,
+      numberOfExchange,
+      numberOfMiningPool,
+      numberOfMiner,
+      numberOfSmContract,
+      numberOfERC20,
+      numberOfERC721,
+      numberOfTrace,
+      medianOfEthProTrans,
+      averageOfEthProTrans,
+      numberOfTransInput,
+      numberOfTransOutput,
+      numberOfTransactions,
+    } = item
+    const sumOfNeigbours =
+      numberOfNone +
+      numberOfOneTime +
+      numberOfExchange +
+      numberOfMiningPool +
+      numberOfMiner +
+      numberOfSmContract +
+      numberOfERC20 +
+      numberOfERC721 +
+      numberOfTrace
+    return [
+      -1 + (numberOfNone / sumOfNeigbours) * 2,
+      -1 + (numberOfOneTime / sumOfNeigbours) * 2,
+      -1 + (numberOfExchange / sumOfNeigbours) * 2,
+      -1 + (numberOfMiningPool / sumOfNeigbours) * 2,
+      -1 + (numberOfMiner / sumOfNeigbours) * 2,
+      -1 + (numberOfSmContract / sumOfNeigbours) * 2,
+      -1 + (numberOfERC20 / sumOfNeigbours) * 2,
+      -1 + (numberOfERC721 / sumOfNeigbours) * 2,
+      -1 + (numberOfTrace / sumOfNeigbours) * 2,
+      -1 + medianOfEthProTrans * 2,
+      -1 + averageOfEthProTrans * 2,
+      -1 + (numberOfTransInput / numberOfTransactions) * 2,
+      -1 + (numberOfTransOutput / numberOfTransactions) * 2,
+      //numberOfTransaction,
+    ]
+  })
+}
+
+const calcErrorRate = (predicted, predictedMustBe) => {
+  console.log(predicted)
+  const isCorrect = map(predicted, (x, index) => x === predictedMustBe[index])
+  console.log(isCorrect)
+  const correcrNumber = compact(isCorrect)
+  console.log(correcrNumber.length / isCorrect.length)
+}
 const ClassificationModel = (callback, deps) => {
   const classes = useStyles()
   const [address, setAddress] = useState(
     '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
+  // 3 Classifier
   const [classifier, setClassifier] = useState(null)
   const [regression, setRegression] = useState(null)
   const [knn, setKNN] = useState(null)
+
   const [output, setOutput] = useState(null)
   const [result, setResult] = useState('')
   const [regressionResult, setRegressionResult] = useState('')
   const [knnResult, setKnnResult] = useState('')
 
   const { data, loading } = useQuery(LOAD_ADDRESS_FEATURES, {
-    variables: { offset: 0, limit: 10000 },
+    variables: { offset: 0, limit: 0 },
   })
   const rows = get(data, 'addressFeatures.rows', [])
   //const count = get(data, 'addressFeatures.count', -1)
-  const changeAddress = e => {
-    const { value } = e.target
-    setAddress(value)
-  }
-
+  const changeAddress = useCallback(
+    e => {
+      const { value } = e.target
+      setAddress(value)
+    },
+    [setAddress]
+  )
+  // todo maybe move out?
   const buildModels = useCallback(() => {
-    const trainingSet = map(
-      rows,
-      ({
-        numberOfNone,
-        numberOfOneTime,
-        numberOfExchange,
-        numberOfMiningPool,
-        numberOfMiner,
-        numberOfSmContract,
-        numberOfERC20,
-        numberOfERC721,
-        numberOfTrace,
-        medianOfEthProTrans,
-        averageOfEthProTrans,
-      }) => [
-        numberOfNone || 0,
-        numberOfOneTime || 0,
-        numberOfExchange || 0,
-        numberOfMiningPool || 0,
-        numberOfMiner || 0,
-        numberOfSmContract || 0,
-        numberOfERC20 || 0,
-        numberOfERC721 || 0,
-        numberOfTrace || 0,
-        medianOfEthProTrans || 0,
-        averageOfEthProTrans || 0,
-      ]
-    )
-    const predictions = map(rows, ({ scam }) => (scam ? 1 : 0))
+    const rowsShuffled = shuffle(rows)
+    const fullSet = fitAndGetFeatures(rowsShuffled)
+    // TODO check if ||0 still actual
+
+    const fullPredictions = map(rowsShuffled, ({ scam }) => (scam ? 1 : 0))
+    const trainingSet = take(fullSet, rows.length * 0.9)
+    const trainingPredictions = take(fullPredictions, rows.length * 0.9)
     const newClassifierRF = new RFClassifier(options)
-    newClassifierRF.train(trainingSet, predictions)
-    // const newRegressionRf = new RFRegression(regressionOptions)
-    // newRegressionRf.train(trainingSet, predictions)
+    newClassifierRF.train(trainingSet, trainingPredictions)
+
+    const testData = takeRight(fullSet, rows.length * 0.1)
+    const testDataPrediction = takeRight(fullPredictions, rows.length * 0.1)
+    const predicted = newClassifierRF.predict(testData)
+
+    calcErrorRate(predicted, testDataPrediction)
     setClassifier(newClassifierRF)
+
+    // const newRegressionRf = new RFRegression(regressionOptions)
+    // newRegressionRf.train(trainingSet, trainingPredictions)
+    // const predictedRegression = newRegressionRf.predict(testData)
+    // calcErrorRate(predictedRegression, testDataPrediction)
     // setRegression(newRegressionRf)
-    // const logreg = new LogisticRegression({
-    //   numSteps: 1000,
-    //   learningRate: 5e-3,
-    // })
-    // const X = new Matrix(trainingSet)
-    // const Y = Matrix.columnVector(predictions)
-    // logreg.train(X, Y)
-    // setRegression(logreg)
-    const knn = new KNN(trainingSet, predictions)
-    setKNN(knn)
+
+    const logreg = new LogisticRegression({
+      numSteps: 1000,
+      learningRate: 5e-3,
+    })
+
+    const X = new Matrix(trainingSet)
+    const Y = Matrix.columnVector(trainingPredictions)
+    logreg.train(X, Y)
+    const predictedLogreg = logreg.predict(new Matrix(testData))
+    calcErrorRate(predictedLogreg, testDataPrediction)
+    setRegression(logreg)
+    // const knn = new KNN(trainingSet, trainingPredictions)
+    // setKNN(knn)
+    // const predictedKNN = knn.predict(testData)
+    // calcErrorRate(predictedKNN, testDataPrediction)
   }, [rows])
 
-  const checkAddress = useCallback(() => {
-    // TODO API call to build new feature for new address
-    const testData = [
-      [1, 1, 2, 0, 0, 0, 0, 0, 0, 0.766776805, 0.766619305],
-      [855, 10, 46, 39, 116, 0, 0, 0, 0, 1, 4.05057682316517],
-    ]
-    const expected = [1, 0]
-    setResult(classifier.predict(testData))
-    setKnnResult(knn.predict(testData))
-  }, [classifier])
+  // const checkAddress = useCallback(() => {
+  //   // TODO API call to build new feature for new address
+  //   setResult(classifier.predict(testData))
+  //   setKnnResult(knn.predict(testData))
+  // }, [classifier])
   return (
     <Paper elevation={3} className={classes.root}>
       <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
@@ -175,7 +225,7 @@ const ClassificationModel = (callback, deps) => {
         <div>Output:</div>
         <div>{}</div>
         <div>
-          <form onSubmit={checkAddress}>
+          <form onSubmit={() => {}}>
             <TextField
               id="address-input"
               label="Address"
@@ -185,7 +235,7 @@ const ClassificationModel = (callback, deps) => {
               onChange={changeAddress}
             />
           </form>
-          <Button variant="contained" color="primary" onClick={checkAddress}>
+          <Button variant="contained" color="primary" onClick={() => {}}>
             Check Address
           </Button>
         </div>
@@ -226,3 +276,5 @@ const ClassificationModel = (callback, deps) => {
 }
 
 export default ClassificationModel
+
+// accuracy

@@ -1,17 +1,19 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { Fragment, useCallback, useContext, useState } from 'react'
 import PropTypes from 'prop-types'
-import { makeStyles } from '@material-ui/core/styles'
-import Paper from '@material-ui/core/Paper'
-import { map, get, takeRight, take, shuffle, truncate, compact } from 'lodash'
-import Button from '@material-ui/core/Button'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
-import TextField from '@material-ui/core/TextField'
+import { map, get, takeRight, take, shuffle, truncate, compact } from 'lodash'
+import { makeStyles } from '@material-ui/core/styles'
+import { Paper, Button, CircularProgress, TextField } from '@material-ui/core'
+import { green } from '@material-ui/core/colors'
 import { RandomForestClassifier as RFClassifier } from 'ml-random-forest'
-import { RandomForestRegression as RFRegression } from 'ml-random-forest'
+import clsx from 'clsx'
+// import { RandomForestRegression as RFRegression } from 'ml-random-forest'
 import LogisticRegression from 'ml-logistic-regression'
 import { Matrix } from 'ml-matrix' //"ml-matrix": "5.3.0",
 import KNN from 'ml-knn'
+import Table from '../components/Table'
+import { ModelContext } from '../App'
 
 const LOAD_ADDRESS_FEATURES = gql`
   query AddressFeatures($offset: Int!, $limit: Int!) {
@@ -69,6 +71,26 @@ const useStyles = makeStyles(theme => ({
     top: 20,
     width: 1,
   },
+  wrapper: {
+    margin: theme.spacing(1),
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'row-reverse',
+  },
+  buttonSuccess: {
+    backgroundColor: green[500],
+    '&:hover': {
+      backgroundColor: green[700],
+    },
+  },
+  buttonProgress: {
+    color: green[500],
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    marginTop: -12,
+    marginLeft: -12,
+  },
 }))
 
 const options = {
@@ -78,7 +100,7 @@ const options = {
   nEstimators: 25,
 }
 // todo needed useSampleBagging to true - hillft gegen overfiting, default false
-// featureBagging alwazs run, cause we have nEstimators
+// featureBagging always run, cause we have nEstimators
 const regressionOptions = {
   seed: 3,
   maxFeatures: 1,
@@ -115,99 +137,124 @@ const fitAndGetFeatures = data => {
       numberOfERC721 +
       numberOfTrace
     return [
-      -1 + (numberOfNone / sumOfNeigbours) * 2,
-      -1 + (numberOfOneTime / sumOfNeigbours) * 2,
-      -1 + (numberOfExchange / sumOfNeigbours) * 2,
-      -1 + (numberOfMiningPool / sumOfNeigbours) * 2,
-      -1 + (numberOfMiner / sumOfNeigbours) * 2,
-      -1 + (numberOfSmContract / sumOfNeigbours) * 2,
-      -1 + (numberOfERC20 / sumOfNeigbours) * 2,
-      -1 + (numberOfERC721 / sumOfNeigbours) * 2,
-      -1 + (numberOfTrace / sumOfNeigbours) * 2,
-      -1 + medianOfEthProTrans * 2,
-      -1 + averageOfEthProTrans * 2,
-      -1 + (numberOfTransInput / numberOfTransactions) * 2,
-      -1 + (numberOfTransOutput / numberOfTransactions) * 2,
-      //numberOfTransaction,
+      numberOfNone / sumOfNeigbours,
+      numberOfOneTime / sumOfNeigbours,
+      numberOfExchange / sumOfNeigbours,
+      numberOfMiningPool / sumOfNeigbours,
+      numberOfMiner / sumOfNeigbours,
+      numberOfSmContract / sumOfNeigbours,
+      numberOfERC20 / sumOfNeigbours,
+      numberOfERC721 / sumOfNeigbours,
+      numberOfTrace / sumOfNeigbours,
+      medianOfEthProTrans,
+      averageOfEthProTrans,
+      numberOfTransInput / numberOfTransactions,
+      numberOfTransOutput / numberOfTransactions,
+      // numberOfTransaction,
     ]
   })
 }
 
 const calcErrorRate = (predicted, predictedMustBe) => {
-  console.log(predicted)
   const isCorrect = map(predicted, (x, index) => x === predictedMustBe[index])
-  console.log(isCorrect)
-  const correcrNumber = compact(isCorrect)
-  console.log(correcrNumber.length / isCorrect.length)
+  const correctNumber = compact(isCorrect)
+  return correctNumber.length / isCorrect.length
 }
+
+const checkAccuracy = (models, testData, testDataPrediction) => {
+  const { lg, rf, knn } = models
+  const predicted = rf.predict(testData)
+  const predictedLogreg = lg.predict(new Matrix(testData))
+  const predictedKNN = knn.predict(testData)
+  const precisionRf = calcErrorRate(predicted, testDataPrediction)
+  const precisionLR = calcErrorRate(predictedLogreg, testDataPrediction)
+  const precisionKNN = calcErrorRate(predictedKNN, testDataPrediction)
+  return { precisionRf, precisionLR, precisionKNN }
+}
+
 const ClassificationModel = (callback, deps) => {
   const classes = useStyles()
-  const [address, setAddress] = useState(
-    '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
-  )
-  // 3 Classifier
-  const [classifier, setClassifier] = useState(null)
-  const [regression, setRegression] = useState(null)
-  const [knn, setKNN] = useState(null)
+  const { models, setModels } = useContext(ModelContext)
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
 
-  const [output, setOutput] = useState(null)
-  const [result, setResult] = useState('')
-  const [regressionResult, setRegressionResult] = useState('')
-  const [knnResult, setKnnResult] = useState('')
-
-  const { data, loading } = useQuery(LOAD_ADDRESS_FEATURES, {
-    variables: { offset: 0, limit: 0 },
+  const buttonClassname = clsx({
+    [classes.buttonSuccess]: success,
   })
-  const rows = get(data, 'addressFeatures.rows', [])
-  //const count = get(data, 'addressFeatures.count', -1)
-  const changeAddress = useCallback(
-    e => {
-      const { value } = e.target
-      setAddress(value)
-    },
-    [setAddress]
+
+  const [trainingData, setTrainingData] = useState(null)
+  const [trainingDataPredictions, setTrainingDataPredictions] = useState(null)
+  const [testData, setTestData] = useState(null)
+  const [testDataPrediction, setTestDataPrediction] = useState(null)
+  const [precision, setPrecision] = useState({
+    precisionRf: 0,
+    precisionLR: 0,
+    precisionKNN: 0,
+  })
+
+  const { data, loading: loadingApi, called } = useQuery(
+    LOAD_ADDRESS_FEATURES,
+    {
+      variables: { offset: 0, limit: 0 },
+    }
   )
-  // todo maybe move out?
-  const buildModels = useCallback(() => {
+  const rows = get(data, 'addressFeatures.rows', [])
+
+  if (!loadingApi && called && !trainingData) {
     const rowsShuffled = shuffle(rows)
     const fullSet = fitAndGetFeatures(rowsShuffled)
-    // TODO check if ||0 still actual
-
+    // separate train and test data
     const fullPredictions = map(rowsShuffled, ({ scam }) => (scam ? 1 : 0))
-    const trainingSet = take(fullSet, rows.length * 0.9)
-    const trainingPredictions = take(fullPredictions, rows.length * 0.9)
-    const newClassifierRF = new RFClassifier(options)
-    newClassifierRF.train(trainingSet, trainingPredictions)
+    setTrainingData(take(fullSet, rows.length * 0.9))
+    setTrainingDataPredictions(take(fullPredictions, rows.length * 0.9))
+    setTestData(takeRight(fullSet, rows.length * 0.1))
+    setTestDataPrediction(takeRight(fullPredictions, rows.length * 0.1))
+    const { lg, rf, knn } = models
+    if (lg && rf && knn) {
+      setPrecision(
+        checkAccuracy(
+          models,
+          takeRight(fullSet, rows.length * 0.1),
+          takeRight(fullPredictions, rows.length * 0.1)
+        )
+      )
+    }
+  }
 
-    const testData = takeRight(fullSet, rows.length * 0.1)
-    const testDataPrediction = takeRight(fullPredictions, rows.length * 0.1)
-    const predicted = newClassifierRF.predict(testData)
+  const buildModels = useCallback(() => {
+    if (!loading && !loadingApi && called) {
+      setSuccess(false)
+      setLoading(true)
+      const newClassifierRF = new RFClassifier(options)
+      newClassifierRF.train(trainingData, trainingDataPredictions)
 
-    calcErrorRate(predicted, testDataPrediction)
-    setClassifier(newClassifierRF)
+      // const newRegressionRf = new RFRegression(regressionOptions)
+      // newRegressionRf.train(trainingData, trainingDataPredictions)
+      // const predictedRegression = newRegressionRf.predict(testData)
+      // calcErrorRate(predictedRegression, testDataPrediction)
+      // setRegression(newRegressionRf)
+      const X = new Matrix(trainingData)
+      const Y = Matrix.columnVector(trainingDataPredictions)
+      const logreg = new LogisticRegression({
+        numSteps: 1000,
+        learningRate: 5e-3,
+      })
+      logreg.train(X, Y)
 
-    // const newRegressionRf = new RFRegression(regressionOptions)
-    // newRegressionRf.train(trainingSet, trainingPredictions)
-    // const predictedRegression = newRegressionRf.predict(testData)
-    // calcErrorRate(predictedRegression, testDataPrediction)
-    // setRegression(newRegressionRf)
-
-    const logreg = new LogisticRegression({
-      numSteps: 1000,
-      learningRate: 5e-3,
-    })
-
-    const X = new Matrix(trainingSet)
-    const Y = Matrix.columnVector(trainingPredictions)
-    logreg.train(X, Y)
-    const predictedLogreg = logreg.predict(new Matrix(testData))
-    calcErrorRate(predictedLogreg, testDataPrediction)
-    setRegression(logreg)
-    // const knn = new KNN(trainingSet, trainingPredictions)
-    // setKNN(knn)
-    // const predictedKNN = knn.predict(testData)
-    // calcErrorRate(predictedKNN, testDataPrediction)
-  }, [rows])
+      const knn = new KNN(trainingData, trainingDataPredictions)
+      const newModels = { lg: logreg, rf: newClassifierRF, knn }
+      setPrecision(checkAccuracy(newModels, testData, testDataPrediction))
+      setModels(newModels)
+      setSuccess(true)
+      setLoading(false)
+    }
+  }, [
+    rows,
+    trainingData,
+    trainingDataPredictions,
+    testData,
+    testDataPrediction,
+  ])
 
   // const checkAddress = useCallback(() => {
   //   // TODO API call to build new feature for new address
@@ -215,66 +262,58 @@ const ClassificationModel = (callback, deps) => {
   //   setKnnResult(knn.predict(testData))
   // }, [classifier])
   return (
-    <Paper elevation={3} className={classes.root}>
-      <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
-        <Button variant="contained" color="primary" onClick={buildModels}>
-          Train
-        </Button>
-      </div>
-      <Paper elevation={0} className={classes.paper}>
-        <div>Output:</div>
-        <div>{}</div>
-        <div>
-          <form onSubmit={() => {}}>
-            <TextField
-              id="address-input"
-              label="Address"
-              autoFocus
-              fullWidth
-              value={address}
-              onChange={changeAddress}
-            />
-          </form>
-          <Button variant="contained" color="primary" onClick={() => {}}>
-            Check Address
+    <Fragment>
+      <Paper elevation={3} className={classes.root}>
+        <div className={classes.wrapper}>
+          <Button
+            color="primary"
+            className={buttonClassname}
+            disabled={loading}
+            onClick={buildModels}
+            variant="contained"
+          >
+            Train
           </Button>
+          {loading && (
+            <CircularProgress size={24} className={classes.buttonProgress} />
+          )}
         </div>
-        <div>Output:</div>
-        <div>
-          <TextField
-            id="address-input"
-            label="Result of rf classifcier"
-            fullWidth
-            multiline
-            rows="4"
-            value={result}
+        <Paper elevation={0} className={classes.paper}>
+          <div>Output:</div>
+          <Table
+            columns={['name', 'precision']}
+            rows={[
+              {
+                id: 'idPrecision_1',
+                name: {
+                  value: 'Random forest',
+                },
+                precision: { value: precision.precisionRf },
+                error: { value: '0.9' },
+              },
+              {
+                id: 'idPrecision_2',
+                name: {
+                  value: 'Logistik regression',
+                },
+                precision: { value: precision.precisionLR },
+                error: { value: '0.9' },
+              },
+
+              {
+                id: 'idPrecision_3',
+                name: {
+                  value: 'K-nearest neighbors',
+                },
+                precision: { value: precision.precisionKNN },
+                error: { value: '0.9' },
+              },
+            ]}
           />
-        </div>
-        <div>
-          <TextField
-            id="address-input"
-            label="Result of KNN"
-            fullWidth
-            multiline
-            rows="4"
-            value={knnResult}
-          />
-        </div>
-        <div>
-          <TextField
-            id="address-input"
-            label="Result of regression"
-            fullWidth
-            multiline
-            rows="4"
-            value={regressionResult}
-          />
-        </div>
+        </Paper>
       </Paper>
-    </Paper>
+    </Fragment>
   )
 }
 
 export default ClassificationModel
-
-// accuracy

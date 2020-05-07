@@ -34,7 +34,7 @@ const LOAD_ADDRESS_FEATURES = gql`
         numberOfERC20
         numberOfERC721
         numberOfTrace
-        numberOfTransaction
+        numberOfTransactions
         medianOfEthProTrans
         averageOfEthProTrans
       }
@@ -331,13 +331,14 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length)
   // TODO Menu stat 3 Buttons
+  // buildFeatures disabled
   return (
     <Paper elevation={3} className={classes.root}>
       <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
         <Button
           variant="contained"
           color="primary"
-          disabled={buildRunning}
+          disabled={buildRunning || true}
           onClick={buildFeatures}
         >
           Build features
@@ -411,7 +412,7 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
                   <TableCell>{row.numberOfERC20}</TableCell>
                   <TableCell>{row.numberOfERC721}</TableCell>
                   <TableCell>{row.numberOfTrace}</TableCell>
-                  <TableCell>{row.numberOfTransaction}</TableCell>
+                  <TableCell>{row.numberOfTransactions}</TableCell>
                   <TableCell>
                     <FormattedNumber value={row.medianOfEthProTrans} />
                   </TableCell>

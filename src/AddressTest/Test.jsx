@@ -1,42 +1,41 @@
-import React, { Fragment, useCallback, useState } from 'react'
+import React, {
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 import PropTypes from 'prop-types'
 import { makeStyles } from '@material-ui/core/styles'
 import Paper from '@material-ui/core/Paper'
-import { map, get, takeRight, take, shuffle, truncate, compact } from 'lodash'
+import { get } from 'lodash'
 import Button from '@material-ui/core/Button'
-import { useQuery } from '@apollo/react-hooks'
+import { useLazyQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import TextField from '@material-ui/core/TextField'
-import { RandomForestClassifier as RFClassifier } from 'ml-random-forest'
-// import { RandomForestRegression as RFRegression } from 'ml-random-forest'
-import LogisticRegression from 'ml-logistic-regression'
 import { Matrix } from 'ml-matrix' //"ml-matrix": "5.3.0",
-import KNN from 'ml-knn'
-import Table from '../components/Table'
+import { fitAndGetFeature } from '../DataAnalyse/ClassificationModel'
+import { ModelContext } from '../App'
 
-const LOAD_ADDRESS_FEATURES = gql`
-  query AddressFeatures($offset: Int!, $limit: Int!) {
-    addressFeatures(offset: $offset, limit: $limit) {
-      rows {
-        id
-        hash
-        scam
-        numberOfNone
-        numberOfOneTime
-        numberOfExchange
-        numberOfMiningPool
-        numberOfMiner
-        numberOfSmContract
-        numberOfERC20
-        numberOfERC721
-        numberOfTrace
-        medianOfEthProTrans
-        averageOfEthProTrans
-        numberOfTransInput
-        numberOfTransOutput
-        numberOfTransactions
-      }
-      count
+const LOAD_ADDRESS_FEATURE = gql`
+  query GetAndCalculateAddressFeatures($address: String!) {
+    getAndCalculateAddressFeatures(address: $address) {
+      hash
+      scam
+      numberOfNone
+      numberOfOneTime
+      numberOfExchange
+      numberOfMiningPool
+      numberOfMiner
+      numberOfSmContract
+      numberOfERC20
+      numberOfERC721
+      numberOfTrace
+      medianOfEthProTrans
+      averageOfEthProTrans
+      numberOfTransInput
+      numberOfTransOutput
+      numberOfTransactions
     }
   }
 `
@@ -87,80 +86,24 @@ const regressionOptions = {
   nEstimators: 1,
 }
 
-const fitAndGetFeatures = data => {
-  return map(data, item => {
-    const {
-      numberOfNone,
-      numberOfOneTime,
-      numberOfExchange,
-      numberOfMiningPool,
-      numberOfMiner,
-      numberOfSmContract,
-      numberOfERC20,
-      numberOfERC721,
-      numberOfTrace,
-      medianOfEthProTrans,
-      averageOfEthProTrans,
-      numberOfTransInput,
-      numberOfTransOutput,
-      numberOfTransactions,
-    } = item
-    const sumOfNeigbours =
-      numberOfNone +
-      numberOfOneTime +
-      numberOfExchange +
-      numberOfMiningPool +
-      numberOfMiner +
-      numberOfSmContract +
-      numberOfERC20 +
-      numberOfERC721 +
-      numberOfTrace
-    return [
-      numberOfNone / sumOfNeigbours,
-      numberOfOneTime / sumOfNeigbours,
-      numberOfExchange / sumOfNeigbours,
-      numberOfMiningPool / sumOfNeigbours,
-      numberOfMiner / sumOfNeigbours,
-      numberOfSmContract / sumOfNeigbours,
-      numberOfERC20 / sumOfNeigbours,
-      numberOfERC721 / sumOfNeigbours,
-      numberOfTrace / sumOfNeigbours,
-      medianOfEthProTrans,
-      averageOfEthProTrans,
-      numberOfTransInput / numberOfTransactions,
-      numberOfTransOutput / numberOfTransactions,
-      // numberOfTransaction,
-    ]
-  })
-}
-
-const calcErrorRate = (predicted, predictedMustBe) => {
-  console.log(predicted)
-  const isCorrect = map(predicted, (x, index) => x === predictedMustBe[index])
-  console.log(isCorrect)
-  const correcrNumber = compact(isCorrect)
-  console.log(correcrNumber.length / isCorrect.length)
-}
 const ClassificationModel = (callback, deps) => {
   const classes = useStyles()
+  const { models, setModels } = useContext(ModelContext)
+  const { lg, rf, knn } = models
   const [address, setAddress] = useState(
     '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
   // 3 Classifier
-  const [classifier, setClassifier] = useState(null)
-  const [regression, setRegression] = useState(null)
-  const [knn, setKNN] = useState(null)
+  const [rfResult, setRfResult] = useState('')
+  const [logregResult, setLogregResult] = useState('')
+  const [KNNResult, setKNNResult] = useState('')
 
-  const [output, setOutput] = useState(null)
-  const [result, setResult] = useState('')
-  const [regressionResult, setRegressionResult] = useState('')
-  const [knnResult, setKnnResult] = useState('')
+  const [
+    loadAddressFeature,
+    { data, loading, networkStatus, called },
+  ] = useLazyQuery(LOAD_ADDRESS_FEATURE)
+  const addressInfo = get(data, 'getAndCalculateAddressFeatures', null)
 
-  const { data, loading } = useQuery(LOAD_ADDRESS_FEATURES, {
-    variables: { offset: 0, limit: 0 },
-  })
-  const rows = get(data, 'addressFeatures.rows', [])
-  //const count = get(data, 'addressFeatures.count', -1)
   const changeAddress = useCallback(
     e => {
       const { value } = e.target
@@ -168,66 +111,28 @@ const ClassificationModel = (callback, deps) => {
     },
     [setAddress]
   )
-  // todo maybe move out?
-  const buildModels = useCallback(() => {
-    const rowsShuffled = shuffle(rows)
-    const fullSet = fitAndGetFeatures(rowsShuffled)
-    // TODO check if ||0 still actual
-
-    const fullPredictions = map(rowsShuffled, ({ scam }) => (scam ? 1 : 0))
-    const trainingSet = take(fullSet, rows.length * 0.9)
-    const trainingPredictions = take(fullPredictions, rows.length * 0.9)
-    const newClassifierRF = new RFClassifier(options)
-    newClassifierRF.train(trainingSet, trainingPredictions)
-
-    const testData = takeRight(fullSet, rows.length * 0.1)
-    const testDataPrediction = takeRight(fullPredictions, rows.length * 0.1)
-    const predicted = newClassifierRF.predict(testData)
-
-    calcErrorRate(predicted, testDataPrediction)
-    setClassifier(newClassifierRF)
-
-    // const newRegressionRf = new RFRegression(regressionOptions)
-    // newRegressionRf.train(trainingSet, trainingPredictions)
-    // const predictedRegression = newRegressionRf.predict(testData)
-    // calcErrorRate(predictedRegression, testDataPrediction)
-    // setRegression(newRegressionRf)
-
-    const logreg = new LogisticRegression({
-      numSteps: 1000,
-      learningRate: 5e-3,
-    })
-
-    const X = new Matrix(trainingSet)
-    const Y = Matrix.columnVector(trainingPredictions)
-    logreg.train(X, Y)
-    const predictedLogreg = logreg.predict(new Matrix(testData))
-    calcErrorRate(predictedLogreg, testDataPrediction)
-    setRegression(logreg)
-    const knn = new KNN(trainingSet, trainingPredictions)
-    setKNN(knn)
-    const predictedKNN = knn.predict(testData)
-    calcErrorRate(predictedKNN, testDataPrediction)
-  }, [rows])
-
-  // const checkAddress = useCallback(() => {
-  //   // TODO API call to build new feature for new address
-  //   setResult(classifier.predict(testData))
-  //   setKnnResult(knn.predict(testData))
-  // }, [classifier])
+  const loadAddressInfo = useCallback(
+    () => loadAddressFeature({ variables: { address: address.toLowerCase() } }),
+    [loadAddressFeature, address]
+  )
+  useEffect(() => {
+    if (networkStatus === 7 && called) {
+      const addressFeature = [fitAndGetFeature(addressInfo)]
+      const rfResult = rf.predict(addressFeature)
+      const predictedLogreg = lg.predict(new Matrix(addressFeature))
+      const predictedKNN = knn.predict(addressFeature)
+      setRfResult(rfResult)
+      setLogregResult(predictedLogreg)
+      setKNNResult(predictedKNN)
+    }
+  }, [addressInfo])
+  // TODO Button link to train section
   return (
     <Fragment>
       <Paper elevation={3} className={classes.root}>
-        <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
-          <Button variant="contained" color="primary" onClick={buildModels}>
-            Train
-          </Button>
-        </div>
         <Paper elevation={0} className={classes.paper}>
-          <div>Output:</div>
-          <div>{}</div>
           <div>
-            <form onSubmit={() => {}}>
+            <form onSubmit={loadAddressInfo}>
               <TextField
                 id="address-input"
                 label="Address"
@@ -237,7 +142,12 @@ const ClassificationModel = (callback, deps) => {
                 onChange={changeAddress}
               />
             </form>
-            <Button variant="contained" color="primary" onClick={() => {}}>
+            <Button
+              variant="contained"
+              color="primary"
+              disabled={!lg || !rf || !knn}
+              onClick={loadAddressInfo}
+            >
               Check Address
             </Button>
           </div>
@@ -249,17 +159,7 @@ const ClassificationModel = (callback, deps) => {
               fullWidth
               multiline
               rows="4"
-              value={result}
-            />
-          </div>
-          <div>
-            <TextField
-              id="address-input"
-              label="Result of KNN"
-              fullWidth
-              multiline
-              rows="4"
-              value={knnResult}
+              value={rfResult}
             />
           </div>
           <div>
@@ -269,7 +169,17 @@ const ClassificationModel = (callback, deps) => {
               fullWidth
               multiline
               rows="4"
-              value={regressionResult}
+              value={logregResult}
+            />
+          </div>
+          <div>
+            <TextField
+              id="address-input"
+              label="Result of KNN"
+              fullWidth
+              multiline
+              rows="4"
+              value={KNNResult}
             />
           </div>
         </Paper>

@@ -1,6 +1,6 @@
 import React from 'react'
 import { makeStyles } from '@material-ui/core/styles'
-import ClassificationModel from './Test'
+import Test from './Test'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -27,7 +27,7 @@ const ClassificationTest = () => {
   return (
     <main className={classes.content}>
       <div className={classes.appBarSpacer} />
-      <ClassificationModel />
+      <Test />
     </main>
   )
 }

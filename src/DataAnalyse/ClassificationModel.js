@@ -48,34 +48,19 @@ const useStyles = makeStyles(theme => ({
     overflow: 'auto',
     flexDirection: 'column',
   },
-  button: {
-    padding: 0,
-  },
   paper: {
     padding: theme.spacing(2),
     display: 'flex',
     overflow: 'auto',
     flexDirection: 'column',
   },
-  table: {
-    minWidth: 750,
-  },
-  visuallyHidden: {
-    border: 0,
-    clip: 'rect(0 0 0 0)',
-    height: 1,
-    margin: -1,
-    overflow: 'hidden',
-    padding: 0,
-    position: 'absolute',
-    top: 20,
-    width: 1,
+  buttonSection: {
+    display: 'flex',
+    flexDirection: 'row-reverse',
   },
   wrapper: {
     margin: theme.spacing(1),
     position: 'relative',
-    display: 'flex',
-    flexDirection: 'row-reverse',
   },
   buttonSuccess: {
     backgroundColor: green[500],
@@ -108,51 +93,52 @@ const regressionOptions = {
   nEstimators: 1,
 }
 
+export const fitAndGetFeature = item => {
+  const {
+    numberOfNone,
+    numberOfOneTime,
+    numberOfExchange,
+    numberOfMiningPool,
+    numberOfMiner,
+    numberOfSmContract,
+    numberOfERC20,
+    numberOfERC721,
+    numberOfTrace,
+    medianOfEthProTrans,
+    averageOfEthProTrans,
+    numberOfTransInput,
+    numberOfTransOutput,
+    numberOfTransactions,
+  } = item
+  const sumOfNeigbours =
+    numberOfNone +
+    numberOfOneTime +
+    numberOfExchange +
+    numberOfMiningPool +
+    numberOfMiner +
+    numberOfSmContract +
+    numberOfERC20 +
+    numberOfERC721 +
+    numberOfTrace
+  return [
+    numberOfNone / sumOfNeigbours,
+    numberOfOneTime / sumOfNeigbours,
+    numberOfExchange / sumOfNeigbours,
+    numberOfMiningPool / sumOfNeigbours,
+    numberOfMiner / sumOfNeigbours,
+    numberOfSmContract / sumOfNeigbours,
+    numberOfERC20 / sumOfNeigbours,
+    numberOfERC721 / sumOfNeigbours,
+    numberOfTrace / sumOfNeigbours,
+    medianOfEthProTrans,
+    averageOfEthProTrans,
+    numberOfTransInput / numberOfTransactions,
+    numberOfTransOutput / numberOfTransactions,
+    // numberOfTransaction,
+  ]
+}
 const fitAndGetFeatures = data => {
-  return map(data, item => {
-    const {
-      numberOfNone,
-      numberOfOneTime,
-      numberOfExchange,
-      numberOfMiningPool,
-      numberOfMiner,
-      numberOfSmContract,
-      numberOfERC20,
-      numberOfERC721,
-      numberOfTrace,
-      medianOfEthProTrans,
-      averageOfEthProTrans,
-      numberOfTransInput,
-      numberOfTransOutput,
-      numberOfTransactions,
-    } = item
-    const sumOfNeigbours =
-      numberOfNone +
-      numberOfOneTime +
-      numberOfExchange +
-      numberOfMiningPool +
-      numberOfMiner +
-      numberOfSmContract +
-      numberOfERC20 +
-      numberOfERC721 +
-      numberOfTrace
-    return [
-      numberOfNone / sumOfNeigbours,
-      numberOfOneTime / sumOfNeigbours,
-      numberOfExchange / sumOfNeigbours,
-      numberOfMiningPool / sumOfNeigbours,
-      numberOfMiner / sumOfNeigbours,
-      numberOfSmContract / sumOfNeigbours,
-      numberOfERC20 / sumOfNeigbours,
-      numberOfERC721 / sumOfNeigbours,
-      numberOfTrace / sumOfNeigbours,
-      medianOfEthProTrans,
-      averageOfEthProTrans,
-      numberOfTransInput / numberOfTransactions,
-      numberOfTransOutput / numberOfTransactions,
-      // numberOfTransaction,
-    ]
-  })
+  return map(data, fitAndGetFeature)
 }
 
 const calcErrorRate = (predicted, predictedMustBe) => {
@@ -192,7 +178,7 @@ const ClassificationModel = (callback, deps) => {
     precisionKNN: 0,
   })
 
-  const { data, loading: loadingApi, called } = useQuery(
+  const { data, loading: loadingApi, networkStatus } = useQuery(
     LOAD_ADDRESS_FEATURES,
     {
       variables: { offset: 0, limit: 0 },
@@ -200,7 +186,7 @@ const ClassificationModel = (callback, deps) => {
   )
   const rows = get(data, 'addressFeatures.rows', [])
 
-  if (!loadingApi && called && !trainingData) {
+  if (!loadingApi && networkStatus === 7 && !trainingData) {
     const rowsShuffled = shuffle(rows)
     const fullSet = fitAndGetFeatures(rowsShuffled)
     // separate train and test data
@@ -222,17 +208,12 @@ const ClassificationModel = (callback, deps) => {
   }
 
   const buildModels = useCallback(() => {
-    if (!loading && !loadingApi && called) {
+    if (!loading && !loadingApi && networkStatus === 7) {
       setSuccess(false)
       setLoading(true)
       const newClassifierRF = new RFClassifier(options)
       newClassifierRF.train(trainingData, trainingDataPredictions)
 
-      // const newRegressionRf = new RFRegression(regressionOptions)
-      // newRegressionRf.train(trainingData, trainingDataPredictions)
-      // const predictedRegression = newRegressionRf.predict(testData)
-      // calcErrorRate(predictedRegression, testDataPrediction)
-      // setRegression(newRegressionRf)
       const X = new Matrix(trainingData)
       const Y = Matrix.columnVector(trainingDataPredictions)
       const logreg = new LogisticRegression({
@@ -256,27 +237,24 @@ const ClassificationModel = (callback, deps) => {
     testDataPrediction,
   ])
 
-  // const checkAddress = useCallback(() => {
-  //   // TODO API call to build new feature for new address
-  //   setResult(classifier.predict(testData))
-  //   setKnnResult(knn.predict(testData))
-  // }, [classifier])
   return (
     <Fragment>
       <Paper elevation={3} className={classes.root}>
-        <div className={classes.wrapper}>
-          <Button
-            color="primary"
-            className={buttonClassname}
-            disabled={loading}
-            onClick={buildModels}
-            variant="contained"
-          >
-            Train
-          </Button>
-          {loading && (
-            <CircularProgress size={24} className={classes.buttonProgress} />
-          )}
+        <div className={classes.buttonSection}>
+          <div className={classes.wrapper}>
+            <Button
+              color="primary"
+              className={buttonClassname}
+              disabled={loading}
+              onClick={buildModels}
+              variant="contained"
+            >
+              Train
+            </Button>
+            {loading && (
+              <CircularProgress size={24} className={classes.buttonProgress} />
+            )}
+          </div>
         </div>
         <Paper elevation={0} className={classes.paper}>
           <div>Output:</div>

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import Button from '@material-ui/core/Button'
@@ -12,6 +12,7 @@ import ImportAddressTable from './ImportAddressTable'
 import FeatureTable from './FeatureTable'
 import ClassificationModel from './ClassificationModel'
 import Grid from '@material-ui/core/Grid'
+import { StepContext } from '../App'
 
 const IMPORT_DATA = gql`
   mutation LoadData {
@@ -77,7 +78,7 @@ const getStepContent = stepIndex => {
 
 const Classification = () => {
   const classes = useStyles()
-  const [activeStep, setActiveStep] = React.useState(2)
+  const { step, setStep } = useContext(StepContext)
   const steps = getSteps()
   const [importData] = useMutation(IMPORT_DATA)
   const [buildFeatures, { loading }] = useMutation(BUILD_FEATURES, {
@@ -89,16 +90,13 @@ const Classification = () => {
     },
   })
   const handleNext = () => {
-    setActiveStep(prevActiveStep => prevActiveStep + 1)
+    setStep(prevActiveStep => prevActiveStep + 1)
   }
 
   const handleBack = () => {
-    setActiveStep(prevActiveStep => prevActiveStep - 1)
+    setStep(prevActiveStep => prevActiveStep - 1)
   }
 
-  const handleReset = () => {
-    setActiveStep(0)
-  }
   return (
     <main className={classes.content}>
       <div className={classes.appBarSpacer} />
@@ -111,14 +109,14 @@ const Classification = () => {
                 <Button
                   variant="contained"
                   color="primary"
-                  disabled={activeStep === 0}
+                  disabled={step === 0}
                   onClick={handleBack}
                 >
                   Back
                 </Button>
               </Grid>
               <Grid item xs={6} md={8} lg={10}>
-                <Stepper activeStep={activeStep} alternativeLabel>
+                <Stepper activeStep={step} alternativeLabel>
                   {steps.map(label => (
                     <Step key={label}>
                       <StepLabel>{label}</StepLabel>
@@ -132,23 +130,23 @@ const Classification = () => {
                   color="primary"
                   onClick={handleNext}
                 >
-                  {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+                  {step === steps.length - 1 ? 'Finish' : 'Next'}
                 </Button>
               </Grid>
             </Grid>
           </Grid>
 
           <Grid item xs={12}>
-            {activeStep === 0 && <ImportAddressTable importData={importData} />}
-            {activeStep === 1 && (
+            {step === 0 && <ImportAddressTable importData={importData} />}
+            {step === 1 && (
               <FeatureTable
                 buildFeatures={buildFeatures}
                 buildRunning={loading}
               />
             )}
-            {activeStep === 2 && <ClassificationModel />}
+            {step === 2 && <ClassificationModel />}
             <Typography className={classes.instructions}>
-              {getStepContent(activeStep)}
+              {getStepContent(step)}
             </Typography>
           </Grid>
         </Grid>

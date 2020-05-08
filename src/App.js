@@ -31,6 +31,11 @@ export const ModelContext = React.createContext({
   setModel: () => {},
 })
 
+export const StepContext = React.createContext({
+  step: 0,
+  setStep: () => {},
+})
+
 const useStyles = makeStyles(theme => ({
   root: {
     display: 'flex',
@@ -43,6 +48,7 @@ const client = new ApolloClient({
 
 const App = () => {
   const classes = useStyles()
+  const [step, setStep] = useState(0)
   const [open, setOpen] = useState(true)
   const [models, setModels] = useState({
     lg: null,
@@ -61,26 +67,28 @@ const App = () => {
   return (
     <ApolloProvider client={client}>
       <ModelContext.Provider value={{ models, setModels }}>
-        <BrowserRouter>
-          <div className={classes.root}>
-            <CustomAppBar open={open} handleDrawerOpen={handleDrawerOpen} />
-            <LeftPanel open={open} handleDrawerClose={handleDrawerClose} />
-            <Switch>
-              <Route path="/class">
-                <Classification />
-              </Route>
-              <Route path="/model">
-                <ClassificationTest />
-              </Route>
-              <Route path="/:hash">
-                <EthereumGraph />
-              </Route>
-              <Route path="/">
-                <EthereumGraph />
-              </Route>
-            </Switch>
-          </div>
-        </BrowserRouter>
+        <StepContext.Provider value={{ step, setStep }}>
+          <BrowserRouter>
+            <div className={classes.root}>
+              <CustomAppBar open={open} handleDrawerOpen={handleDrawerOpen} />
+              <LeftPanel open={open} handleDrawerClose={handleDrawerClose} />
+              <Switch>
+                <Route path="/class">
+                  <Classification />
+                </Route>
+                <Route path="/model">
+                  <ClassificationTest />
+                </Route>
+                <Route path="/:hash">
+                  <EthereumGraph />
+                </Route>
+                <Route path="/">
+                  <EthereumGraph />
+                </Route>
+              </Switch>
+            </div>
+          </BrowserRouter>
+        </StepContext.Provider>
       </ModelContext.Provider>
     </ApolloProvider>
   )

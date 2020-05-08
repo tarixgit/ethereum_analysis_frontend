@@ -235,6 +235,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
             const { newModels } = data
             setModelsLocal(loadAndSaveModels(newModels))
           }
+          const spinner = (!updatedAt && lastPostAt) || updatedAt < lastPostAt
           return (
             <Paper elevation={3} className={classes.root}>
               <div className={classes.buttonSection}>
@@ -284,13 +285,12 @@ const ClassificationModelWebWorker = (callback, deps) => {
                   ]}
                 />
                 {error ? `Something went wrong: ${error.message}` : ''}
-                {loading && (
+                {spinner && (
                   <CircularProgress
                     size={40}
                     className={classes.buttonProgress}
                   />
                 )}
-                {updatedAt < lastPostAt ? 'Loading...' : 'Go'}
               </Paper>
             </Paper>
           )

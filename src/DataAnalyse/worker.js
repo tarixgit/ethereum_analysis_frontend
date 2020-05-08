@@ -20,7 +20,6 @@ const regressionOptions = {
 
 onmessage = function(e) {
   console.log('Message received from main script')
-  const workerResult = 'Result: ' + e.data
   const dataParsed = JSON.parse(e.data)
   const { trainingData, trainingDataPredictions } = dataParsed
   const newClassifierRF = new RFClassifier(options)

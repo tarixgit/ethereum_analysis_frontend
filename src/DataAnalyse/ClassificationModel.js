@@ -1,4 +1,10 @@
-import React, { Fragment, useCallback, useContext, useState } from 'react'
+import React, {
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 import PropTypes from 'prop-types'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
@@ -206,11 +212,8 @@ const ClassificationModel = (callback, deps) => {
       )
     }
   }
-
-  const buildModels = useCallback(() => {
-    if (!loading && !loadingApi && networkStatus === 7) {
-      setSuccess(false)
-      setLoading(true)
+  useEffect(() => {
+    if (!success && !loadingApi && networkStatus === 7) {
       const newClassifierRF = new RFClassifier(options)
       newClassifierRF.train(trainingData, trainingDataPredictions)
 
@@ -229,32 +232,48 @@ const ClassificationModel = (callback, deps) => {
       setSuccess(true)
       setLoading(false)
     }
-  }, [
-    rows,
-    trainingData,
-    trainingDataPredictions,
-    testData,
-    testDataPrediction,
-  ])
+  }, [success, loading])
+
+  const buildModels = useCallback(() => {
+    setSuccess(false)
+    setLoading(true)
+
+    // if (!loading && !loadingApi && networkStatus === 7) {
+    //   setSuccess(false)
+    //   setLoading(true)
+    //   const newClassifierRF = new RFClassifier(options)
+    //   newClassifierRF.train(trainingData, trainingDataPredictions)
+    //
+    //   const X = new Matrix(trainingData)
+    //   const Y = Matrix.columnVector(trainingDataPredictions)
+    //   const logreg = new LogisticRegression({
+    //     numSteps: 1000,
+    //     learningRate: 5e-3,
+    //   })
+    //   logreg.train(X, Y)
+    //
+    //   const knn = new KNN(trainingData, trainingDataPredictions)
+    //   const newModels = { lg: logreg, rf: newClassifierRF, knn }
+    //   setPrecision(checkAccuracy(newModels, testData, testDataPrediction))
+    //   setModels(newModels)
+    //   setSuccess(true)
+    //   setLoading(false)
+    // }
+  }, [setSuccess, setLoading])
 
   return (
     <Fragment>
       <Paper elevation={3} className={classes.root}>
         <div className={classes.buttonSection}>
-          <div className={classes.wrapper}>
-            <Button
-              color="primary"
-              className={buttonClassname}
-              disabled={loading}
-              onClick={buildModels}
-              variant="contained"
-            >
-              Train
-            </Button>
-            {loading && (
-              <CircularProgress size={24} className={classes.buttonProgress} />
-            )}
-          </div>
+          <Button
+            color="primary"
+            className={buttonClassname}
+            disabled={loading}
+            onClick={buildModels}
+            variant="contained"
+          >
+            Train
+          </Button>
         </div>
         <Paper elevation={0} className={classes.paper}>
           <div>Output:</div>
@@ -289,6 +308,9 @@ const ClassificationModel = (callback, deps) => {
             ]}
           />
         </Paper>
+        {loading && (
+          <CircularProgress size={40} className={classes.buttonProgress} />
+        )}
       </Paper>
     </Fragment>
   )

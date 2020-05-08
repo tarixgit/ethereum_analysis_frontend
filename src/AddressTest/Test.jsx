@@ -159,7 +159,7 @@ const ClassificationModel = (callback, deps) => {
               fullWidth
               multiline
               rows="4"
-              value={rfResult}
+              value={rfResult === 1 ? 'scam' : 'not scam'}
             />
           </div>
           <div>
@@ -169,7 +169,7 @@ const ClassificationModel = (callback, deps) => {
               fullWidth
               multiline
               rows="4"
-              value={logregResult}
+              value={logregResult === 1 ? 'scam' : 'not scam'}
             />
           </div>
           <div>
@@ -179,7 +179,7 @@ const ClassificationModel = (callback, deps) => {
               fullWidth
               multiline
               rows="4"
-              value={KNNResult}
+              value={KNNResult === 1 ? 'scam' : 'not scam'}
             />
           </div>
         </Paper>

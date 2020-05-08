@@ -14,6 +14,7 @@ import ClassificationModel from './ClassificationModel'
 import Grid from '@material-ui/core/Grid'
 import { StepContext } from '../App'
 import ClassificationModelWebWorker from './ClassificationModelWebWorker'
+import StepButton from '@material-ui/core/StepButton'
 
 const IMPORT_DATA = gql`
   mutation LoadData {
@@ -91,13 +92,18 @@ const Classification = () => {
     },
   })
   const handleNext = () => {
-    setStep(prevActiveStep => prevActiveStep + 1)
+    setStep(prevActiveStep =>
+      prevActiveStep === 2 ? prevActiveStep : prevActiveStep + 1
+    )
   }
 
   const handleBack = () => {
     setStep(prevActiveStep => prevActiveStep - 1)
   }
 
+  const handleStep = step => () => {
+    setStep(step)
+  }
   return (
     <main className={classes.content}>
       <div className={classes.appBarSpacer} />
@@ -117,10 +123,12 @@ const Classification = () => {
                 </Button>
               </Grid>
               <Grid item xs={6} md={8} lg={10}>
-                <Stepper activeStep={step} alternativeLabel>
-                  {steps.map(label => (
+                <Stepper activeStep={step} alternativeLabel nonLinear>
+                  {steps.map((label, index) => (
                     <Step key={label}>
-                      <StepLabel>{label}</StepLabel>
+                      <StepButton onClick={handleStep(index)} completed={false}>
+                        {label}
+                      </StepButton>
                     </Step>
                   ))}
                 </Stepper>

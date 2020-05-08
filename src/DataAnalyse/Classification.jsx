@@ -13,6 +13,7 @@ import FeatureTable from './FeatureTable'
 import ClassificationModel from './ClassificationModel'
 import Grid from '@material-ui/core/Grid'
 import { StepContext } from '../App'
+import ClassificationModelWebWorker from './ClassificationModelWebWorker'
 
 const IMPORT_DATA = gql`
   mutation LoadData {
@@ -144,7 +145,12 @@ const Classification = () => {
                 buildRunning={loading}
               />
             )}
-            {step === 2 && <ClassificationModel />}
+            {step === 2 && typeof Worker === 'undefined' && (
+              <ClassificationModel />
+            )}
+            {step === 2 && typeof Worker !== 'undefined' && (
+              <ClassificationModelWebWorker />
+            )}
             <Typography className={classes.instructions}>
               {getStepContent(step)}
             </Typography>

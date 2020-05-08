@@ -27,6 +27,7 @@ export const ModelContext = React.createContext({
     lg: null,
     rf: null,
     knn: null,
+    newModelsJSON: null,
   },
   setModel: () => {},
 })
@@ -54,6 +55,7 @@ const App = () => {
     lg: null,
     rf: null,
     knn: null,
+    newModelsJSON: null,
   })
   // todo in state of setMOdels write hook to store to local storage and to state
   const handleDrawerOpen = () => {

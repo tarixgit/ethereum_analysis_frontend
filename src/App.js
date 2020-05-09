@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { BrowserRouter, Switch, Route } from 'react-router-dom'
+import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
 import ApolloClient from 'apollo-boost'
 import { ApolloProvider } from '@apollo/react-hooks'
 import EthereumGraph from './Graph/EthereumGraph'
@@ -77,6 +77,7 @@ const App = () => {
               <CustomAppBar open={open} handleDrawerOpen={handleDrawerOpen} />
               <LeftPanel open={open} handleDrawerClose={handleDrawerClose} />
               <Switch>
+                <Redirect exact from="/" to="/graph" />
                 <Route path="/class">
                   <Classification />
                 </Route>
@@ -89,10 +90,10 @@ const App = () => {
                 <Route path="/info">
                   <Info />
                 </Route>
-                <Route path="/:hash">
+                <Route path="/graph/:hash">
                   <EthereumGraph />
                 </Route>
-                <Route path="/">
+                <Route path="/graph">
                   <EthereumGraph />
                 </Route>
               </Switch>

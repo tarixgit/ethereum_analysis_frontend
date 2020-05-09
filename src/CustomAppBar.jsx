@@ -4,10 +4,13 @@ import IconButton from '@material-ui/core/IconButton'
 import MenuIcon from '@material-ui/icons/Menu'
 import Typography from '@material-ui/core/Typography'
 import Badge from '@material-ui/core/Badge'
-import NotificationsIcon from '@material-ui/icons/Notifications'
+import HelpIcon from '@material-ui/icons/Help'
 import AppBar from '@material-ui/core/AppBar'
-import React from 'react'
-import { makeStyles } from '@material-ui/core/styles'
+import React, { Fragment, useState } from 'react'
+import { makeStyles, withStyles } from '@material-ui/core/styles'
+import { useLocation, useParams, useRouteMatch } from 'react-router-dom'
+import Tooltip from '@material-ui/core/Tooltip'
+import ClickAwayListener from '@material-ui/core/ClickAwayListener'
 
 const drawerWidth = 240
 
@@ -50,8 +53,55 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
+const HtmlTooltip = withStyles(theme => ({
+  tooltip: {
+    backgroundColor: '#f5f5f9',
+    color: 'rgba(0, 0, 0, 0.87)',
+    maxWidth: 220,
+    fontSize: theme.typography.pxToRem(12),
+    border: '1px solid #dadde9',
+  },
+}))(Tooltip)
+
+const tooltipTitles = {
+  class: '',
+  model: '',
+  searchneighbors: '',
+  info: '',
+  graph: (
+    <Fragment>
+      <Typography color="inherit">Ethereum grpah</Typography>
+      {'Some functionality: '}
+      <ul style={{ margin: 0 }}>
+        <li>The graph will not be erased after new address added</li>
+        <li>You can use right click to load more for selected node</li>
+      </ul>
+      {/*
+                    <em>{"And here's"}</em> <b>{'some'}</b>{' '}
+                    <u>{'amazing content'}</u>. {"It's very engaging. Right?"}
+*/}
+    </Fragment>
+  ),
+}
+
 const CustomAppBar = ({ handleDrawerOpen, open }) => {
   const classes = useStyles()
+  const [isTooltipOpen, setOpen] = useState(false)
+  let match = useRouteMatch('/:page')
+  let tooltipTitle = 'No info'
+  if (match) {
+    const { page } = match && match.params ? match.params : null
+    tooltipTitle = tooltipTitles[page] ? tooltipTitles[page] : tooltipTitle
+    tooltipTitle = !page ? tooltipTitles.graph : tooltipTitle
+  }
+
+  const handleTooltipClose = () => {
+    setOpen(false)
+  }
+
+  const handleTooltipOpen = () => {
+    setOpen(true)
+  }
   return (
     <div>
       <AppBar
@@ -78,13 +128,23 @@ const CustomAppBar = ({ handleDrawerOpen, open }) => {
             noWrap
             className={classes.title}
           >
-            Dashboard
+            Ethereum analysis
           </Typography>
-          <IconButton color="inherit">
-            <Badge badgeContent={4} color="secondary">
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
+          <ClickAwayListener onClickAway={handleTooltipClose}>
+            <div>
+              <HtmlTooltip
+                title={tooltipTitle}
+                placement="bottom-start"
+                open={isTooltipOpen}
+                disableFocusListener
+                disableHoverListener
+              >
+                <IconButton color="inherit" onClick={handleTooltipOpen}>
+                  <HelpIcon />
+                </IconButton>
+              </HtmlTooltip>
+            </div>
+          </ClickAwayListener>
         </Toolbar>
       </AppBar>
     </div>

@@ -242,7 +242,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
                 <Button
                   color="primary"
                   className={buttonClassname}
-                  disabled={loading}
+                  disabled={spinner}
                   onClick={() =>
                     postMessage({ trainingData, trainingDataPredictions })
                   }

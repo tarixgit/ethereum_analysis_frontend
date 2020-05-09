@@ -8,6 +8,8 @@ import CustomAppBar from './CustomAppBar'
 import LeftPanel from './LeftPanel/LeftPanel'
 import { makeStyles } from '@material-ui/core/styles'
 import ClassificationTest from './AddressTest/ClassificationTest'
+import SearchNeighbors from './SearchNeighbors/SearchNeighbors'
+import Info from './Info/Info'
 /*
 function Copyright() {
     return (
@@ -80,6 +82,12 @@ const App = () => {
                 </Route>
                 <Route path="/model">
                   <ClassificationTest />
+                </Route>
+                <Route path="/searchneighbors">
+                  <SearchNeighbors />
+                </Route>
+                <Route path="/info">
+                  <Info />
                 </Route>
                 <Route path="/:hash">
                   <EthereumGraph />

@@ -121,9 +121,9 @@ const ClassificationModel = (callback, deps) => {
       const rfResult = rf.predict(addressFeature)
       const predictedLogreg = lg.predict(new Matrix(addressFeature))
       const predictedKNN = knn.predict(addressFeature)
-      setRfResult(rfResult)
-      setLogregResult(predictedLogreg)
-      setKNNResult(predictedKNN)
+      setRfResult(rfResult[0] === 1 ? 'scam' : 'not scam')
+      setLogregResult(predictedLogreg[0] === 1 ? 'scam' : 'not scam')
+      setKNNResult(predictedKNN[0] === 1 ? 'scam' : 'not scam')
     }
   }, [addressInfo])
   // TODO Button link to train section
@@ -159,7 +159,7 @@ const ClassificationModel = (callback, deps) => {
               fullWidth
               multiline
               rows="4"
-              value={rfResult === 1 ? 'scam' : 'not scam'}
+              value={rfResult}
             />
           </div>
           <div>
@@ -169,7 +169,7 @@ const ClassificationModel = (callback, deps) => {
               fullWidth
               multiline
               rows="4"
-              value={logregResult === 1 ? 'scam' : 'not scam'}
+              value={logregResult}
             />
           </div>
           <div>
@@ -179,7 +179,7 @@ const ClassificationModel = (callback, deps) => {
               fullWidth
               multiline
               rows="4"
-              value={KNNResult === 1 ? 'scam' : 'not scam'}
+              value={KNNResult}
             />
           </div>
         </Paper>

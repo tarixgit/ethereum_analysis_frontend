@@ -3,68 +3,69 @@ import ListItem from '@material-ui/core/ListItem'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
 import ListSubheader from '@material-ui/core/ListSubheader'
-import DashboardIcon from '@material-ui/icons/Dashboard'
-import ShoppingCartIcon from '@material-ui/icons/ShoppingCart'
-import PeopleIcon from '@material-ui/icons/People'
+import GrainIcon from '@material-ui/icons/Grain'
+import StorageIcon from '@material-ui/icons/Storage'
+import BubbleChartIcon from '@material-ui/icons/BubbleChart'
 import BarChartIcon from '@material-ui/icons/BarChart'
-import AssignmentIcon from '@material-ui/icons/Assignment'
+import InfoIcon from '@material-ui/icons/Info'
+import PlaylistAddCheckIcon from '@material-ui/icons/PlaylistAddCheck'
 import { Link } from 'react-router-dom'
-
+// compare_arrows
 export const mainListItems = classes => (
   <div>
     <Link to="/" className={classes.links}>
       <ListItem button>
         <ListItemIcon>
-          <DashboardIcon />
+          <GrainIcon />
         </ListItemIcon>
-        <ListItemText primary="Ethereum Graph" />
+        <ListItemText primary="Ethereum graph" />
       </ListItem>
     </Link>
     <Link to="/class" className={classes.links}>
       <ListItem button>
         <ListItemIcon>
-          <ShoppingCartIcon />
+          <StorageIcon />
         </ListItemIcon>
-        <ListItemText primary="Data Analyse" />
+        <ListItemText primary="Data and models" />
       </ListItem>
     </Link>
     <Link to="/model" className={classes.links}>
       <ListItem button>
         <ListItemIcon>
-          <PeopleIcon />
+          <PlaylistAddCheckIcon />
         </ListItemIcon>
         <ListItemText primary="Test of address" />
       </ListItem>
     </Link>
-    <ListItem button>
-      <ListItemIcon>
-        <PeopleIcon />
-      </ListItemIcon>
-      <ListItemText primary="Parameter" />
-    </ListItem>
-    <ListItem button>
-      <ListItemIcon>
-        <BarChartIcon />
-      </ListItemIcon>
-      <ListItemText primary="Integrations" />
-    </ListItem>
+    <Link to="/searchneighbors" className={classes.links}>
+      <ListItem button>
+        <ListItemIcon>
+          <BubbleChartIcon />
+        </ListItemIcon>
+        <ListItemText primary="Scam neighbors" />
+      </ListItem>
+    </Link>
   </div>
 )
 
-export const secondaryListItems = () => (
+export const secondaryListItems = classes => (
   <div>
-    <ListSubheader inset>Saved reports</ListSubheader>
-    <ListItem button>
-      <ListItemIcon>
-        <AssignmentIcon />
-      </ListItemIcon>
-      <ListItemText primary="Current" />
-    </ListItem>
+    <ListSubheader inset>Documentation</ListSubheader>
+    <Link to="/info" className={classes.links}>
+      <ListItem button>
+        <ListItemIcon>
+          <InfoIcon />
+        </ListItemIcon>
+        <ListItemText primary="Info" />
+      </ListItem>
+    </Link>
+    {/*
     <ListItem button>
       <ListItemIcon>
         <AssignmentIcon />
       </ListItemIcon>
       <ListItemText primary="Last" />
     </ListItem>
+*/}
   </div>
 )

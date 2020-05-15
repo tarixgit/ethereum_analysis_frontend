@@ -212,11 +212,12 @@ const EthereumGraph = () => {
   const changeAddress = useCallback(
     e => {
       const { value } = e.target
-      if (value.length >= 42) {
-        loadNetworkData({
-          variables: { address: value.toLowerCase() },
-        })
-      }
+      // cause performance issue
+      // if (value.length >= 42) {
+      //   loadNetworkData({
+      //     variables: { address: value.toLowerCase() },
+      //   })
+      // }
       setAddress(value)
     },
     [loadNetworkData, setAddress]

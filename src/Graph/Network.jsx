@@ -68,7 +68,7 @@ const Network = ({ nodes, edges, loadMore, labels }) => {
       edgesSet.clear()
     }
   }, [])
-  nodesSet.update([...nodes])
+  nodesSet.update([...nodes]) // doesn't remove not included address
   edgesSet.update(edges)
   return (
     <div ref={ref} className={classes.root}>

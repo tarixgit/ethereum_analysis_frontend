@@ -93,6 +93,7 @@ const CustomAppBar = ({ handleDrawerOpen, open }) => {
     const { page } = match && match.params ? match.params : null
     tooltipTitle = tooltipTitles[page] ? tooltipTitles[page] : tooltipTitle
     tooltipTitle = !page ? tooltipTitles.graph : tooltipTitle
+    // TODO dsa gleiche auch für Titel machen
   }
 
   const handleTooltipClose = () => {

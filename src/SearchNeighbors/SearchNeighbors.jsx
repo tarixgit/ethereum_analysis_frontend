@@ -72,42 +72,17 @@ const LABELS = gql`
   }
 `
 
-const TRANSACTION = gql`
-  query Addresses($address: String!) {
-    addresses(address: $address) {
-      id
-      scam
-      hash
-      degree
-      alias
-      labelId
-      transactionsInput {
-        amount
-        bid
-        id
-        fromAddress {
-          id
-          hash
-          scam
-          labelId
-          degree
-          outdegree
-          alias
-        }
+const TEST = gql`
+  query FindNeighborsScam($address: String!) {
+    findNeighborsScam(address: $address) {
+      edges {
+        to
+        from
       }
-      transactionsOutput {
-        amount
-        bid
+      nodes {
+        group
         id
-        toAddress {
-          id
-          hash
-          scam
-          labelId
-          degree
-          outdegree
-          alias
-        }
+        label
       }
     }
   }
@@ -197,7 +172,7 @@ const SearchNeighbors = () => {
     called,
     errorLabels,
   } = useQuery(LABELS)
-  const [loadNetworkData, { loading, error, data }] = useLazyQuery(TRANSACTION)
+  const [loadNetworkData, { loading, error, data }] = useLazyQuery(TEST)
   const [loadMoreNetworkData, { data: dataAdd }] = useLazyQuery(
     TRANSACTION_MORE
   )
@@ -212,11 +187,6 @@ const SearchNeighbors = () => {
   const changeAddress = useCallback(
     e => {
       const { value } = e.target
-      if (value.length >= 42) {
-        loadNetworkData({
-          variables: { address: value.toLowerCase() },
-        })
-      }
       setAddress(value)
     },
     [loadNetworkData, setAddress]
@@ -242,12 +212,12 @@ const SearchNeighbors = () => {
 
   if (labelLoading) return <p>labelLoading...</p>
   if (errorLabels) return <p>Error :(</p>
-  const addressesWithInfo = get(data, 'addresses[0]', null)
-  if (addressesWithInfo) {
-    const result = getNodesAndEdges(addressesWithInfo)
-    edges = result.edges
-    nodes = result.nodes
-  }
+  const graphData = get(data, 'findNeighborsScam', {
+    edges: null,
+    nodes: null,
+  })
+  edges = graphData.edges ? graphData.edges : edges
+  nodes = graphData.nodes ? graphData.nodes : nodes
   // nachladen
   const addressAdditional = get(dataAdd, 'address', null)
   if (addressAdditional) {

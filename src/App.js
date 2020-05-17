@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
-import ApolloClient from 'apollo-boost'
-import { ApolloProvider } from '@apollo/react-hooks'
+import { useSubscription } from '@apollo/react-hooks'
+import { gql } from 'apollo-boost'
+
 import EthereumGraph from './Graph/EthereumGraph'
 import Classification from './DataAnalyse/Classification'
 import CustomAppBar from './CustomAppBar'
@@ -24,6 +25,7 @@ function Copyright() {
     );
 }
 */
+
 export const ModelContext = React.createContext({
   model: {
     lg: null,
@@ -45,9 +47,30 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-const client = new ApolloClient({
-  uri: process.env.REACT_APP_GRAPHQL,
-})
+const MESSAGE = gql`
+  subscription Message {
+    messageNotify {
+      message
+    }
+  }
+`
+
+const SCAM_FOUND = gql`
+  subscription MySubscription {
+    neighborsScamFounded {
+      edges {
+        from
+        to
+      }
+      error
+      nodes {
+        group
+        id
+        label
+      }
+    }
+  }
+`
 
 const App = () => {
   const classes = useStyles()
@@ -59,6 +82,11 @@ const App = () => {
     knn: null,
     newModelsJSON: null,
   })
+  const { data: message, loading } = useSubscription(MESSAGE)
+  const { data: neighborsScamFounded, loading_ } = useSubscription(SCAM_FOUND)
+  console.log(message)
+  console.log(neighborsScamFounded)
+  console.log(loading_)
   // todo in state of setMOdels write hook to store to local storage and to state
   const handleDrawerOpen = () => {
     setOpen(true)
@@ -69,39 +97,37 @@ const App = () => {
   // TODO Powered by Etherscan.io APIs
   // TODO Powered by etherscamdb APIs
   return (
-    <ApolloProvider client={client}>
-      <ModelContext.Provider value={{ models, setModels }}>
-        <StepContext.Provider value={{ step, setStep }}>
-          <BrowserRouter>
-            <div className={classes.root}>
-              <CustomAppBar open={open} handleDrawerOpen={handleDrawerOpen} />
-              <LeftPanel open={open} handleDrawerClose={handleDrawerClose} />
-              <Switch>
-                <Redirect exact from="/" to="/graph" />
-                <Route path="/class">
-                  <Classification />
-                </Route>
-                <Route path="/model">
-                  <ClassificationTest />
-                </Route>
-                <Route path="/searchneighbors">
-                  <SearchNeighbors />
-                </Route>
-                <Route path="/info">
-                  <Info />
-                </Route>
-                <Route path="/graph/:hash">
-                  <EthereumGraph />
-                </Route>
-                <Route path="/graph">
-                  <EthereumGraph />
-                </Route>
-              </Switch>
-            </div>
-          </BrowserRouter>
-        </StepContext.Provider>
-      </ModelContext.Provider>
-    </ApolloProvider>
+    <ModelContext.Provider value={{ models, setModels }}>
+      <StepContext.Provider value={{ step, setStep }}>
+        <BrowserRouter>
+          <div className={classes.root}>
+            <CustomAppBar open={open} handleDrawerOpen={handleDrawerOpen} />
+            <LeftPanel open={open} handleDrawerClose={handleDrawerClose} />
+            <Switch>
+              <Redirect exact from="/" to="/graph" />
+              <Route path="/class">
+                <Classification />
+              </Route>
+              <Route path="/model">
+                <ClassificationTest />
+              </Route>
+              <Route path="/searchneighbors">
+                <SearchNeighbors />
+              </Route>
+              <Route path="/info">
+                <Info />
+              </Route>
+              <Route path="/graph/:hash">
+                <EthereumGraph />
+              </Route>
+              <Route path="/graph">
+                <EthereumGraph />
+              </Route>
+            </Switch>
+          </div>
+        </BrowserRouter>
+      </StepContext.Provider>
+    </ModelContext.Provider>
   )
 }
 

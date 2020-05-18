@@ -2,7 +2,7 @@ import React, { Fragment, useCallback, useEffect, useState } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import { useParams } from 'react-router-dom'
-import { useLazyQuery, useQuery } from '@apollo/react-hooks'
+import { useLazyQuery, useMutation, useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import Grid from '@material-ui/core/Grid'
 import Paper from '@material-ui/core/Paper'
@@ -73,20 +73,29 @@ const LABELS = gql`
 `
 
 const TEST = gql`
-  query FindNeighborsScam($address: String!) {
-    findNeighborsScam(address: $address) {
-      edges {
-        to
-        from
-      }
-      nodes {
-        group
-        id
-        label
-      }
+  mutation FindNeighborsScam($address: String!) {
+    findNeighborsScamThread(address: $address) {
+      success
+      message
     }
   }
 `
+
+// const TEST = gql`
+//   query FindNeighborsScam($address: String!) {
+//     findNeighborsScam(address: $address) {
+//       edges {
+//         to
+//         from
+//       }
+//       nodes {
+//         group
+//         id
+//         label
+//       }
+//     }
+//   }
+// `
 
 const TRANSACTION_MORE = gql`
   query Address($addressId: ID!) {
@@ -172,7 +181,7 @@ const SearchNeighbors = () => {
     called,
     errorLabels,
   } = useQuery(LABELS)
-  const [loadNetworkData, { loading, error, data }] = useLazyQuery(TEST)
+  const [loadNetworkData, { loading, error, data }] = useMutation(TEST)
   const [loadMoreNetworkData, { data: dataAdd }] = useLazyQuery(
     TRANSACTION_MORE
   )

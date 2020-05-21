@@ -17,6 +17,8 @@ import { gql } from 'apollo-boost'
 import { Link } from 'react-router-dom'
 import download from 'downloadjs'
 import { FormattedNumber, useIntl } from 'react-intl'
+import Grid from '@material-ui/core/Grid'
+import TableMenu from '../components/TableMenu'
 
 const LOAD_ADDRESS_FEATURES = gql`
   query AddressFeatures($offset: Int!, $limit: Int!) {
@@ -332,34 +334,32 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length)
   // TODO Menu stat 3 Buttons
   // buildFeatures disabled
+  const openInfoModal = useCallback(() => {})
   return (
     <Paper elevation={3} className={classes.root}>
-      <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
-        <Button
-          variant="contained"
-          color="primary"
-          disabled={buildRunning || true}
-          onClick={buildFeatures}
-        >
-          Build features
-        </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          disabled={exportAddFeatureRunning}
-          onClick={exportAddFeatures}
-        >
-          Export address features
-        </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          disbaled={exportTransFeatureRunning}
-          onClick={exportTransFeatures}
-        >
-          Export trans. features
-        </Button>
-      </div>
+      <Grid container justify="space-between" alignItems="center">
+        <Grid item>
+          <div>
+            <span>Feature table</span>
+          </div>
+        </Grid>
+        <Grid item>
+          <TableMenu
+            menuItems={[
+              { label: 'Build features', handler: buildFeatures },
+              {
+                label: 'Export address features',
+                handler: exportAddFeatureRunning,
+              },
+              {
+                label: 'Export trans. features',
+                handler: exportTransFeatureRunning,
+              },
+              { label: 'Info', handler: openInfoModal },
+            ]}
+          />
+        </Grid>
+      </Grid>
       <Paper elevation={0} className={classes.paper}>
         <TableContainer>
           <Table

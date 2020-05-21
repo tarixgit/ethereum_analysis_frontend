@@ -7,9 +7,9 @@ import Grow from '@material-ui/core/Grow'
 import ClickAwayListener from '@material-ui/core/ClickAwayListener'
 import MenuList from '@material-ui/core/MenuList'
 import MenuItem from '@material-ui/core/MenuItem'
-import Grid from '@material-ui/core/Grid'
+import { map } from 'lodash'
 
-const BlackWhiteListMenu = ({ importData, openInfoModal }) => {
+const TableMenu = ({ menuItems }) => {
   const anchorRef = useRef(null)
   const [open, setOpen] = useState(false)
   const handleToggle = () => {
@@ -22,14 +22,10 @@ const BlackWhiteListMenu = ({ importData, openInfoModal }) => {
 
     setOpen(false)
   }
-  const importDataHandler = useCallback(() => {
+  const runHandler = handler => () => {
     handleToggle()
-    importData()
-  })
-  const openInfoModalHandler = useCallback(() => {
-    handleToggle()
-    openInfoModal()
-  })
+    handler()
+  }
 
   return (
     <Fragment>
@@ -58,12 +54,11 @@ const BlackWhiteListMenu = ({ importData, openInfoModal }) => {
             }}
           >
             <Paper>
-              <ClickAwayListener onClickAway={importDataHandler}>
+              <ClickAwayListener onClickAway={handleClose}>
                 <MenuList autoFocusItem={open} id="menu-list-grow">
-                  <MenuItem onClick={importData}>
-                    Import blacklist data
-                  </MenuItem>
-                  <MenuItem onClick={openInfoModalHandler}>Info</MenuItem>
+                  {map(menuItems, ({ label, handler }) => (
+                    <MenuItem onClick={runHandler(handler)}>{label}</MenuItem>
+                  ))}
                 </MenuList>
               </ClickAwayListener>
             </Paper>
@@ -74,4 +69,4 @@ const BlackWhiteListMenu = ({ importData, openInfoModal }) => {
   )
 }
 
-export default BlackWhiteListMenu
+export default TableMenu

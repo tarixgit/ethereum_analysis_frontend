@@ -15,19 +15,8 @@ import Button from '@material-ui/core/Button'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import { Link } from 'react-router-dom'
-import IconButton from '@material-ui/core/IconButton'
-import Menu from '@material-ui/core/Menu'
-import MenuItem from '@material-ui/core/MenuItem'
-import MoreVertIcon from '@material-ui/icons/MoreVert'
-import ClickAwayListener from '@material-ui/core/ClickAwayListener'
-import Grow from '@material-ui/core/Grow'
-import MenuList from '@material-ui/core/MenuList'
-import Popper from '@material-ui/core/Popper'
 import Grid from '@material-ui/core/Grid'
-import BlackWhiteListMenu from '../components/BlackWhiteListMenu'
-// .MuiTableCell-sizeSmall {
-//   padding: 3px 1px 3px 1px;
-// }
+import TableMenu from '../components/TableMenu'
 
 const LOAD_IMPORT_ADDRESSES = gql`
   query ImportAddresses($offset: Int!, $limit: Int!) {
@@ -226,9 +215,14 @@ const ImportAddressTable = ({ importData }) => {
           </div>
         </Grid>
         <Grid item>
-          <BlackWhiteListMenu
-            importData={importData}
-            openInfoModal={openInfoModal}
+          <TableMenu
+            menuItems={[
+              {
+                label: 'Import blacklist data',
+                handler: importData,
+              },
+              { label: 'Info', handler: openInfoModal },
+            ]}
           />
         </Grid>
       </Grid>

@@ -23,7 +23,7 @@ const useStyles = makeStyles(theme => ({
     flexDirection: 'column',
   },
   table: {
-    minWidth: 750,
+    minWidth: 180,
   },
 }))
 

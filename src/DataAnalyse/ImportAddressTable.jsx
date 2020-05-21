@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import PropTypes from 'prop-types'
 import { makeStyles } from '@material-ui/core/styles'
 import Table from '@material-ui/core/Table'
@@ -15,7 +15,16 @@ import Button from '@material-ui/core/Button'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import { Link } from 'react-router-dom'
-
+import IconButton from '@material-ui/core/IconButton'
+import Menu from '@material-ui/core/Menu'
+import MenuItem from '@material-ui/core/MenuItem'
+import MoreVertIcon from '@material-ui/icons/MoreVert'
+import ClickAwayListener from '@material-ui/core/ClickAwayListener'
+import Grow from '@material-ui/core/Grow'
+import MenuList from '@material-ui/core/MenuList'
+import Popper from '@material-ui/core/Popper'
+import Grid from '@material-ui/core/Grid'
+import BlackWhiteListMenu from '../components/BlackWhiteListMenu'
 // .MuiTableCell-sizeSmall {
 //   padding: 3px 1px 3px 1px;
 // }
@@ -33,6 +42,7 @@ const LOAD_IMPORT_ADDRESSES = gql`
         status
         subcategory
         url
+        scam
       }
       count
     }
@@ -64,6 +74,7 @@ const headCells = [
     label: 'Quelle',
   },
   { id: 'status', numeric: false, disablePadding: false, label: 'Status' },
+  { id: 'scam', numeric: false, disablePadding: false, label: 'Scam' },
 ]
 
 const EnhancedTableHead = props => {
@@ -113,15 +124,18 @@ EnhancedTableHead.propTypes = {
 
 const useStyles = makeStyles(theme => ({
   root: {
-    width: `calc(100% - ${2 * theme.spacing(2)}px)`,
-    paddingTop: theme.spacing(2),
-    paddingLeft: theme.spacing(2),
-    paddingRight: theme.spacing(2),
-    margin: theme.spacing(1),
+    padding: theme.spacing(2),
+    display: 'flex',
+    overflow: 'auto',
+    flexDirection: 'column',
   },
   paper: {
-    width: '100%',
-    marginBottom: theme.spacing(2),
+    // width: '100%',
+    // marginBottom: theme.spacing(2),
+    padding: theme.spacing(2),
+    display: 'flex',
+    overflow: 'auto',
+    flexDirection: 'column',
   },
   table: {
     minWidth: 750,
@@ -202,16 +216,22 @@ const ImportAddressTable = ({ importData }) => {
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length)
 
+  const openInfoModal = useCallback(() => {})
   return (
     <Paper elevation={3} className={classes.root}>
-      <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
-        <Button variant="contained" color="primary" onClick={importData}>
-          Import blacklist data
-        </Button>
-      </div>
-      <div>
-        <span>Blacklist and whitelist together</span>
-      </div>
+      <Grid container justify="space-between" alignItems="center">
+        <Grid item>
+          <div>
+            <span>Blacklist and whitelist together</span>
+          </div>
+        </Grid>
+        <Grid item>
+          <BlackWhiteListMenu
+            importData={importData}
+            openInfoModal={openInfoModal}
+          />
+        </Grid>
+      </Grid>
       <Paper elevation={0} className={classes.paper}>
         <TableContainer>
           <Table
@@ -241,8 +261,8 @@ const ImportAddressTable = ({ importData }) => {
                   <TableCell component="th" scope="row" padding="none">
                     {row.id}
                   </TableCell>
-                  <TableCell align="right">
-                    <Link to={`/${row.hash}`} className={classes.links}>
+                  <TableCell padding="none">
+                    <Link to={`graph/${row.hash}`} className={classes.links}>
                       <Button color="primary">
                         {get(row, 'hash', '').length > 42
                           ? `${truncate(row.hash, {
@@ -258,7 +278,8 @@ const ImportAddressTable = ({ importData }) => {
                   <TableCell>{row.subcategory}</TableCell>
                   <TableCell>{row.url}</TableCell>
                   <TableCell>{row.reporter}</TableCell>
-                  <TableCell align="right">{row.status}</TableCell>
+                  <TableCell>{row.status}</TableCell>
+                  <TableCell>{row.scam ? 'true' : 'false'}</TableCell>
                 </TableRow>
               ))}
               {emptyRows > 0 && (

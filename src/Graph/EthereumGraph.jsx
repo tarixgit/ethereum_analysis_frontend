@@ -212,7 +212,7 @@ const EthereumGraph = () => {
   const changeAddress = useCallback(
     e => {
       const { value } = e.target
-      // cause performance issue
+      //cause performance issue
       // if (value.length >= 42) {
       //   loadNetworkData({
       //     variables: { address: value.toLowerCase() },

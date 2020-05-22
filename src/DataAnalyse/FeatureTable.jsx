@@ -264,7 +264,6 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
 
   useEffect(() => {
     // TODO every time download?
-    // TODO Hash of Address is wrong in export
     if (called) {
       exportToCSV(headTransactionCells, transFeatures, formatNumber)
     }

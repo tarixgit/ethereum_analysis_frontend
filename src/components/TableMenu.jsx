@@ -8,8 +8,16 @@ import ClickAwayListener from '@material-ui/core/ClickAwayListener'
 import MenuList from '@material-ui/core/MenuList'
 import MenuItem from '@material-ui/core/MenuItem'
 import { map } from 'lodash'
+import { makeStyles } from '@material-ui/core/styles'
+
+const useStyles = makeStyles(theme => ({
+  paper: {
+    boxShadow: theme.shadows[8],
+  },
+}))
 
 const TableMenu = ({ menuItems }) => {
+  const classes = useStyles()
   const anchorRef = useRef(null)
   const [open, setOpen] = useState(false)
   const handleToggle = () => {
@@ -53,7 +61,7 @@ const TableMenu = ({ menuItems }) => {
                 placement === 'bottom' ? 'center top' : 'center bottom',
             }}
           >
-            <Paper>
+            <Paper className={classes.paper}>
               <ClickAwayListener onClickAway={handleClose}>
                 <MenuList autoFocusItem={open} id="menu-list-grow">
                   {map(menuItems, ({ label, handler }) => (

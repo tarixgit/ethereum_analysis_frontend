@@ -19,8 +19,8 @@ import Grid from '@material-ui/core/Grid'
 import TableMenu from '../components/TableMenu'
 
 const LOAD_IMPORT_ADDRESSES = gql`
-  query ImportAddresses($offset: Int!, $limit: Int!) {
-    importAddresses(offset: $offset, limit: $limit) {
+  query ImportAddresses($orderBy: Order, $offset: Int!, $limit: Int!) {
+    importAddresses(orderBy: [$orderBy], offset: $offset, limit: $limit) {
       rows {
         category
         hash
@@ -149,12 +149,17 @@ const useStyles = makeStyles(theme => ({
 const ImportAddressTable = ({ importData }) => {
   const classes = useStyles()
   const [order, setOrder] = useState('asc')
-  const [orderBy, setOrderBy] = useState('calories')
+  const [orderBy, setOrderBy] = useState(null)
+  const [orderByQuery, setOrderQuery] = useState(null)
   const [selected, setSelected] = useState([])
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const { data, loading } = useQuery(LOAD_IMPORT_ADDRESSES, {
-    variables: { offset: page * rowsPerPage, limit: rowsPerPage },
+    variables: {
+      orderBy: orderByQuery,
+      offset: page * rowsPerPage,
+      limit: rowsPerPage,
+    },
   })
   const rows = get(data, 'importAddresses.rows', [])
   const count = get(data, 'importAddresses.count', -1)
@@ -163,6 +168,7 @@ const ImportAddressTable = ({ importData }) => {
     const isAsc = orderBy === property && order === 'asc'
     setOrder(isAsc ? 'desc' : 'asc')
     setOrderBy(property)
+    setOrderQuery({ field: property, type: isAsc ? 'DESC' : 'ASC' })
   }
 
   const handleSelectAllClick = event => {

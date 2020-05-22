@@ -19,10 +19,11 @@ import download from 'downloadjs'
 import { FormattedNumber, useIntl } from 'react-intl'
 import Grid from '@material-ui/core/Grid'
 import TableMenu from '../components/TableMenu'
+import Tooltip from '@material-ui/core/Tooltip'
 
 const LOAD_ADDRESS_FEATURES = gql`
-  query AddressFeatures($offset: Int!, $limit: Int!) {
-    addressFeatures(offset: $offset, limit: $limit) {
+  query AddressFeatures($orderBy: Order, $offset: Int!, $limit: Int!) {
+    addressFeatures(orderBy: [$orderBy], offset: $offset, limit: $limit) {
       rows {
         id
         hash
@@ -73,6 +74,7 @@ const headCells = [
     label: 'Ids',
   },
   { id: 'hash', numeric: false, disablePadding: true, label: 'hash' },
+  { id: 'scam', numeric: false, disablePadding: false, label: 'Scam' },
   {
     id: 'numberOfNone',
     numeric: false,
@@ -247,13 +249,18 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
   const [selected, setSelected] = useState([])
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
+  const [orderByQuery, setOrderQuery] = useState(null)
   const {
     data,
     refetch,
     loading: exportAddFeatureRunning,
     networkStatus,
   } = useQuery(LOAD_ADDRESS_FEATURES, {
-    variables: { offset: page * rowsPerPage, limit: rowsPerPage },
+    variables: {
+      orderBy: orderByQuery,
+      offset: page * rowsPerPage,
+      limit: rowsPerPage,
+    },
   })
   const [
     getTransactionFeatures,
@@ -291,6 +298,7 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
     const isAsc = orderBy === property && order === 'asc'
     setOrder(isAsc ? 'desc' : 'asc')
     setOrderBy(property)
+    setOrderQuery({ field: property, type: isAsc ? 'DESC' : 'ASC' })
   }
 
   const handleSelectAllClick = event => {
@@ -391,18 +399,21 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
                     {row.id}
                   </TableCell>
                   <TableCell padding="none">
-                    <Link to={`/${row.hash}`} className={classes.links}>
-                      <Button
-                        color="primary"
-                        className={classes.button}
-                        size="small"
-                      >
-                        {truncate(row.hash, {
-                          length: 10,
-                        })}
-                      </Button>
-                    </Link>
+                    <Tooltip title={row.hash} aria-label="add">
+                      <Link to={`/${row.hash}`} className={classes.links}>
+                        <Button
+                          color="primary"
+                          className={classes.button}
+                          size="small"
+                        >
+                          {truncate(row.hash, {
+                            length: 10,
+                          })}
+                        </Button>
+                      </Link>
+                    </Tooltip>
                   </TableCell>
+                  <TableCell>{row.scam ? 'true' : 'false'}</TableCell>
                   <TableCell>{row.numberOfNone}</TableCell>
                   <TableCell>{row.numberOfOneTime}</TableCell>
                   <TableCell>{row.numberOfExchange}</TableCell>

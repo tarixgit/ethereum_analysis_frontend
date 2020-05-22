@@ -17,6 +17,9 @@ import { gql } from 'apollo-boost'
 import { Link } from 'react-router-dom'
 import Grid from '@material-ui/core/Grid'
 import TableMenu from '../components/TableMenu'
+import EnhancedTableHead from '../components/EnhancedTableHead'
+import TableBodyEnhanced from '../components/TableBodyEnhanced'
+import Tooltip from '@material-ui/core/Tooltip'
 
 const LOAD_IMPORT_ADDRESSES = gql`
   query ImportAddresses($orderBy: Order, $offset: Int!, $limit: Int!) {
@@ -45,7 +48,25 @@ const headCells = [
     disablePadding: true,
     label: 'Ids',
   },
-  { id: 'hash', numeric: false, disablePadding: false, label: 'Hash' },
+  {
+    id: 'hash',
+    numeric: false,
+    disablePadding: false,
+    label: 'Hash',
+    render: (val, _, __, classes) => (
+      <TableCell padding="none">
+        <Link to={`graph/${val}`} className={classes.links}>
+          <Button color="primary">
+            {val.length > 42
+              ? `${truncate(val, {
+                  length: 42,
+                })}`
+              : val}
+          </Button>
+        </Link>
+      </TableCell>
+    ),
+  },
   { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
   { id: 'coin', numeric: false, disablePadding: false, label: 'Währung' },
   { id: 'category', numeric: false, disablePadding: false, label: 'Category' },
@@ -65,51 +86,6 @@ const headCells = [
   { id: 'status', numeric: false, disablePadding: false, label: 'Status' },
   { id: 'scam', numeric: false, disablePadding: false, label: 'Scam' },
 ]
-
-const EnhancedTableHead = props => {
-  const { classes, order, orderBy, onRequestSort } = props
-  const createSortHandler = property => event => {
-    onRequestSort(event, property)
-  }
-
-  return (
-    <TableHead>
-      <TableRow>
-        {headCells.map(headCell => (
-          <TableCell
-            key={headCell.id}
-            align={headCell.numeric ? 'right' : 'left'}
-            padding={headCell.disablePadding ? 'none' : 'default'}
-            sortDirection={orderBy === headCell.id ? order : false}
-          >
-            <TableSortLabel
-              active={orderBy === headCell.id}
-              direction={orderBy === headCell.id ? order : 'asc'}
-              onClick={createSortHandler(headCell.id)}
-            >
-              {headCell.label}
-              {orderBy === headCell.id ? (
-                <span className={classes.visuallyHidden}>
-                  {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
-                </span>
-              ) : null}
-            </TableSortLabel>
-          </TableCell>
-        ))}
-      </TableRow>
-    </TableHead>
-  )
-}
-
-EnhancedTableHead.propTypes = {
-  classes: PropTypes.object.isRequired,
-  numSelected: PropTypes.number.isRequired,
-  onRequestSort: PropTypes.func.isRequired,
-  onSelectAllClick: PropTypes.func.isRequired,
-  order: PropTypes.oneOf(['asc', 'desc']).isRequired,
-  orderBy: PropTypes.string.isRequired,
-  rowCount: PropTypes.number.isRequired,
-}
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -248,46 +224,14 @@ const ImportAddressTable = ({ importData }) => {
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
+              headCells={headCells}
             />
-            <TableBody>
-              {map(rows, row => (
-                <TableRow
-                  hover
-                  onClick={event => handleClick(event, row.id)}
-                  role="checkbox"
-                  tabIndex={-1}
-                  key={row.id}
-                >
-                  <TableCell component="th" scope="row" padding="none">
-                    {row.id}
-                  </TableCell>
-                  <TableCell padding="none">
-                    <Link to={`graph/${row.hash}`} className={classes.links}>
-                      <Button color="primary">
-                        {get(row, 'hash', '').length > 42
-                          ? `${truncate(row.hash, {
-                              length: 42,
-                            })}`
-                          : row.hash}
-                      </Button>
-                    </Link>
-                  </TableCell>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{row.coin}</TableCell>
-                  <TableCell>{row.category}</TableCell>
-                  <TableCell>{row.subcategory}</TableCell>
-                  <TableCell>{row.url}</TableCell>
-                  <TableCell>{row.reporter}</TableCell>
-                  <TableCell>{row.status}</TableCell>
-                  <TableCell>{row.scam ? 'true' : 'false'}</TableCell>
-                </TableRow>
-              ))}
-              {emptyRows > 0 && (
-                <TableRow style={{ height: 33 * emptyRows }}>
-                  <TableCell colSpan={6} />
-                </TableRow>
-              )}
-            </TableBody>
+            <TableBodyEnhanced
+              classes={classes}
+              rows={rows}
+              headCells={headCells}
+              emptyRows={emptyRows}
+            />
           </Table>
         </TableContainer>
         <TablePagination

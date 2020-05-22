@@ -20,6 +20,8 @@ import { FormattedNumber, useIntl } from 'react-intl'
 import Grid from '@material-ui/core/Grid'
 import TableMenu from '../components/TableMenu'
 import Tooltip from '@material-ui/core/Tooltip'
+import EnhancedTableHead from '../components/EnhancedTableHead'
+import TableBodyEnhanced from '../components/TableBodyEnhanced'
 
 const LOAD_ADDRESS_FEATURES = gql`
   query AddressFeatures($orderBy: Order, $offset: Int!, $limit: Int!) {
@@ -69,130 +71,103 @@ const headTransactionCells = [
 const headCells = [
   {
     id: 'id',
-    numeric: false,
+    numeric: true,
     disablePadding: true,
     label: 'Ids',
   },
-  { id: 'hash', numeric: false, disablePadding: true, label: 'hash' },
+  {
+    id: 'hash',
+    numeric: false,
+    disablePadding: true,
+    label: 'hash',
+    render: (val, _, __, classes) => (
+      <TableCell padding="none">
+        <Tooltip title={val} aria-label="add">
+          <Link to={`/${val}`} className={classes.links}>
+            <Button color="primary" className={classes.button} size="small">
+              {truncate(val, {
+                length: 10,
+              })}
+            </Button>
+          </Link>
+        </Tooltip>
+      </TableCell>
+    ),
+  },
   { id: 'scam', numeric: false, disablePadding: false, label: 'Scam' },
   {
     id: 'numberOfNone',
-    numeric: false,
-    disablePadding: false,
+    numeric: true,
+    disablePadding: true,
     label: 'n.None',
   },
   {
     id: 'numberOfOneTime',
-    numeric: false,
-    disablePadding: false,
+    numeric: true,
+    disablePadding: true,
     label: 'n.OneTime',
   },
   {
     id: 'numberOfExchange',
-    numeric: false,
+    numeric: true,
     disablePadding: false,
     label: 'n.Exch.',
   },
   {
     id: 'numberOfMiningPool',
-    numeric: false,
+    numeric: true,
     disablePadding: false,
     label: 'n.MiningP',
   },
   {
     id: 'numberOfMiner',
-    numeric: false,
+    numeric: true,
     disablePadding: false,
     label: 'n.Miner',
   },
   {
     id: 'numberOfSmContract',
-    numeric: false,
+    numeric: true,
     disablePadding: false,
     label: 'n.S.Contr',
   },
   {
     id: 'numberOfERC20',
-    numeric: false,
+    numeric: true,
     disablePadding: false,
     label: 'n.ERC20',
   },
   {
     id: 'numberOfERC721',
-    numeric: false,
+    numeric: true,
     disablePadding: false,
     label: 'n.ERC721',
   },
   {
     id: 'numberOfTrace',
-    numeric: false,
+    numeric: true,
     disablePadding: false,
     label: 'n.Trace',
   },
   {
-    id: 'numberOfTransaction',
-    numeric: false,
+    id: 'numberOfTransactions',
+    numeric: true,
     disablePadding: false,
     label: 'n.Trans.',
   },
   {
     id: 'medianOfEthProTrans',
-    numeric: false,
-    disablePadding: false,
+    numeric: true,
+    disablePadding: true,
     label: 'medianOfEth',
   },
   {
     id: 'averageOfEthProTrans',
-    numeric: false,
-    disablePadding: false,
+    numeric: true,
+    disablePadding: true,
     label: 'Avg.OfEth',
   },
 ]
-
-const EnhancedTableHead = props => {
-  const { classes, order, orderBy, onRequestSort } = props
-  const createSortHandler = property => event => {
-    onRequestSort(event, property)
-  }
-
-  return (
-    <TableHead>
-      <TableRow>
-        {headCells.map(headCell => (
-          <TableCell
-            key={headCell.id}
-            align={headCell.numeric ? 'right' : 'left'}
-            padding={headCell.disablePadding ? 'none' : 'default'}
-            sortDirection={orderBy === headCell.id ? order : false}
-          >
-            <TableSortLabel
-              active={orderBy === headCell.id}
-              direction={orderBy === headCell.id ? order : 'asc'}
-              onClick={createSortHandler(headCell.id)}
-            >
-              {headCell.label}
-              {orderBy === headCell.id ? (
-                <span className={classes.visuallyHidden}>
-                  {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
-                </span>
-              ) : null}
-            </TableSortLabel>
-          </TableCell>
-        ))}
-      </TableRow>
-    </TableHead>
-  )
-}
-
-EnhancedTableHead.propTypes = {
-  classes: PropTypes.object.isRequired,
-  numSelected: PropTypes.number.isRequired,
-  onRequestSort: PropTypes.func.isRequired,
-  onSelectAllClick: PropTypes.func.isRequired,
-  order: PropTypes.oneOf(['asc', 'desc']).isRequired,
-  orderBy: PropTypes.string.isRequired,
-  rowCount: PropTypes.number.isRequired,
-}
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -229,9 +204,11 @@ const useStyles = makeStyles(theme => ({
 const exportToCSV = (headCells, rows, formatNumber) => {
   const headers = map(headCells, 'id').join(';')
   const rowsString = map(rows, row =>
-    map(headCells, ({ id }) => formatNumber(row[id])).join(';')
+    map(headCells, ({ id, numeric }) =>
+      numeric ? formatNumber(row[id]) : String(row[id])
+    ).join(';')
   ).join('\r\n')
-
+  // TODO add improvement with unit8Byte
   download(
     `data:text/csv;charset=utf-8,\ufeff${encodeURI(
       `${headers}\r\n${rowsString}`
@@ -276,7 +253,11 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
   rows = slice(rows, 0, rowsPerPage) // hack because of export/refetching
   const count = get(data, 'addressFeatures.count', -1)
   const exportAddFeatures = useCallback(async () => {
-    const { data: dataToExport } = await refetch({ offset: 0, limit: 10000 })
+    const { data: dataToExport } = await refetch({
+      orderBy: orderByQuery,
+      offset: 0,
+      limit: 0,
+    })
     const rows = get(dataToExport, 'addressFeatures.rows', [])
     exportToCSV(headCells, rows, formatNumber)
   })
@@ -357,12 +338,12 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
               { label: 'Build features', handler: buildFeatures },
               {
                 label: 'Export address features',
-                handler: exportAddFeatureRunning,
+                handler: exportAddFeatures,
               },
-              {
-                label: 'Export trans. features',
-                handler: exportTransFeatureRunning,
-              },
+              // {
+              //   label: 'Export trans. features',
+              //   handler: exportTransFeatures,
+              // },
               { label: 'Info', handler: openInfoModal },
             ]}
           />
@@ -384,60 +365,14 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
+              headCells={headCells}
             />
-            <TableBody>
-              {/* TODO refactor */}
-              {map(rows, row => (
-                <TableRow
-                  hover
-                  onClick={event => handleClick(event, row.id)}
-                  role="checkbox"
-                  tabIndex={-1}
-                  key={row.id}
-                >
-                  <TableCell component="th" scope="row" padding="none">
-                    {row.id}
-                  </TableCell>
-                  <TableCell padding="none">
-                    <Tooltip title={row.hash} aria-label="add">
-                      <Link to={`/${row.hash}`} className={classes.links}>
-                        <Button
-                          color="primary"
-                          className={classes.button}
-                          size="small"
-                        >
-                          {truncate(row.hash, {
-                            length: 10,
-                          })}
-                        </Button>
-                      </Link>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell>{row.scam ? 'true' : 'false'}</TableCell>
-                  <TableCell>{row.numberOfNone}</TableCell>
-                  <TableCell>{row.numberOfOneTime}</TableCell>
-                  <TableCell>{row.numberOfExchange}</TableCell>
-                  <TableCell>{row.numberOfMiningPool}</TableCell>
-                  <TableCell>{row.numberOfMiner}</TableCell>
-                  <TableCell>{row.numberOfSmContract}</TableCell>
-                  <TableCell>{row.numberOfERC20}</TableCell>
-                  <TableCell>{row.numberOfERC721}</TableCell>
-                  <TableCell>{row.numberOfTrace}</TableCell>
-                  <TableCell>{row.numberOfTransactions}</TableCell>
-                  <TableCell>
-                    <FormattedNumber value={row.medianOfEthProTrans} />
-                  </TableCell>
-                  <TableCell>
-                    <FormattedNumber value={row.averageOfEthProTrans} />
-                  </TableCell>
-                </TableRow>
-              ))}
-              {emptyRows > 0 && (
-                <TableRow style={{ height: 33 * emptyRows }}>
-                  <TableCell colSpan={6} />
-                </TableRow>
-              )}
-            </TableBody>
+            <TableBodyEnhanced
+              classes={classes}
+              rows={rows}
+              headCells={headCells}
+              emptyRows={emptyRows}
+            />
           </Table>
         </TableContainer>
         <TablePagination

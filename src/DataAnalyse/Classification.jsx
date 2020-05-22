@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useCallback, useContext, useState } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import Button from '@material-ui/core/Button'
@@ -15,6 +15,9 @@ import Grid from '@material-ui/core/Grid'
 import { StepContext } from '../App'
 import ClassificationModelWebWorker from './ClassificationModelWebWorker'
 import StepButton from '@material-ui/core/StepButton'
+import Snackbar from '@material-ui/core/Snackbar'
+import MuiAlert from '@material-ui/lab/Alert'
+import { get } from 'lodash'
 
 const IMPORT_DATA = gql`
   mutation LoadData {
@@ -63,6 +66,10 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
+function Alert(props) {
+  return <MuiAlert elevation={6} variant="filled" {...props} />
+}
+
 const getSteps = () => ['Black & white addresses', 'Features', 'Model']
 
 const getStepContent = stepIndex => {
@@ -78,11 +85,28 @@ const getStepContent = stepIndex => {
   }
 }
 
-const Classification = () => {
+const Classification = (callback, deps) => {
   const classes = useStyles()
+  const [open, setOpen] = useState(false)
+  const [snackbarMessage, setSnackbarMessage] = useState({
+    success: null,
+    message: null,
+  })
+  //snackbarMessage
   const { step, setStep } = useContext(StepContext)
   const steps = getSteps()
-  const [importData] = useMutation(IMPORT_DATA)
+  const [importData] = useMutation(IMPORT_DATA, {
+    onCompleted: data => {
+      const importDataResponse = get(data, 'loadData', {
+        success: null,
+        message: null,
+      })
+      if (!importDataResponse.message) {
+        return
+      }
+      openSnackbar(importDataResponse)
+    },
+  })
   const [buildFeatures, { loading }] = useMutation(BUILD_FEATURES, {
     cachePolicy: 'no-cache',
     ignoreResults: true,
@@ -91,6 +115,20 @@ const Classification = () => {
       message: 'ok',
     },
   })
+  // const handleOpenSnackbar = () => {
+  //   setOpen(true)
+  // }
+  const openSnackbar = useCallback(message => {
+    setSnackbarMessage(message)
+    setOpen(true)
+  })
+  const handleClose = (event, reason) => {
+    if (reason === 'clickaway') {
+      return
+    }
+
+    setOpen(false)
+  }
   const handleNext = () => {
     setStep(prevActiveStep =>
       prevActiveStep === 2 ? prevActiveStep : prevActiveStep + 1
@@ -146,18 +184,24 @@ const Classification = () => {
           </Grid>
 
           <Grid item xs={12}>
-            {step === 0 && <ImportAddressTable importData={importData} />}
+            {step === 0 && (
+              <ImportAddressTable
+                importData={importData}
+                openSnackbar={openSnackbar}
+              />
+            )}
             {step === 1 && (
               <FeatureTable
                 buildFeatures={buildFeatures}
                 buildRunning={loading}
+                openSnackbar={openSnackbar}
               />
             )}
             {step === 2 && typeof Worker === 'undefined' && (
-              <ClassificationModel />
+              <ClassificationModel openSnackbar={openSnackbar} />
             )}
             {step === 2 && typeof Worker !== 'undefined' && (
-              <ClassificationModelWebWorker />
+              <ClassificationModelWebWorker openSnackbar={openSnackbar} />
             )}
             <Typography className={classes.instructions}>
               {getStepContent(step)}
@@ -165,6 +209,14 @@ const Classification = () => {
           </Grid>
         </Grid>
       </Container>
+      <Snackbar open={open} autoHideDuration={2000} onClose={handleClose}>
+        <Alert
+          onClose={handleClose}
+          severity={snackbarMessage.success ? 'success' : 'warning'}
+        >
+          {snackbarMessage.message}
+        </Alert>
+      </Snackbar>
     </main>
   )
 }

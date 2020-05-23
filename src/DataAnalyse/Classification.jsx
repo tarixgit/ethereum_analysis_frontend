@@ -1,8 +1,7 @@
-import React, { useCallback, useContext, useState } from 'react'
+import React, { useContext } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import Button from '@material-ui/core/Button'
-import StepLabel from '@material-ui/core/StepLabel'
 import Stepper from '@material-ui/core/Stepper'
 import Typography from '@material-ui/core/Typography'
 import Step from '@material-ui/core/Step'
@@ -12,10 +11,9 @@ import ImportAddressTable from './ImportAddressTable'
 import FeatureTable from './FeatureTable'
 import ClassificationModel from './ClassificationModel'
 import Grid from '@material-ui/core/Grid'
-import { StepContext } from '../App'
+import { SnackbarContext, StepContext } from '../App'
 import ClassificationModelWebWorker from './ClassificationModelWebWorker'
 import StepButton from '@material-ui/core/StepButton'
-import Snackbar from '@material-ui/core/Snackbar'
 import MuiAlert from '@material-ui/lab/Alert'
 import { get } from 'lodash'
 
@@ -95,13 +93,8 @@ const getStepContent = stepIndex => {
 
 const Classification = (callback, deps) => {
   const classes = useStyles()
-  const [open, setOpen] = useState(false)
-  const [snackbarMessage, setSnackbarMessage] = useState({
-    success: null,
-    message: null,
-  })
-  //snackbarMessage
   const { step, setStep } = useContext(StepContext)
+  const { setSnackbarMessage } = useContext(SnackbarContext)
   const steps = getSteps()
   const [importData] = useMutation(IMPORT_DATA, {
     onCompleted: data => {
@@ -112,7 +105,7 @@ const Classification = (callback, deps) => {
       if (!importDataResponse.message) {
         return
       }
-      openSnackbar(importDataResponse)
+      setSnackbarMessage(importDataResponse)
     },
   })
   const [buildFeatures, { loading }] = useMutation(BUILD_FEATURES, {
@@ -131,7 +124,7 @@ const Classification = (callback, deps) => {
       if (!importDataResponse.message) {
         return
       }
-      openSnackbar(importDataResponse)
+      setSnackbarMessage(importDataResponse)
     },
   })
   const [recalcFeatures, { loading: loading_ }] = useMutation(RECALC_FEATURES, {
@@ -144,23 +137,9 @@ const Classification = (callback, deps) => {
       if (!importDataResponse.message) {
         return
       }
-      openSnackbar(importDataResponse)
+      setSnackbarMessage(importDataResponse)
     },
   })
-  // const handleOpenSnackbar = () => {
-  //   setOpen(true)
-  // }
-  const openSnackbar = useCallback(message => {
-    setSnackbarMessage(message)
-    setOpen(true)
-  })
-  const handleClose = (event, reason) => {
-    if (reason === 'clickaway') {
-      return
-    }
-
-    setOpen(false)
-  }
   const handleNext = () => {
     setStep(prevActiveStep =>
       prevActiveStep === 2 ? prevActiveStep : prevActiveStep + 1
@@ -216,24 +195,18 @@ const Classification = (callback, deps) => {
           </Grid>
 
           <Grid item xs={12}>
-            {step === 0 && (
-              <ImportAddressTable
-                importData={importData}
-                openSnackbar={openSnackbar}
-              />
-            )}
+            {step === 0 && <ImportAddressTable importData={importData} />}
             {step === 1 && (
               <FeatureTable
                 buildFeatures={buildFeatures}
                 recalcFeatures={recalcFeatures}
-                openSnackbar={openSnackbar}
               />
             )}
             {step === 2 && typeof Worker === 'undefined' && (
-              <ClassificationModel openSnackbar={openSnackbar} />
+              <ClassificationModel />
             )}
             {step === 2 && typeof Worker !== 'undefined' && (
-              <ClassificationModelWebWorker openSnackbar={openSnackbar} />
+              <ClassificationModelWebWorker />
             )}
             <Typography className={classes.instructions}>
               {getStepContent(step)}
@@ -241,14 +214,6 @@ const Classification = (callback, deps) => {
           </Grid>
         </Grid>
       </Container>
-      <Snackbar open={open} autoHideDuration={2000} onClose={handleClose}>
-        <Alert
-          onClose={handleClose}
-          severity={snackbarMessage.success ? 'success' : 'warning'}
-        >
-          {snackbarMessage.message}
-        </Alert>
-      </Snackbar>
     </main>
   )
 }

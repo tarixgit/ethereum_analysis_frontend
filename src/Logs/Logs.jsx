@@ -151,7 +151,7 @@ const Logs = () => {
           <Grid container justify="space-between" alignItems="center">
             <Grid item>
               <div>
-                <span>Blacklist and whitelist together</span>
+                <span>The logs from threads running on server</span>
               </div>
             </Grid>
           </Grid>

@@ -6,7 +6,7 @@ import ListSubheader from '@material-ui/core/ListSubheader'
 import GrainIcon from '@material-ui/icons/Grain'
 import StorageIcon from '@material-ui/icons/Storage'
 import BubbleChartIcon from '@material-ui/icons/BubbleChart'
-import BarChartIcon from '@material-ui/icons/BarChart'
+import AssignmentIcon from '@material-ui/icons/Assignment'
 import InfoIcon from '@material-ui/icons/Info'
 import PlaylistAddCheckIcon from '@material-ui/icons/PlaylistAddCheck'
 import { Link } from 'react-router-dom'
@@ -50,7 +50,15 @@ export const mainListItems = classes => (
 
 export const secondaryListItems = classes => (
   <div>
-    <ListSubheader inset>Documentation</ListSubheader>
+    <ListSubheader inset>Documentation and logs</ListSubheader>
+    <Link to="/logs" className={classes.links}>
+      <ListItem button>
+        <ListItemIcon>
+          <AssignmentIcon />
+        </ListItemIcon>
+        <ListItemText primary="Logs" />
+      </ListItem>
+    </Link>
     <Link to="/info" className={classes.links}>
       <ListItem button>
         <ListItemIcon>
@@ -59,13 +67,5 @@ export const secondaryListItems = classes => (
         <ListItemText primary="Info" />
       </ListItem>
     </Link>
-    {/*
-    <ListItem button>
-      <ListItemIcon>
-        <AssignmentIcon />
-      </ListItemIcon>
-      <ListItemText primary="Last" />
-    </ListItem>
-*/}
   </div>
 )

@@ -11,6 +11,7 @@ import { makeStyles } from '@material-ui/core/styles'
 import ClassificationTest from './AddressTest/ClassificationTest'
 import SearchNeighbors from './SearchNeighbors/SearchNeighbors'
 import Info from './Info/Info'
+import Logs from './Logs/Logs'
 /*
 function Copyright() {
     return (
@@ -116,6 +117,9 @@ const App = () => {
               </Route>
               <Route path="/info">
                 <Info />
+              </Route>
+              <Route path="/logs">
+                <Logs />
               </Route>
               <Route path="/graph/:hash">
                 <EthereumGraph />

@@ -30,7 +30,15 @@ const IMPORT_DATA = gql`
 
 const BUILD_FEATURES = gql`
   mutation BuildFeatures {
-    recalcFeatures {
+    buildFeaturesThread {
+      success
+      message
+    }
+  }
+`
+const RECALC_FEATURES = gql`
+  mutation BuildFeatures {
+    recalcFeaturesThread {
       success
       message
     }
@@ -111,8 +119,32 @@ const Classification = (callback, deps) => {
     cachePolicy: 'no-cache',
     ignoreResults: true,
     optimisticResponse: {
+      // todo check if needed?
       success: true,
       message: 'ok',
+    },
+    onCompleted: data => {
+      const importDataResponse = get(data, 'loadData', {
+        success: null,
+        message: null,
+      })
+      if (!importDataResponse.message) {
+        return
+      }
+      openSnackbar(importDataResponse)
+    },
+  })
+  const [recalcFeatures, { loading: loading_ }] = useMutation(RECALC_FEATURES, {
+    cachePolicy: 'no-cache',
+    onCompleted: data => {
+      const importDataResponse = get(data, 'loadData', {
+        success: null,
+        message: null,
+      })
+      if (!importDataResponse.message) {
+        return
+      }
+      openSnackbar(importDataResponse)
     },
   })
   // const handleOpenSnackbar = () => {
@@ -193,7 +225,7 @@ const Classification = (callback, deps) => {
             {step === 1 && (
               <FeatureTable
                 buildFeatures={buildFeatures}
-                buildRunning={loading}
+                recalcFeatures={recalcFeatures}
                 openSnackbar={openSnackbar}
               />
             )}

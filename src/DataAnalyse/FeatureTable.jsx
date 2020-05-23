@@ -218,7 +218,7 @@ const exportToCSV = (headCells, rows, formatNumber) => {
   )
 }
 
-const FeatureTable = ({ buildFeatures, buildRunning }) => {
+const FeatureTable = ({ buildFeatures, recalcFeatures }) => {
   const classes = useStyles()
   const { formatNumber } = useIntl()
   const [order, setOrder] = useState('asc')
@@ -334,15 +334,12 @@ const FeatureTable = ({ buildFeatures, buildRunning }) => {
         <Grid item>
           <TableMenu
             menuItems={[
-              { label: 'Build features', handler: buildFeatures },
+              { label: 'Build features for new A.', handler: buildFeatures },
+              { label: 'Recalculate features', handler: recalcFeatures },
               {
                 label: 'Export address features',
                 handler: exportAddFeatures,
               },
-              // {
-              //   label: 'Export trans. features',
-              //   handler: exportTransFeatures,
-              // },
               { label: 'Info', handler: openInfoModal },
             ]}
           />

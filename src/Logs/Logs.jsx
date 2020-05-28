@@ -122,6 +122,7 @@ const Logs = () => {
       offset: page * rowsPerPage,
       limit: rowsPerPage,
     },
+    fetchPolicy: 'cache-and-network',
   })
   const rows = get(data, 'logs.rows', [])
   const count = get(data, 'logs.count', -1)

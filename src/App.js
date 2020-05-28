@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom'
 import { useSubscription } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
-import { get } from 'lodash'
+import { get, isString } from 'lodash'
 
 import EthereumGraph from './Graph/EthereumGraph'
 import Classification from './DataAnalyse/Classification'
@@ -45,7 +45,7 @@ export const StepContext = React.createContext({
 })
 
 export const SnackbarContext = React.createContext({
-  snackbarMessage: { success: null, message: null },
+  snackbarMessage: { type: null, message: null },
   setSnackbarMessage: () => {},
 })
 
@@ -59,6 +59,20 @@ const useStyles = makeStyles(theme => ({
     display: 'flex',
   },
 }))
+
+const getMessageType = mesg => {
+  const message = get(mesg, 'messageNotify.message', '')
+  if (isString(message) && message.toLowerCase().indexOf('error') > -1) {
+    return 'error'
+  }
+  if (isString(message) && message.toLowerCase().indexOf('warning') > -1) {
+    return 'warning'
+  }
+  if (isString(message) && message.toLowerCase().indexOf('info') > -1) {
+    return 'info'
+  }
+  return 'success'
+}
 
 const MESSAGE = gql`
   subscription Message {
@@ -96,7 +110,7 @@ const App = () => {
     newModelsJSON: null,
   })
   const [snackbarMessage, setSnackbarMessage] = useState({
-    success: null,
+    type: null,
     message: null,
   })
   const [neighborsScamFounded, setNeighborsScamFounded] = useState(null)
@@ -105,7 +119,7 @@ const App = () => {
   const { data: scamNeighbors } = useSubscription(SCAM_FOUND)
   useEffect(() => {
     setSnackbarMessage({
-      success: true, // todo use type
+      type: getMessageType(message),
       message: get(message, 'messageNotify.message'),
     })
   }, [message])

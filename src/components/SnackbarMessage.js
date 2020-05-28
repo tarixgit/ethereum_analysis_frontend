@@ -21,7 +21,7 @@ const SnackbarMessage = ({ snackbarMessage }) => {
       <Alert
         variant="filled"
         onClose={handleClose}
-        severity={snackbarMessage.success ? 'success' : 'warning'}
+        severity={snackbarMessage.type ? snackbarMessage.type : 'success'}
       >
         {snackbarMessage.message}
       </Alert>

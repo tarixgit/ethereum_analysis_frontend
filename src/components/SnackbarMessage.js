@@ -1,11 +1,14 @@
 import Snackbar from '@material-ui/core/Snackbar'
 import React, { useEffect, useState } from 'react'
 import Alert from '@material-ui/lab/Alert'
+import { get } from 'lodash'
 
 const SnackbarMessage = ({ snackbarMessage }) => {
   const [open, setOpen] = useState(false)
   useEffect(() => {
-    setOpen(true)
+    if (get(snackbarMessage, 'message')) {
+      setOpen(true)
+    }
   }, [snackbarMessage])
   const handleClose = (event, reason) => {
     if (reason === 'clickaway') {

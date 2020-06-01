@@ -14,7 +14,6 @@ import Grid from '@material-ui/core/Grid'
 import { SnackbarContext, StepContext } from '../App'
 import ClassificationModelWebWorker from './ClassificationModelWebWorker'
 import StepButton from '@material-ui/core/StepButton'
-import MuiAlert from '@material-ui/lab/Alert'
 import { get } from 'lodash'
 
 const IMPORT_DATA = gql`
@@ -72,10 +71,6 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-function Alert(props) {
-  return <MuiAlert elevation={6} variant="filled" {...props} />
-}
-
 const getSteps = () => ['Black & white addresses', 'Features', 'Model']
 
 const getStepContent = stepIndex => {
@@ -111,13 +106,8 @@ const Classification = (callback, deps) => {
   const [buildFeatures, { loading }] = useMutation(BUILD_FEATURES, {
     cachePolicy: 'no-cache',
     ignoreResults: true,
-    optimisticResponse: {
-      // todo check if needed?
-      success: true,
-      message: 'ok',
-    },
     onCompleted: data => {
-      const importDataResponse = get(data, 'loadData', {
+      const importDataResponse = get(data, 'buildFeaturesThread', {
         success: null,
         message: null,
       })
@@ -130,7 +120,7 @@ const Classification = (callback, deps) => {
   const [recalcFeatures, { loading: loading_ }] = useMutation(RECALC_FEATURES, {
     cachePolicy: 'no-cache',
     onCompleted: data => {
-      const importDataResponse = get(data, 'loadData', {
+      const importDataResponse = get(data, 'recalcFeaturesThread', {
         success: null,
         message: null,
       })

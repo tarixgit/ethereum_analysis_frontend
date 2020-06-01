@@ -15,7 +15,9 @@ import { gql } from 'apollo-boost'
 import TextField from '@material-ui/core/TextField'
 import { Matrix } from 'ml-matrix' //"ml-matrix": "5.3.0",
 import { fitAndGetFeature } from '../DataAnalyse/ClassificationModel'
-import { ModelContext } from '../App'
+import { ModelContext, StepContext } from '../App'
+import Link from '@material-ui/core/Link'
+import { useHistory } from 'react-router-dom'
 
 const LOAD_ADDRESS_FEATURE = gql`
   query GetAndCalculateAddressFeatures($address: String!) {
@@ -88,11 +90,14 @@ const regressionOptions = {
 
 const ClassificationModel = (callback, deps) => {
   const classes = useStyles()
-  const { models, setModels } = useContext(ModelContext)
+  const history = useHistory()
+  const { models } = useContext(ModelContext)
+  const { step, setStep } = useContext(StepContext)
   const { lg, rf, knn } = models
   const [address, setAddress] = useState(
     '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
+
   // 3 Classifier
   const [rfResult, setRfResult] = useState('')
   const [logregResult, setLogregResult] = useState('')
@@ -103,7 +108,12 @@ const ClassificationModel = (callback, deps) => {
     { data, loading, networkStatus, called },
   ] = useLazyQuery(LOAD_ADDRESS_FEATURE)
   const addressInfo = get(data, 'getAndCalculateAddressFeatures', null)
-
+  const goToTrainModels = useCallback(() => {
+    if (step !== 2) {
+      setStep(2)
+      history.push('/class')
+    }
+  }, [history])
   const changeAddress = useCallback(
     e => {
       const { value } = e.target
@@ -126,7 +136,8 @@ const ClassificationModel = (callback, deps) => {
       setKNNResult(predictedKNN[0] === 1 ? 'scam' : 'not scam')
     }
   }, [addressInfo])
-  // TODO Button link to train section
+
+  const noModels = !lg || !rf || !knn
   return (
     <Fragment>
       <Paper elevation={3} className={classes.root}>
@@ -145,11 +156,20 @@ const ClassificationModel = (callback, deps) => {
             <Button
               variant="contained"
               color="primary"
-              disabled={!lg || !rf || !knn}
+              disabled={noModels}
               onClick={loadAddressInfo}
             >
               Check Address
             </Button>
+            {noModels && (
+              <span>
+                The models are not trained please do this on{' '}
+                <Link href="#" onClick={goToTrainModels}>
+                  models
+                </Link>{' '}
+                page
+              </span>
+            )}
           </div>
           <div>Output:</div>
           <div>

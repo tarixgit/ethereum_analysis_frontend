@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import Button from '@material-ui/core/Button'
@@ -15,6 +15,7 @@ import { SnackbarContext, StepContext } from '../App'
 import ClassificationModelWebWorker from './ClassificationModelWebWorker'
 import StepButton from '@material-ui/core/StepButton'
 import { get } from 'lodash'
+import ModalDialog from '../components/ModalDialog'
 
 const IMPORT_DATA = gql`
   mutation LoadData {
@@ -88,6 +89,9 @@ const getStepContent = stepIndex => {
 
 const Classification = (callback, deps) => {
   const classes = useStyles()
+  const [isOpen, setOpenModal] = useState(false)
+  const [isInfoOpen, setInfoOpen] = useState(false)
+  const [info, setInfo] = useState({ title: 'Info', infoText: '-' })
   const { step, setStep } = useContext(StepContext)
   const { setSnackbarMessage } = useContext(SnackbarContext)
   const steps = getSteps()
@@ -143,6 +147,26 @@ const Classification = (callback, deps) => {
   const handleStep = step => () => {
     setStep(step)
   }
+
+  const closeModal = () => {
+    setOpenModal(false)
+  }
+
+  const openModal = () => {
+    // later you can do a universal modal window
+    setOpenModal(true)
+  }
+
+  const closeInfoModal = () => {
+    setInfoOpen(false)
+  }
+
+  const openInfo = ({ title, infoText }) => {
+    // later you can do a universal modal window
+    setInfo({ title, infoText })
+    setInfoOpen(true)
+  }
+
   return (
     <main className={classes.content}>
       <div className={classes.appBarSpacer} />
@@ -185,11 +209,14 @@ const Classification = (callback, deps) => {
           </Grid>
 
           <Grid item xs={12}>
-            {step === 0 && <ImportAddressTable importData={importData} />}
+            {step === 0 && (
+              <ImportAddressTable importData={importData} openInfo={openInfo} />
+            )}
             {step === 1 && (
               <FeatureTable
                 buildFeatures={buildFeatures}
-                recalcFeatures={recalcFeatures}
+                recalcFeatures={openModal}
+                openInfo={openInfo}
               />
             )}
             {step === 2 && typeof Worker === 'undefined' && (
@@ -203,6 +230,24 @@ const Classification = (callback, deps) => {
             </Typography>
           </Grid>
         </Grid>
+        {isOpen && (
+          <ModalDialog
+            applyHandler={recalcFeatures}
+            closeHandler={closeModal}
+            closeText="Close"
+            applyText="Run"
+            title="Run the recalculation of all existing address features "
+            infoText="This calculation will be executed in separate thread. Nevertheless this calculation will take a lot of hours, because some addresses have ca. 400 thousands of transaction, that must be taken from database and calculated."
+          />
+        )}
+        {isInfoOpen && (
+          <ModalDialog
+            closeHandler={closeInfoModal}
+            closeText="Close"
+            title={info.title}
+            infoText={info.infoText}
+          />
+        )}
       </Container>
     </main>
   )

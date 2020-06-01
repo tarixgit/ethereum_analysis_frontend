@@ -218,7 +218,7 @@ const exportToCSV = (headCells, rows, formatNumber) => {
   )
 }
 
-const FeatureTable = ({ buildFeatures, recalcFeatures }) => {
+const FeatureTable = ({ buildFeatures, recalcFeatures, openInfo }) => {
   const classes = useStyles()
   const { formatNumber } = useIntl()
   const [order, setOrder] = useState('asc')
@@ -322,7 +322,24 @@ const FeatureTable = ({ buildFeatures, recalcFeatures }) => {
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length)
   // TODO Menu stat 3 Buttons
   // buildFeatures disabled
-  const openInfoModal = useCallback(() => {})
+  const openInfoModal = useCallback(() => {
+    openInfo({
+      title: 'Features list',
+      infoText: (
+        <span>
+          The list show the calculated features. There is option in menu to
+          calculate new imported addresses, that have not been calculated and to
+          recalculate the all features in the list.
+          <br />
+          The last options wil take a lot of time because there is addresses
+          that habe ca. 400 000 Transaction, that must be taken from databases
+          before calculation. This need big hardware resources.
+          <br />
+          There is also an option to export all existed features
+        </span>
+      ),
+    })
+  })
   return (
     <Paper elevation={3} className={classes.root}>
       <Grid container justify="space-between" alignItems="center">

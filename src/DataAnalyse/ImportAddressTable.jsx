@@ -116,7 +116,7 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-const ImportAddressTable = ({ importData }) => {
+const ImportAddressTable = ({ importData, openInfo }) => {
   const classes = useStyles()
   const [order, setOrder] = useState('asc')
   const [orderBy, setOrderBy] = useState(null)
@@ -181,7 +181,13 @@ const ImportAddressTable = ({ importData }) => {
 
   const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length)
 
-  const openInfoModal = useCallback(() => {})
+  const openInfoModal = useCallback(() => {
+    openInfo({
+      title: 'Black and white adresses',
+      infoText:
+        'Here you see the addresses that was used for calculation of features. The pool consist of black(scam) and white(not scam) addresses. If you want to import the new black addresses from https://etherscamdb.info please select menu "Import blacklist data" ',
+    })
+  })
   return (
     <Paper elevation={3} className={classes.root}>
       <Grid container justify="space-between" alignItems="center">

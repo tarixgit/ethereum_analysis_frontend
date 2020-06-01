@@ -64,10 +64,47 @@ const HtmlTooltip = withStyles(theme => ({
 }))(Tooltip)
 
 const tooltipTitles = {
-  class: '',
-  model: '',
-  searchneighbors: '',
-  info: '',
+  class: (
+    <Fragment>
+      <Typography color="inherit">Classification section</Typography>
+      {'Some functionality: '}
+      <ul style={{ margin: 0 }}>
+        <li>Here showed the lists of imported addresses and features.</li>
+        <li>You can train the models for classification of scam addresses</li>
+        <li>You can use some functionality in menus on the lists</li>
+        <li>To test the addresses there is separate section in main menu</li>
+      </ul>
+    </Fragment>
+  ),
+  model: (
+    <Fragment>
+      <Typography color="inherit">Testing section</Typography>
+      The section is for testing/checking addresses based on the models created
+      in "Data and models" sections. If the address looks like scam address or
+      not
+    </Fragment>
+  ),
+  searchneighbors: (
+    <Fragment>
+      <Typography color="inherit">Searching for suspicion neighbors</Typography>
+      The algorithm search recursive in the neighbors the scam addresses. Per
+      default the algorithm goes until third level of neighbors, because of
+      hardware limitation. Searching are running thread.
+    </Fragment>
+  ),
+  info: (
+    <Fragment>
+      <Typography color="inherit">Info</Typography>
+      Some information about app
+    </Fragment>
+  ),
+  logs: (
+    <Fragment>
+      <Typography color="inherit">Logs</Typography>
+      There is three type of calculation that can be run in threads. You can see
+      here the logs from that threads.
+    </Fragment>
+  ),
   graph: (
     <Fragment>
       <Typography color="inherit">Ethereum grpah</Typography>

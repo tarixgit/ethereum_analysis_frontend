@@ -21,16 +21,36 @@ const regressionOptions = {
 onmessage = function(e) {
   console.log('Message received from main script')
   const dataParsed = JSON.parse(e.data)
-  const { trainingData, trainingDataPredictions } = dataParsed
-  const newClassifierRF = new RFClassifier(options)
+  const {
+    trainingData,
+    trainingDataPredictions,
+    rfSettings,
+    lgSettings,
+  } = dataParsed
+  let rfClassifierOpt = rfSettings ? rfSettings : options
+  rfClassifierOpt = {
+    seed: Number(rfClassifierOpt.seed),
+    maxFeatures: Number(rfClassifierOpt.maxFeatures),
+    replacement: rfClassifierOpt.replacement,
+    nEstimators: Number(rfClassifierOpt.nEstimators),
+  }
+  let lgClassifierOpt = lgSettings
+    ? lgSettings
+    : {
+        numSteps: 1000,
+        learningRate: 5e-3,
+      }
+  lgClassifierOpt = {
+    numSteps: Number(lgClassifierOpt.numSteps),
+    learningRate: Number(lgClassifierOpt.learningRate),
+  }
+
+  const newClassifierRF = new RFClassifier(rfClassifierOpt)
   newClassifierRF.train(trainingData, trainingDataPredictions)
 
   const X = new Matrix(trainingData)
   const Y = Matrix.columnVector(trainingDataPredictions)
-  const logreg = new LogisticRegression({
-    numSteps: 1000,
-    learningRate: 5e-3,
-  })
+  const logreg = new LogisticRegression(lgClassifierOpt)
   logreg.train(X, Y)
 
   const knn = new KNN(trainingData, trainingDataPredictions)

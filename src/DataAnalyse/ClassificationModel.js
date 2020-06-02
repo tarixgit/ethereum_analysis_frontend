@@ -18,7 +18,7 @@ import clsx from 'clsx'
 import LogisticRegression from 'ml-logistic-regression'
 import { Matrix } from 'ml-matrix' //"ml-matrix": "5.3.0",
 import KNN from 'ml-knn'
-import Table from '../components/Table'
+import Table from '../components/CollapsibleTable'
 import { ModelContext } from '../App'
 
 const LOAD_ADDRESS_FEATURES = gql`

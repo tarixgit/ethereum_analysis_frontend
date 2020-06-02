@@ -5,7 +5,6 @@ import React, {
   useEffect,
   useState,
 } from 'react'
-import PropTypes from 'prop-types'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import { map, get, takeRight, take, shuffle, truncate, compact } from 'lodash'
@@ -19,7 +18,7 @@ import LogisticRegression from 'ml-logistic-regression'
 import { Matrix } from 'ml-matrix' //"ml-matrix": "5.3.0",
 import KNN from 'ml-knn'
 import WebWorker from 'react-webworker'
-import Table from '../components/Table'
+import CollapsibleTable from '../components/CollapsibleTable'
 import { ModelContext } from '../App'
 
 const myWorker = new Worker('./worker.js', { type: 'module' }) // relative path to the source file, not the public URL
@@ -86,7 +85,16 @@ const useStyles = makeStyles(theme => ({
     marginLeft: -12,
   },
 }))
-
+const rfOptions = {
+  seed: 3, // for random function(MersenneTwister) for bagging
+  maxFeatures: 0.8, // part of features used for bagging
+  replacement: true, // for bagging
+  nEstimators: 25,
+}
+const lgOptions = {
+  numSteps: 1000,
+  learningRate: 5e-3,
+}
 const loadAndSaveModels = memoizeOne(newModels => {
   const rf = RFClassifier.load(newModels.rf)
   const lg = LogisticRegression.load(newModels.lg)
@@ -187,6 +195,9 @@ const ClassificationModelWebWorker = (callback, deps) => {
     precisionLR: 0,
     precisionKNN: 0,
   })
+  const [rfSettings, onSubmitRf] = useState(rfOptions)
+  const [lgSettings, onSubmitLg] = useState(lgOptions)
+  const [knnSettings, onSubmitKNN] = useState(null) // empty now
 
   const { data, loading: loadingApi, networkStatus } = useQuery(
     LOAD_ADDRESS_FEATURES,
@@ -244,7 +255,12 @@ const ClassificationModelWebWorker = (callback, deps) => {
                   className={buttonClassname}
                   disabled={spinner}
                   onClick={() =>
-                    postMessage({ trainingData, trainingDataPredictions })
+                    postMessage({
+                      trainingData,
+                      trainingDataPredictions,
+                      rfSettings,
+                      lgSettings,
+                    })
                   }
                   variant="contained"
                 >
@@ -253,12 +269,11 @@ const ClassificationModelWebWorker = (callback, deps) => {
               </div>
 
               <Paper elevation={0} className={classes.paper}>
-                <div>Output:</div>
-                <Table
+                <CollapsibleTable
                   columns={['name', 'precision']}
                   rows={[
                     {
-                      id: 'idPrecision_1',
+                      id: 'idPrecision_rf',
                       name: {
                         value: 'Random forest',
                       },
@@ -266,7 +281,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
                       error: { value: '0.9' },
                     },
                     {
-                      id: 'idPrecision_2',
+                      id: 'idPrecision_lg',
                       name: {
                         value: 'Logistik regression',
                       },
@@ -275,7 +290,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
                     },
 
                     {
-                      id: 'idPrecision_3',
+                      id: 'idPrecision_KNN',
                       name: {
                         value: 'K-nearest neighbors',
                       },
@@ -283,6 +298,11 @@ const ClassificationModelWebWorker = (callback, deps) => {
                       error: { value: '0.9' },
                     },
                   ]}
+                  onSubmitRf={onSubmitRf}
+                  onSubmitLg={onSubmitLg}
+                  onSubmitKNN={onSubmitKNN}
+                  rfSettings={rfSettings}
+                  lgSettings={lgSettings}
                 />
                 {error ? `Something went wrong: ${error.message}` : ''}
                 {spinner && (

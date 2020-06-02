@@ -114,6 +114,11 @@ const useStyles = makeStyles(theme => ({
     color: 'inherit',
     textDecoration: 'none',
   },
+  tableContainer: {
+    maxHeight: 440,
+    overflowX: 'hidden',
+    overflowY: 'scroll',
+  },
 }))
 
 const ImportAddressTable = ({ importData, openInfo }) => {
@@ -209,8 +214,9 @@ const ImportAddressTable = ({ importData, openInfo }) => {
         </Grid>
       </Grid>
       <Paper elevation={0} className={classes.paper}>
-        <TableContainer>
+        <TableContainer className={classes.tableContainer}>
           <Table
+            stickyHeader
             className={classes.table}
             aria-labelledby="tableTitle"
             size="small"

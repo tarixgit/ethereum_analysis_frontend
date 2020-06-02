@@ -199,6 +199,11 @@ const useStyles = makeStyles(theme => ({
     top: 20,
     width: 1,
   },
+  tableContainer: {
+    maxHeight: 440,
+    overflowX: 'hidden',
+    overflowY: 'scroll',
+  },
 }))
 
 const exportToCSV = (headCells, rows, formatNumber) => {
@@ -363,8 +368,9 @@ const FeatureTable = ({ buildFeatures, recalcFeatures, openInfo }) => {
         </Grid>
       </Grid>
       <Paper elevation={0} className={classes.paper}>
-        <TableContainer>
+        <TableContainer className={classes.tableContainer}>
           <Table
+            stickyHeader
             className={classes.table}
             aria-labelledby="tableTitle"
             size="small"

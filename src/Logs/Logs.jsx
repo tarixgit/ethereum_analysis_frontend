@@ -110,9 +110,12 @@ const useStyles = makeStyles(theme => ({
 
 const Logs = () => {
   const classes = useStyles()
-  const [order, setOrder] = useState('asc')
-  const [orderBy, setOrderBy] = useState(null)
-  const [orderByQuery, setOrderQuery] = useState(null)
+  const [order, setOrder] = useState('desc')
+  const [orderBy, setOrderBy] = useState('createdAt')
+  const [orderByQuery, setOrderQuery] = useState({
+    field: 'createdAt',
+    type: 'DESC',
+  })
   const [selected, setSelected] = useState([])
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)

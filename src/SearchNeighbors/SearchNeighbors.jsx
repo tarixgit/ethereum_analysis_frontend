@@ -10,6 +10,7 @@ import TextField from '@material-ui/core/TextField'
 import Network from '../Graph/Network'
 import { forEach, get, uniqBy, map, mapKeys, mapValues, keyBy } from 'lodash'
 import { networkOptions } from '../Graph/config'
+import Button from '@material-ui/core/Button'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -73,8 +74,8 @@ const LABELS = gql`
 `
 
 const TEST = gql`
-  mutation FindNeighborsScam($address: String!) {
-    findNeighborsScamThread(address: $address) {
+  mutation FindNeighborsScam($address: String!, $level: Int) {
+    findNeighborsScamThread(address: $address, level: $level) {
       success
       message
     }
@@ -174,6 +175,8 @@ const SearchNeighbors = () => {
   const [address, setAddress] = useState(
     hash || '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
+  const [level, setLevel] = useState(3)
+
   //Labels
   const {
     loading: labelLoading,
@@ -188,10 +191,18 @@ const SearchNeighbors = () => {
   useEffect(() => {
     if (hash) {
       loadNetworkData({
-        variables: { address: hash.toLowerCase() },
+        variables: { address: hash.toLowerCase(), level },
       })
     }
-  }, [hash, loadNetworkData])
+  }, [hash, loadNetworkData, level])
+
+  const changeLevel = useCallback(
+    e => {
+      const { value } = e.target
+      setLevel(value)
+    },
+    [setLevel]
+  )
 
   const changeAddress = useCallback(
     e => {
@@ -204,10 +215,10 @@ const SearchNeighbors = () => {
     e => {
       e.preventDefault()
       loadNetworkData({
-        variables: { address: address.toLowerCase() },
+        variables: { address: address.toLowerCase(), level: Number(level) },
       })
     },
-    [loadNetworkData]
+    [loadNetworkData, address, level]
   )
   const loadMore = useCallback(
     addressId => {
@@ -257,14 +268,42 @@ const SearchNeighbors = () => {
             <Grid item xs={12}>
               <Paper>
                 <form onSubmit={submit}>
-                  <TextField
-                    id="address-input"
-                    label="Address"
-                    autoFocus
-                    fullWidth
-                    value={address}
-                    onChange={changeAddress}
-                  />
+                  <Grid
+                    container
+                    direction="row"
+                    justify="flex-start"
+                    alignItems="center"
+                  >
+                    <Grid item xs={10}>
+                      <TextField
+                        id="address-input"
+                        label="Address"
+                        fullWidth
+                        autoFocus
+                        value={address}
+                        onChange={changeAddress}
+                      />
+                    </Grid>
+                    <Grid item>
+                      <TextField
+                        id="address-input"
+                        label="Level"
+                        fullWidth
+                        autoFocus
+                        value={level}
+                        onChange={changeLevel}
+                      />
+                    </Grid>
+                    <Grid item>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={submit}
+                      >
+                        Search
+                      </Button>
+                    </Grid>
+                  </Grid>
                 </form>
               </Paper>
             </Grid>

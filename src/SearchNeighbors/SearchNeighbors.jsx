@@ -1,4 +1,10 @@
-import React, { Fragment, useCallback, useEffect, useState } from 'react'
+import React, {
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import { useParams } from 'react-router-dom'
@@ -7,10 +13,11 @@ import { gql } from 'apollo-boost'
 import Grid from '@material-ui/core/Grid'
 import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
+import Button from '@material-ui/core/Button'
 import Network from '../Graph/Network'
 import { forEach, get, uniqBy, map, mapKeys, mapValues, keyBy } from 'lodash'
 import { networkOptions } from '../Graph/config'
-import Button from '@material-ui/core/Button'
+import { SnackbarContext } from '../App'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -175,6 +182,7 @@ const SearchNeighbors = () => {
   const [address, setAddress] = useState(
     hash || '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
+  const { setSnackbarMessage } = useContext(SnackbarContext)
   const [level, setLevel] = useState(3)
 
   //Labels
@@ -184,7 +192,18 @@ const SearchNeighbors = () => {
     called,
     errorLabels,
   } = useQuery(LABELS)
-  const [loadNetworkData, { loading, error, data }] = useMutation(TEST)
+  const [loadNetworkData, { loading, error, data }] = useMutation(TEST, {
+    onCompleted: data => {
+      const dataMessage = get(data, 'findNeighborsScamThread', {
+        success: null,
+        message: null,
+      })
+      if (!dataMessage.message) {
+        return
+      }
+      setSnackbarMessage(dataMessage)
+    },
+  })
   const [loadMoreNetworkData, { data: dataAdd }] = useLazyQuery(
     TRANSACTION_MORE
   )

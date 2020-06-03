@@ -89,7 +89,7 @@ const tooltipTitles = {
       <Typography color="inherit">Searching for suspicion neighbors</Typography>
       The algorithm search recursive in the neighbors the scam addresses. Per
       default the algorithm goes until third level of neighbors, because of
-      hardware limitation. Searching are running thread.
+      hardware limitation. Searching are running in thread.
     </Fragment>
   ),
   info: (

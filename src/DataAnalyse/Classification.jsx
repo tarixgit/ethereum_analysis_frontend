@@ -81,7 +81,7 @@ const getStepContent = stepIndex => {
     case 1:
       return 'Features Analyse'
     case 2:
-      return 'Model training and testing'
+      return 'Model training. The algorithm are running with WebWorker, so the page will not freeze.'
     default:
       return 'Unknown stepIndex'
   }

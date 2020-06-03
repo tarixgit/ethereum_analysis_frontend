@@ -21,7 +21,7 @@ import WebWorker from 'react-webworker'
 import CollapsibleTable from '../components/CollapsibleTable'
 import { ModelContext } from '../App'
 
-const myWorker = new Worker('./worker.js', { type: 'module' }) // relative path to the source file, not the public URL
+const myWorker = new Worker('./classifier.worker.js', { type: 'module' }) // relative path to the source file, not the public URL
 
 const LOAD_ADDRESS_FEATURES = gql`
   query AddressFeatures($offset: Int!, $limit: Int!) {
@@ -236,7 +236,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
   return (
     <Fragment>
       <WebWorker
-        // url="/worker.js"
+        // url="/classifier.worker.js"
         worker={myWorker}
         parser={JSON.parse}
         serializer={JSON.stringify}

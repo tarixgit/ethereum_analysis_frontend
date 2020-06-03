@@ -83,7 +83,7 @@ const headCells = [
     render: (val, _, __, classes) => (
       <TableCell padding="none">
         <Tooltip title={val} aria-label="add">
-          <Link to={`/${val}`} className={classes.links}>
+          <Link to={`graph/${val}`} className={classes.links}>
             <Button color="primary" className={classes.button} size="small">
               {truncate(val, {
                 length: 10,
@@ -231,7 +231,10 @@ const FeatureTable = ({ buildFeatures, recalcFeatures, openInfo }) => {
   const [selected, setSelected] = useState([])
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
-  const [orderByQuery, setOrderQuery] = useState(null)
+  const [orderByQuery, setOrderQuery] = useState({
+    field: 'id',
+    type: 'ASC',
+  })
   const {
     data,
     refetch,

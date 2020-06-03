@@ -124,8 +124,11 @@ const useStyles = makeStyles(theme => ({
 const ImportAddressTable = ({ importData, openInfo }) => {
   const classes = useStyles()
   const [order, setOrder] = useState('asc')
-  const [orderBy, setOrderBy] = useState(null)
-  const [orderByQuery, setOrderQuery] = useState(null)
+  const [orderBy, setOrderBy] = useState('id')
+  const [orderByQuery, setOrderQuery] = useState({
+    field: 'id',
+    type: 'ASC',
+  })
   const [selected, setSelected] = useState([])
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)

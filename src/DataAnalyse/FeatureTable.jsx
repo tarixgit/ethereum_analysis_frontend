@@ -202,7 +202,7 @@ const useStyles = makeStyles(theme => ({
   tableContainer: {
     maxHeight: 440,
     overflowX: 'hidden',
-    overflowY: 'scroll',
+    overflowY: 'auto',
   },
 }))
 

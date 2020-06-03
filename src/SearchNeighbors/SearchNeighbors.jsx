@@ -297,13 +297,14 @@ const SearchNeighbors = () => {
                       <TextField
                         id="address-input"
                         label="Address"
+                        style={{ marginLeft: 1 }}
                         fullWidth
                         autoFocus
                         value={address}
                         onChange={changeAddress}
                       />
                     </Grid>
-                    <Grid item>
+                    <Grid item xs={1}>
                       <TextField
                         id="address-input"
                         label="Level"
@@ -313,8 +314,9 @@ const SearchNeighbors = () => {
                         onChange={changeLevel}
                       />
                     </Grid>
-                    <Grid item>
+                    <Grid item xs={1}>
                       <Button
+                        style={{ marginLeft: 4 }}
                         variant="contained"
                         color="primary"
                         onClick={submit}

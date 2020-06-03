@@ -282,6 +282,7 @@ const EthereumGraph = () => {
                   <TextField
                     id="address-input"
                     label="Address"
+                    style={{ marginLeft: 1, paddingRight: 1 }}
                     autoFocus
                     fullWidth
                     value={address}

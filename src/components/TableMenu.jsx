@@ -14,6 +14,9 @@ const useStyles = makeStyles(theme => ({
   paper: {
     boxShadow: theme.shadows[8],
   },
+  popper: {
+    zIndex: 10,
+  },
 }))
 
 const TableMenu = ({ menuItems }) => {
@@ -48,6 +51,7 @@ const TableMenu = ({ menuItems }) => {
       </IconButton>
       <Popper
         open={open}
+        className={classes.popper}
         anchorEl={anchorRef.current}
         role={undefined}
         transition

@@ -52,14 +52,14 @@ const Row = ({
   //const classes = useRowStyles();
   const getCells = (row, columns) =>
     map(columns, col => (
-      <TableCell component="th" scope="row">
+      <TableCell component="th" scope="row" key={`cell_${row.id}_${col}`}>
         {String(row[col].value)}
       </TableCell>
     ))
   return (
     <Fragment>
       <TableRow key={row.id}>
-        <TableCell>
+        <TableCell component="th">
           <IconButton
             aria-label="expand row"
             size="small"
@@ -70,184 +70,186 @@ const Row = ({
         </TableCell>
         {getCells(row, columns)}
       </TableRow>
-      <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-        <Collapse in={open} timeout="auto" unmountOnExit>
-          <Box margin={1}>
-            <Typography variant="h6" gutterBottom component="div">
-              Settings
-            </Typography>
-            {row.id === 'idPrecision_rf' && (
-              <Form
-                onSubmit={onSubmitRf}
-                initialValues={rfSettings}
-                render={({ handleSubmit, submitting, pristine }) => (
-                  <form onSubmit={handleSubmit}>
-                    <Grid
-                      container
-                      direction="row"
-                      justify="flex-start"
-                      alignItems="center"
-                    >
-                      <Grid item xs={2}>
-                        <label>Seed</label>
-                        <Field name="seed" parse={Number}>
-                          {({ input: { value, onChange, name } }) => (
-                            <div>
-                              <TextField
+      <TableRow key={`sub_col_${row.id}`}>
+        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+          <Collapse in={open} timeout="auto" unmountOnExit>
+            <Box margin={1}>
+              <Typography variant="h6" gutterBottom component="div">
+                Settings
+              </Typography>
+              {row.id === 'idPrecision_rf' && (
+                <Form
+                  onSubmit={onSubmitRf}
+                  initialValues={rfSettings}
+                  render={({ handleSubmit, submitting, pristine }) => (
+                    <form onSubmit={handleSubmit}>
+                      <Grid
+                        container
+                        direction="row"
+                        justify="flex-start"
+                        alignItems="center"
+                      >
+                        <Grid item xs={2}>
+                          <label>Seed</label>
+                          <Field name="seed" parse={Number}>
+                            {({ input: { value, onChange, name } }) => (
+                              <div>
+                                <TextField
+                                  name={name}
+                                  value={value}
+                                  onChange={onChange}
+                                />
+                              </div>
+                            )}
+                          </Field>
+                        </Grid>
+                        <Grid item xs={2}>
+                          <label>maxFeatures</label>
+                          <Field name="maxFeatures" parse={Number}>
+                            {({ input: { value, onChange, name } }) => (
+                              <div>
+                                <TextField
+                                  name={name}
+                                  value={value}
+                                  onChange={onChange}
+                                />
+                              </div>
+                            )}
+                          </Field>
+                        </Grid>
+                        <Grid item xs={2}>
+                          <label>replacement</label>
+                          <Field name="replacement">
+                            {({ input: { value, onChange, name } }) => (
+                              <Checkbox
+                                color="primary"
+                                inputProps={{
+                                  'aria-label': 'secondary checkbox',
+                                }}
                                 name={name}
-                                value={value}
+                                checked={value}
                                 onChange={onChange}
                               />
-                            </div>
-                          )}
-                        </Field>
+                            )}
+                          </Field>
+                        </Grid>
+                        <Grid item xs={2}>
+                          <label>nEstimators</label>
+                          <Field name="nEstimators" parse={Number}>
+                            {({ input: { value, onChange, name } }) => (
+                              <div>
+                                <TextField
+                                  name={name}
+                                  value={value}
+                                  onChange={onChange}
+                                />
+                              </div>
+                            )}
+                          </Field>
+                        </Grid>
+                        <Grid item xs={2}>
+                          <IconButton
+                            aria-label="expand row"
+                            size="small"
+                            type="submit"
+                            color="primary"
+                            onClick={handleSubmit}
+                            disabled={submitting || pristine}
+                          >
+                            <CheckCircleOutlineIcon />
+                          </IconButton>
+                        </Grid>
                       </Grid>
-                      <Grid item xs={2}>
-                        <label>maxFeatures</label>
-                        <Field name="maxFeatures" parse={Number}>
-                          {({ input: { value, onChange, name } }) => (
-                            <div>
-                              <TextField
-                                name={name}
-                                value={value}
-                                onChange={onChange}
-                              />
-                            </div>
-                          )}
-                        </Field>
+                    </form>
+                  )}
+                />
+              )}
+              {row.id === 'idPrecision_lg' && (
+                <Form
+                  onSubmit={onSubmitLg}
+                  initialValues={lgSettings}
+                  render={({ handleSubmit, submitting, pristine }) => (
+                    <form onSubmit={handleSubmit}>
+                      <Grid
+                        container
+                        direction="row"
+                        justify="flex-start"
+                        alignItems="center"
+                      >
+                        <Grid item xs={2}>
+                          <label>Number of steps</label>
+                          <Field name="numSteps" parse={Number}>
+                            {props => (
+                              <div>
+                                <TextField
+                                  name={props.input.name}
+                                  value={props.input.value}
+                                  onChange={props.input.onChange}
+                                />
+                              </div>
+                            )}
+                          </Field>
+                        </Grid>
+                        <Grid item xs={2}>
+                          <label>Learning rate</label>
+                          <Field name="learningRate" parse={Number}>
+                            {props => (
+                              <div>
+                                <TextField
+                                  name={props.input.name}
+                                  value={props.input.value}
+                                  onChange={props.input.onChange}
+                                />
+                              </div>
+                            )}
+                          </Field>
+                        </Grid>
+                        <Grid item xs={2}>
+                          <IconButton
+                            aria-label="expand row"
+                            size="small"
+                            type="submit"
+                            color="primary"
+                            onClick={handleSubmit}
+                            disabled={submitting || pristine}
+                          >
+                            <CheckCircleOutlineIcon />
+                          </IconButton>
+                        </Grid>
                       </Grid>
-                      <Grid item xs={2}>
-                        <label>replacement</label>
-                        <Field name="replacement">
-                          {({ input: { value, onChange, name } }) => (
-                            <Checkbox
-                              color="primary"
-                              inputProps={{
-                                'aria-label': 'secondary checkbox',
-                              }}
-                              name={name}
-                              checked={value}
-                              onChange={onChange}
-                            />
-                          )}
-                        </Field>
+                    </form>
+                  )}
+                />
+              )}
+              {row.id === 'idPrecision_KNN' && (
+                <Form
+                  onSubmit={onSubmitRf}
+                  initialValues={{
+                    seed: 3,
+                    maxFeatures: 0.8,
+                    replacement: true,
+                    nEstimators: 25,
+                  }}
+                  render={({ handleSubmit, submitting, pristine }) => (
+                    <form onSubmit={handleSubmit}>
+                      <Grid
+                        container
+                        direction="row"
+                        justify="flex-start"
+                        alignItems="center"
+                      >
+                        <Grid item xs={2}>
+                          No settings for KNN classifier
+                        </Grid>
                       </Grid>
-                      <Grid item xs={2}>
-                        <label>nEstimators</label>
-                        <Field name="nEstimators" parse={Number}>
-                          {({ input: { value, onChange, name } }) => (
-                            <div>
-                              <TextField
-                                name={name}
-                                value={value}
-                                onChange={onChange}
-                              />
-                            </div>
-                          )}
-                        </Field>
-                      </Grid>
-                      <Grid item xs={2}>
-                        <IconButton
-                          aria-label="expand row"
-                          size="small"
-                          type="submit"
-                          color="primary"
-                          onClick={handleSubmit}
-                          disabled={submitting || pristine}
-                        >
-                          <CheckCircleOutlineIcon />
-                        </IconButton>
-                      </Grid>
-                    </Grid>
-                  </form>
-                )}
-              />
-            )}
-            {row.id === 'idPrecision_lg' && (
-              <Form
-                onSubmit={onSubmitLg}
-                initialValues={lgSettings}
-                render={({ handleSubmit, submitting, pristine }) => (
-                  <form onSubmit={handleSubmit}>
-                    <Grid
-                      container
-                      direction="row"
-                      justify="flex-start"
-                      alignItems="center"
-                    >
-                      <Grid item xs={2}>
-                        <label>Number of steps</label>
-                        <Field name="numSteps" parse={Number}>
-                          {props => (
-                            <div>
-                              <TextField
-                                name={props.input.name}
-                                value={props.input.value}
-                                onChange={props.input.onChange}
-                              />
-                            </div>
-                          )}
-                        </Field>
-                      </Grid>
-                      <Grid item xs={2}>
-                        <label>Learning rate</label>
-                        <Field name="learningRate" parse={Number}>
-                          {props => (
-                            <div>
-                              <TextField
-                                name={props.input.name}
-                                value={props.input.value}
-                                onChange={props.input.onChange}
-                              />
-                            </div>
-                          )}
-                        </Field>
-                      </Grid>
-                      <Grid item xs={2}>
-                        <IconButton
-                          aria-label="expand row"
-                          size="small"
-                          type="submit"
-                          color="primary"
-                          onClick={handleSubmit}
-                          disabled={submitting || pristine}
-                        >
-                          <CheckCircleOutlineIcon />
-                        </IconButton>
-                      </Grid>
-                    </Grid>
-                  </form>
-                )}
-              />
-            )}
-            {row.id === 'idPrecision_KNN' && (
-              <Form
-                onSubmit={onSubmitRf}
-                initialValues={{
-                  seed: 3,
-                  maxFeatures: 0.8,
-                  replacement: true,
-                  nEstimators: 25,
-                }}
-                render={({ handleSubmit, submitting, pristine }) => (
-                  <form onSubmit={handleSubmit}>
-                    <Grid
-                      container
-                      direction="row"
-                      justify="flex-start"
-                      alignItems="center"
-                    >
-                      <Grid item xs={2}>
-                        No settings for KNN classifier
-                      </Grid>
-                    </Grid>
-                  </form>
-                )}
-              />
-            )}
-          </Box>
-        </Collapse>
-      </TableCell>
+                    </form>
+                  )}
+                />
+              )}
+            </Box>
+          </Collapse>
+        </TableCell>
+      </TableRow>
     </Fragment>
   )
 }
@@ -267,6 +269,7 @@ const CollapsibleTable = ({
   const classes = useStyles()
   const rowsRendered = map(rows, row => (
     <Row
+      key={`colapse_row_${row.id}`}
       row={row}
       columns={columns}
       onSubmitRf={onSubmitRf}
@@ -282,9 +285,9 @@ const CollapsibleTable = ({
       <Table className={classes.table} aria-label="simple table">
         <TableHead>
           <TableRow>
-            <TableCell />
+            <TableCell key="head_empty" />
             {map(columns, col => (
-              <TableCell>{String(col)}</TableCell>
+              <TableCell key={`head_${col}`}>{String(col)}</TableCell>
             ))}
           </TableRow>
         </TableHead>

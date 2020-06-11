@@ -7,7 +7,6 @@ import React, {
 } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
-import { useParams } from 'react-router-dom'
 import { useLazyQuery, useMutation, useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import Grid from '@material-ui/core/Grid'
@@ -15,7 +14,7 @@ import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
 import Button from '@material-ui/core/Button'
 import Network from '../Graph/Network'
-import { forEach, get, uniqBy, map, mapKeys, mapValues, keyBy } from 'lodash'
+import { find, get, uniqBy, map, mapKeys, mapValues, keyBy } from 'lodash'
 import { networkOptions } from '../Graph/config'
 import { SnackbarContext, ScamNeighborContext } from '../App'
 import { getNodesAndEdges } from '../Graph/EthereumGraph'
@@ -90,22 +89,6 @@ const TEST = gql`
   }
 `
 
-// const TEST = gql`
-//   query FindNeighborsScam($address: String!) {
-//     findNeighborsScam(address: $address) {
-//       edges {
-//         to
-//         from
-//       }
-//       nodes {
-//         group
-//         id
-//         label
-//       }
-//     }
-//   }
-// `
-
 const TRANSACTION_MORE = gql`
   query Address($addressId: ID!) {
     address(id: $addressId) {
@@ -149,15 +132,16 @@ const TRANSACTION_MORE = gql`
 
 const SearchNeighbors = () => {
   const classes = useStyles()
-  const { hash } = useParams()
-  let edges = []
-  let nodes = []
   let labelsList = []
-  const [address, setAddress] = useState(
-    hash || '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
-  )
   const { setSnackbarMessage } = useContext(SnackbarContext)
   const { neighborsScamFounded } = useContext(ScamNeighborContext)
+  let edges = get(neighborsScamFounded, 'edges') || []
+  let nodes = get(neighborsScamFounded, 'nodes') || []
+  const startNodeId = get(edges, '[0].from')
+  const startNode = find(nodes, { id: startNodeId })
+  const [address, setAddress] = useState(
+    get(startNode, 'label') || '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
+  )
 
   const [level, setLevel] = useState(3)
 
@@ -183,13 +167,6 @@ const SearchNeighbors = () => {
   const [loadMoreNetworkData, { data: dataAdd }] = useLazyQuery(
     TRANSACTION_MORE
   )
-  useEffect(() => {
-    if (hash) {
-      loadNetworkData({
-        variables: { address: hash.toLowerCase(), level },
-      })
-    }
-  }, [hash, loadNetworkData, level])
 
   const changeLevel = useCallback(
     e => {
@@ -228,14 +205,6 @@ const SearchNeighbors = () => {
   if (labelLoading) return <p>labelLoading...</p>
   if (errorLabels) return <p>Error :(</p>
 
-  edges =
-    neighborsScamFounded && neighborsScamFounded.edges
-      ? neighborsScamFounded.edges
-      : edges
-  nodes =
-    neighborsScamFounded && neighborsScamFounded.nodes
-      ? neighborsScamFounded.nodes
-      : nodes
   // nachladen
   const addressAdditional = get(dataAdd, 'address', null)
   if (addressAdditional) {

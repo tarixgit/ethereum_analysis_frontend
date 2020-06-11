@@ -51,6 +51,7 @@ export const SnackbarContext = React.createContext({
 
 export const ScamNeighborContext = React.createContext({
   neighborsScamFounded: { edges: null, nodes: null },
+  setNeighborsScamFounded: () => {},
 })
 
 const useStyles = makeStyles(theme => ({
@@ -137,15 +138,15 @@ const App = () => {
   const handleDrawerClose = () => {
     setOpen(false)
   }
-  // TODO Powered by Etherscan.io APIs
-  // TODO Powered by etherscamdb APIs
   return (
     <ModelContext.Provider value={{ models, setModels }}>
       <StepContext.Provider value={{ step, setStep }}>
         <SnackbarContext.Provider
           value={{ snackbarMessage, setSnackbarMessage }}
         >
-          <ScamNeighborContext.Provider value={{ neighborsScamFounded }}>
+          <ScamNeighborContext.Provider
+            value={{ neighborsScamFounded, setNeighborsScamFounded }}
+          >
             <BrowserRouter>
               <div className={classes.root}>
                 <CustomAppBar open={open} handleDrawerOpen={handleDrawerOpen} />
@@ -185,3 +186,5 @@ const App = () => {
 }
 
 export default App
+// TODO Some data powered by Etherscan.io APIs
+// TODO Some data powered by etherscamdb APIs

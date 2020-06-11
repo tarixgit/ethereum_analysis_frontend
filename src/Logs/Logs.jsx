@@ -1,27 +1,20 @@
-import React, { useState, useCallback } from 'react'
-import PropTypes from 'prop-types'
+import React, { useState, useContext } from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Table from '@material-ui/core/Table'
-import TableBody from '@material-ui/core/TableBody'
 import TableCell from '@material-ui/core/TableCell'
 import TableContainer from '@material-ui/core/TableContainer'
-import TableHead from '@material-ui/core/TableHead'
 import TablePagination from '@material-ui/core/TablePagination'
-import TableRow from '@material-ui/core/TableRow'
-import TableSortLabel from '@material-ui/core/TableSortLabel'
 import Paper from '@material-ui/core/Paper'
-import { map, get, truncate } from 'lodash'
+import { get } from 'lodash'
 import Button from '@material-ui/core/Button'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import { Link } from 'react-router-dom'
 import Grid from '@material-ui/core/Grid'
-import TableMenu from '../components/TableMenu'
 import EnhancedTableHead from '../components/EnhancedTableHead'
 import TableBodyEnhanced from '../components/TableBodyEnhanced'
-import Tooltip from '@material-ui/core/Tooltip'
-import { FormattedNumber } from 'react-intl'
 import Container from '@material-ui/core/Container'
+import { ScamNeighborContext } from '../App'
 
 const LOAD_LOGS = gql`
   query Logs($orderBy: Order, $offset: Int!, $limit: Int!) {
@@ -31,13 +24,25 @@ const LOAD_LOGS = gql`
         description
         name
         createdAt
+        data {
+          edges {
+            from
+            to
+          }
+          nodes {
+            group
+            id
+            label
+            shape
+          }
+        }
       }
       count
     }
   }
 `
 
-const headCells = [
+const headCells = setGraph => [
   {
     id: 'id',
     numeric: false,
@@ -65,6 +70,33 @@ const headCells = [
       )
     },
   },
+  {
+    id: 'data',
+    numeric: false,
+    disablePadding: false,
+    label: 'Data',
+    render: (val, _, column, classes) => {
+      const isData = get(val, 'nodes') && get(val, 'edges')
+      return (
+        <TableCell padding={column.disablePadding ? 'none' : 'default'}>
+          {isData ? (
+            <Link to="searchneighbors" className={classes.links}>
+              <Button
+                color="primary"
+                className={classes.button}
+                size="small"
+                onClick={() => setGraph(val)}
+              >
+                show on graph
+              </Button>
+            </Link>
+          ) : (
+            ''
+          )}
+        </TableCell>
+      )
+    },
+  },
 ]
 
 const useStyles = makeStyles(theme => ({
@@ -81,6 +113,9 @@ const useStyles = makeStyles(theme => ({
     display: 'flex',
     overflow: 'auto',
     flexDirection: 'column',
+  },
+  button: {
+    padding: 0,
   },
   table: {
     minWidth: 750,
@@ -110,6 +145,7 @@ const useStyles = makeStyles(theme => ({
 
 const Logs = () => {
   const classes = useStyles()
+  const { setNeighborsScamFounded } = useContext(ScamNeighborContext)
   const [order, setOrder] = useState('desc')
   const [orderBy, setOrderBy] = useState('createdAt')
   const [orderByQuery, setOrderQuery] = useState({
@@ -174,12 +210,12 @@ const Logs = () => {
                   orderBy={orderBy}
                   onRequestSort={handleRequestSort}
                   rowCount={rows.length}
-                  headCells={headCells}
+                  headCells={headCells(setNeighborsScamFounded)}
                 />
                 <TableBodyEnhanced
                   classes={classes}
                   rows={rows}
-                  headCells={headCells}
+                  headCells={headCells(setNeighborsScamFounded)}
                   emptyRows={emptyRows}
                 />
               </Table>

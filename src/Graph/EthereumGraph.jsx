@@ -8,7 +8,16 @@ import Grid from '@material-ui/core/Grid'
 import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
 import Network from './Network'
-import { forEach, get, uniqBy, map, mapKeys, mapValues, keyBy } from 'lodash'
+import {
+  countBy,
+  forEach,
+  get,
+  uniqBy,
+  map,
+  mapKeys,
+  mapValues,
+  keyBy,
+} from 'lodash'
 import { networkOptions } from './config'
 
 const useStyles = makeStyles(theme => ({
@@ -154,6 +163,19 @@ const TRANSACTION_MORE = gql`
   }
 `
 
+const getNodeEdgeFromTrans = (
+  { id, hash, alias, labelId, scam },
+  mainAddressId,
+  isInputTrans
+) => ({
+  // scam flag updated manually in addersses
+  node: scam
+    ? { id: Number(id), label: alias || hash, group: labelId, shape: 'star' }
+    : { id: Number(id), label: alias || hash, group: labelId },
+  edge: isInputTrans
+    ? { from: Number(id), to: mainAddressId }
+    : { from: mainAddressId, to: Number(id) },
+})
 const getNodesAndEdges = addressesWithIndo => {
   let edges = []
   let nodes = []
@@ -163,20 +185,29 @@ const getNodesAndEdges = addressesWithIndo => {
     hash,
     alias,
     labelId,
+    scam,
     transactionsInput,
     transactionsOutput,
   } = addressesWithIndo
-  nodes = [{ id: Number(id), label: alias || hash, group: labelId }]
+  nodes = [
+    scam
+      ? { id: Number(id), label: alias || hash, group: labelId, shape: 'star' }
+      : { id: Number(id), label: alias || hash, group: labelId },
+  ]
   edges = []
   forEach(transactionsInput, ({ fromAddress }) => {
-    const { id, hash, alias, labelId } = fromAddress
-    nodes.push({ id: Number(id), label: alias || hash, group: labelId })
-    edges.push({ from: Number(id), to: mainAddressId })
+    const { node, edge } = getNodeEdgeFromTrans(
+      fromAddress,
+      mainAddressId,
+      true
+    )
+    nodes.push(node)
+    edges.push(edge)
   })
   forEach(transactionsOutput, ({ toAddress }) => {
-    const { id, hash, alias, labelId } = toAddress
-    nodes.push({ id: Number(id), label: alias || hash, group: labelId })
-    edges.push({ from: mainAddressId, to: Number(id) })
+    const { node, edge } = getNodeEdgeFromTrans(toAddress, mainAddressId, false)
+    nodes.push(node)
+    edges.push(edge)
   })
   return { nodes, edges }
 }
@@ -261,12 +292,15 @@ const EthereumGraph = () => {
     labelsList = get(labelsData, 'labels', null)
   }
   nodes = uniqBy(nodes, 'id')
+  const nodesCounted = countBy(nodes, 'group')
   const labelsListKeyed = keyBy(labelsList, 'id')
   const order = [0, 3, 6, 1, 5, 2, 7, 8, 4, 9]
   const labels = map(order, id => (
     <div className={classes.labelItem}>
       <div className={classes[`circle${labelsListKeyed[id].id}`]} />
-      {labelsListKeyed[id].name}
+      {nodesCounted[id]
+        ? `${labelsListKeyed[id].name} (${nodesCounted[id]})`
+        : labelsListKeyed[id].name}
     </div>
   ))
 

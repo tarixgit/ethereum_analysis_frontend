@@ -17,7 +17,8 @@ import Button from '@material-ui/core/Button'
 import Network from '../Graph/Network'
 import { forEach, get, uniqBy, map, mapKeys, mapValues, keyBy } from 'lodash'
 import { networkOptions } from '../Graph/config'
-import { SnackbarContext } from '../App'
+import { SnackbarContext, ScamNeighborContext } from '../App'
+import { getNodesAndEdges } from '../Graph/EthereumGraph'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -146,33 +147,6 @@ const TRANSACTION_MORE = gql`
   }
 `
 
-const getNodesAndEdges = addressesWithIndo => {
-  let edges = []
-  let nodes = []
-  const mainAddressId = Number(addressesWithIndo.id)
-  const {
-    id,
-    hash,
-    alias,
-    labelId,
-    transactionsInput,
-    transactionsOutput,
-  } = addressesWithIndo
-  nodes = [{ id: Number(id), label: alias || hash, group: labelId }]
-  edges = []
-  forEach(transactionsInput, ({ fromAddress }) => {
-    const { id, hash, alias, labelId } = fromAddress
-    nodes.push({ id: Number(id), label: alias || hash, group: labelId })
-    edges.push({ from: Number(id), to: mainAddressId })
-  })
-  forEach(transactionsOutput, ({ toAddress }) => {
-    const { id, hash, alias, labelId } = toAddress
-    nodes.push({ id: Number(id), label: alias || hash, group: labelId })
-    edges.push({ from: mainAddressId, to: Number(id) })
-  })
-  return { nodes, edges }
-}
-
 const SearchNeighbors = () => {
   const classes = useStyles()
   const { hash } = useParams()
@@ -183,6 +157,8 @@ const SearchNeighbors = () => {
     hash || '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
   const { setSnackbarMessage } = useContext(SnackbarContext)
+  const { neighborsScamFounded } = useContext(ScamNeighborContext)
+
   const [level, setLevel] = useState(3)
 
   //Labels
@@ -192,7 +168,7 @@ const SearchNeighbors = () => {
     called,
     errorLabels,
   } = useQuery(LABELS)
-  const [loadNetworkData, { loading, error, data }] = useMutation(TEST, {
+  const [loadNetworkData, { loading, error }] = useMutation(TEST, {
     onCompleted: data => {
       const dataMessage = get(data, 'findNeighborsScamThread', {
         success: null,
@@ -251,12 +227,15 @@ const SearchNeighbors = () => {
 
   if (labelLoading) return <p>labelLoading...</p>
   if (errorLabels) return <p>Error :(</p>
-  const graphData = get(data, 'findNeighborsScam', {
-    edges: null,
-    nodes: null,
-  })
-  edges = graphData.edges ? graphData.edges : edges
-  nodes = graphData.nodes ? graphData.nodes : nodes
+
+  edges =
+    neighborsScamFounded && neighborsScamFounded.edges
+      ? neighborsScamFounded.edges
+      : edges
+  nodes =
+    neighborsScamFounded && neighborsScamFounded.nodes
+      ? neighborsScamFounded.nodes
+      : nodes
   // nachladen
   const addressAdditional = get(dataAdd, 'address', null)
   if (addressAdditional) {

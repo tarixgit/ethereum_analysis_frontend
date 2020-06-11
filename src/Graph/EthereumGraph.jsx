@@ -176,7 +176,7 @@ const getNodeEdgeFromTrans = (
     ? { from: Number(id), to: mainAddressId }
     : { from: mainAddressId, to: Number(id) },
 })
-const getNodesAndEdges = addressesWithIndo => {
+export const getNodesAndEdges = addressesWithIndo => {
   let edges = []
   let nodes = []
   const mainAddressId = Number(addressesWithIndo.id)
@@ -260,7 +260,7 @@ const EthereumGraph = () => {
         variables: { address: address.toLowerCase() },
       })
     },
-    [loadNetworkData]
+    [loadNetworkData, address]
   )
   const loadMore = useCallback(
     addressId => {

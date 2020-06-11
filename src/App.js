@@ -50,8 +50,7 @@ export const SnackbarContext = React.createContext({
 })
 
 export const ScamNeighborContext = React.createContext({
-  neighborsScamFounded: null,
-  setNeighborsScamFounded: () => {},
+  neighborsScamFounded: { edges: null, nodes: null },
 })
 
 const useStyles = makeStyles(theme => ({
@@ -94,6 +93,7 @@ const SCAM_FOUND = gql`
         group
         id
         label
+        shape
       }
     }
   }
@@ -113,7 +113,10 @@ const App = () => {
     type: null,
     message: null,
   })
-  const [neighborsScamFounded, setNeighborsScamFounded] = useState(null)
+  const [neighborsScamFounded, setNeighborsScamFounded] = useState({
+    edges: null,
+    nodes: null,
+  })
 
   const { data: message } = useSubscription(MESSAGE)
   const { data: scamNeighbors } = useSubscription(SCAM_FOUND)
@@ -125,9 +128,7 @@ const App = () => {
   }, [message])
   useEffect(() => {
     setNeighborsScamFounded(get(scamNeighbors, 'neighborsScamFounded'))
-  }, [neighborsScamFounded])
-  console.log(message)
-  console.log(neighborsScamFounded)
+  }, [scamNeighbors])
 
   // todo in state of setMOdels write hook to store to local storage and to state
   const handleDrawerOpen = () => {
@@ -144,9 +145,7 @@ const App = () => {
         <SnackbarContext.Provider
           value={{ snackbarMessage, setSnackbarMessage }}
         >
-          <ScamNeighborContext.Provider
-            value={{ neighborsScamFounded, setNeighborsScamFounded }}
-          >
+          <ScamNeighborContext.Provider value={{ neighborsScamFounded }}>
             <BrowserRouter>
               <div className={classes.root}>
                 <CustomAppBar open={open} handleDrawerOpen={handleDrawerOpen} />

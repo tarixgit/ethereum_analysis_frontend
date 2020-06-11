@@ -14,7 +14,16 @@ import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
 import Button from '@material-ui/core/Button'
 import Network from '../Graph/Network'
-import { find, get, uniqBy, map, mapKeys, mapValues, keyBy } from 'lodash'
+import {
+  find,
+  get,
+  uniqBy,
+  map,
+  mapKeys,
+  mapValues,
+  keyBy,
+  countBy,
+} from 'lodash'
 import { networkOptions } from '../Graph/config'
 import { SnackbarContext, ScamNeighborContext } from '../App'
 import { getNodesAndEdges } from '../Graph/EthereumGraph'
@@ -217,12 +226,15 @@ const SearchNeighbors = () => {
     labelsList = get(labelsData, 'labels', null)
   }
   nodes = uniqBy(nodes, 'id')
+  const nodesCounted = countBy(nodes, 'group')
   const labelsListKeyed = keyBy(labelsList, 'id')
   const order = [0, 3, 6, 1, 5, 2, 7, 8, 4, 9]
   const labels = map(order, id => (
     <div className={classes.labelItem} key={`searchneighbors_${id}`}>
       <div className={classes[`circle${labelsListKeyed[id].id}`]} />
-      {labelsListKeyed[id].name}
+      {nodesCounted[id]
+        ? `${labelsListKeyed[id].name} (${nodesCounted[id]})`
+        : labelsListKeyed[id].name}
     </div>
   ))
 

@@ -39,26 +39,26 @@ export const networkOptions = {
     }, // 0: blue    None              [0, 3, 6, 1, 5, 2, 7, 8, 4, 9]
     1: {
       color: {
-        border: '#7C29F0',
-        background: '#AD85E4',
-        highlight: { border: '#7C29F0', background: '#D3BDF0' },
-        hover: { border: '#7C29F0', background: '#D3BDF0' },
+        border: '#4220FB',
+        background: '#6E6EFD',
+        highlight: { border: '#4220FB', background: '#9B9BFD' },
+        hover: { border: '#4220FB', background: '#9B9BFD' },
       },
     }, // 1: yellow  Mining Pool
     2: {
-      color: {
-        border: '#FA0A10',
-        background: '#FB7E81',
-        highlight: { border: '#FA0A10', background: '#FFAFB1' },
-        hover: { border: '#FA0A10', background: '#FFAFB1' },
-      },
-    }, // 2: red  Smart Contract
-    3: {
       color: {
         border: '#41A906',
         background: '#7BE141',
         highlight: { border: '#41A906', background: '#A1EC76' },
         hover: { border: '#41A906', background: '#A1EC76' },
+      },
+    },
+    3: {
+      color: {
+        border: '#FA0A10',
+        background: '#FB7E81',
+        highlight: { border: '#FA0A10', background: '#FFAFB1' },
+        hover: { border: '#FA0A10', background: '#FFAFB1' },
       },
     }, // 3: green   Onetime
     4: {
@@ -71,10 +71,10 @@ export const networkOptions = {
     }, // 4: magenta  Trace
     5: {
       color: {
-        border: '#4220FB',
-        background: '#6E6EFD',
-        highlight: { border: '#4220FB', background: '#9B9BFD' },
-        hover: { border: '#4220FB', background: '#9B9BFD' },
+        border: '#7C29F0',
+        background: '#AD85E4',
+        highlight: { border: '#7C29F0', background: '#D3BDF0' },
+        hover: { border: '#7C29F0', background: '#D3BDF0' },
       },
     }, // 5: purple  Miner
     6: {

@@ -61,10 +61,13 @@ const headCells = setGraph => [
     numeric: false,
     disablePadding: false,
     label: 'Created at',
-    render: (val, _, column) => {
+    render: (val, row, column) => {
       const date = new Date(Number(val)) // maybe change
       return (
-        <TableCell padding={column.disablePadding ? 'none' : 'default'}>
+        <TableCell
+          padding={column.disablePadding ? 'none' : 'default'}
+          key={`table_${row.id}_${column.id}`}
+        >
           {date ? date.toGMTString() : ''}
         </TableCell>
       )
@@ -75,10 +78,13 @@ const headCells = setGraph => [
     numeric: false,
     disablePadding: false,
     label: 'Data',
-    render: (val, _, column, classes) => {
+    render: (val, row, column, classes) => {
       const isData = get(val, 'nodes') && get(val, 'edges')
       return (
-        <TableCell padding={column.disablePadding ? 'none' : 'default'}>
+        <TableCell
+          padding={column.disablePadding ? 'none' : 'default'}
+          key={`table_${row.id}_${column.id}`}
+        >
           {isData ? (
             <Link to="searchneighbors" className={classes.links}>
               <Button

@@ -19,6 +19,7 @@ const TableBodyEnhanced = ({ classes, rows, headCells, emptyRows }) => {
             component="th"
             scope="row"
             padding={disablePadding ? 'none' : 'default'}
+            key={`table_${row.id}_${id}`}
           >
             {row.id}
           </TableCell>
@@ -26,13 +27,19 @@ const TableBodyEnhanced = ({ classes, rows, headCells, emptyRows }) => {
       }
       if (numeric) {
         return (
-          <TableCell padding={disablePadding ? 'none' : 'default'}>
+          <TableCell
+            padding={disablePadding ? 'none' : 'default'}
+            key={`table_${row.id}_${id}`}
+          >
             <FormattedNumber value={row[id]} />
           </TableCell>
         )
       }
       return (
-        <TableCell padding={disablePadding ? 'none' : 'default'}>
+        <TableCell
+          padding={disablePadding ? 'none' : 'default'}
+          key={`table_${row.id}_${id}`}
+        >
           {String(row[id])}
         </TableCell>
       )
@@ -58,11 +65,8 @@ const TableBodyEnhanced = ({ classes, rows, headCells, emptyRows }) => {
 
 TableBodyEnhanced.propTypes = {
   classes: PropTypes.object.isRequired,
-  numSelected: PropTypes.number.isRequired,
-  onRequestSort: PropTypes.func.isRequired,
-  onSelectAllClick: PropTypes.func.isRequired,
-  order: PropTypes.oneOf(['asc', 'desc']).isRequired,
-  orderBy: PropTypes.string.isRequired,
-  rowCount: PropTypes.number.isRequired,
+  rows: PropTypes.array.isRequired,
+  headCells: PropTypes.array.isRequired,
+  emptyRows: PropTypes.number.isRequired,
 }
 export default TableBodyEnhanced

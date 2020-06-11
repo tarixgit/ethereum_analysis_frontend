@@ -296,7 +296,7 @@ const EthereumGraph = () => {
   const labelsListKeyed = keyBy(labelsList, 'id')
   const order = [0, 3, 6, 1, 5, 2, 7, 8, 4, 9]
   const labels = map(order, id => (
-    <div className={classes.labelItem}>
+    <div className={classes.labelItem} key={`ethereumgraph_${id}`}>
       <div className={classes[`circle${labelsListKeyed[id].id}`]} />
       {nodesCounted[id]
         ? `${labelsListKeyed[id].name} (${nodesCounted[id]})`

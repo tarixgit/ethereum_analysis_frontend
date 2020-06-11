@@ -75,8 +75,8 @@ const headCells = [
     numeric: false,
     disablePadding: true,
     label: 'hash',
-    render: (val, _, __, classes) => (
-      <TableCell padding="none">
+    render: (val, row, column, classes) => (
+      <TableCell padding="none" key={`table_${row.id}_${column.id}`}>
         <Tooltip title={val} aria-label="add">
           <Link to={`graph/${val}`} className={classes.links}>
             <Button color="primary" className={classes.button} size="small">

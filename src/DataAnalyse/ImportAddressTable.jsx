@@ -47,8 +47,8 @@ const headCells = [
     numeric: false,
     disablePadding: false,
     label: 'Hash',
-    render: (val, _, __, classes) => (
-      <TableCell padding="none">
+    render: (val, row, column, classes) => (
+      <TableCell padding="none" key={`table_${row.id}_${column.id}`}>
         <Link to={`graph/${val}`} className={classes.links}>
           <Button color="primary">
             {val.length > 42

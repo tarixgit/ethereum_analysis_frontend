@@ -13,7 +13,7 @@ import { Link } from 'react-router-dom'
 // compare_arrows
 export const mainListItems = classes => (
   <div>
-    <Link to="/" className={classes.links}>
+    <Link to="/graph" className={classes.links}>
       <ListItem button>
         <ListItemIcon>
           <GrainIcon />

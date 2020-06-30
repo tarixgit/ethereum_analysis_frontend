@@ -1,10 +1,4 @@
-import React, {
-  Fragment,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from 'react'
+import React, { Fragment, useContext, useEffect, useState } from 'react'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import { map, get, takeRight, take, shuffle, truncate, compact } from 'lodash'
@@ -12,7 +6,10 @@ import memoizeOne from 'memoize-one'
 import { makeStyles } from '@material-ui/core/styles'
 import { Paper, Button, CircularProgress, TextField } from '@material-ui/core'
 import { green } from '@material-ui/core/colors'
-import { RandomForestClassifier as RFClassifier } from 'ml-random-forest'
+import {
+  RandomForestClassifier as RFClassifier,
+  RandomForestRegression as RFRegression,
+} from 'ml-random-forest'
 import clsx from 'clsx'
 import LogisticRegression from 'ml-logistic-regression'
 import { Matrix } from 'ml-matrix' //"ml-matrix": "5.3.0",
@@ -20,6 +17,7 @@ import KNN from 'ml-knn'
 import WebWorker from 'react-webworker'
 import CollapsibleTable from '../components/CollapsibleTable'
 import { ModelContext } from '../App'
+import { GaussianNB } from 'ml-naivebayes'
 
 const myWorker = new Worker('./classifier.worker.js', { type: 'module' }) // relative path to the source file, not the public URL
 
@@ -99,10 +97,12 @@ const loadAndSaveModels = memoizeOne(newModels => {
   const rf = RFClassifier.load(newModels.rf)
   const lg = LogisticRegression.load(newModels.lg)
   const knn = KNN.load(newModels.knn)
+  const gaussianNB = GaussianNB.load(newModels.gaussianNB)
+  const regression = RFRegression.load(newModels.regression)
   sessionStorage.setItem('rf', rf)
   sessionStorage.setItem('lg', lg)
   sessionStorage.setItem('knn', knn)
-  return { rf, lg, knn, newModelsJSON: newModels }
+  return { rf, lg, knn, newModelsJSON: newModels, gaussianNB, regression }
 })
 
 export const fitAndGetFeature = item => {
@@ -160,10 +160,15 @@ const calcErrorRate = (predicted, predictedMustBe) => {
 }
 
 const checkAccuracy = (models, testData, testDataPrediction) => {
-  const { lg, rf, knn } = models
+  const { lg, rf, knn, gaussianNB, regression } = models
   const predicted = rf.predict(testData)
   const predictedLogreg = lg.predict(new Matrix(testData))
   const predictedKNN = knn.predict(testData)
+  const predictedgaussianNB = gaussianNB.predict(testData)
+  const predictedRegression = regression.predict(testData)
+  console.log(predictedgaussianNB)
+  console.log(predictedRegression)
+  console.log(testDataPrediction)
   const precisionRf = calcErrorRate(predicted, testDataPrediction)
   const precisionLR = calcErrorRate(predictedLogreg, testDataPrediction)
   const precisionKNN = calcErrorRate(predictedKNN, testDataPrediction)
@@ -211,14 +216,19 @@ const ClassificationModelWebWorker = (callback, deps) => {
     const fullSet = fitAndGetFeatures(rowsShuffled)
     // separate train and test data
     const fullPredictions = map(rowsShuffled, ({ scam }) => (scam ? 1 : 0))
-    setTrainingData(take(fullSet, rows.length * 0.9))
-    setTrainingDataPredictions(take(fullPredictions, rows.length * 0.9))
-    setTestData(takeRight(fullSet, rows.length * 0.1))
-    setTestDataPrediction(takeRight(fullPredictions, rows.length * 0.1))
+    setTrainingData(fullSet)
+    setTrainingDataPredictions(fullPredictions)
+    setTestData(fullSet)
+    setTestDataPrediction(fullPredictions)
+
+    // setTrainingData(take(fullSet, rows.length * 0.9))
+    // setTrainingDataPredictions(take(fullPredictions, rows.length * 0.9))
+    // setTestData(takeRight(fullSet, rows.length * 0.1))
+    // setTestDataPrediction(takeRight(fullPredictions, rows.length * 0.1))
   }
   useEffect(() => {
     if (trainingData) {
-      const { lg, rf, knn } = modelsLocal
+      const { lg, rf, knn, gaussianNB, regression } = modelsLocal
       if (lg && rf && knn) {
         setPrecision(checkAccuracy(modelsLocal, testData, testDataPrediction))
         setModels(modelsLocal)

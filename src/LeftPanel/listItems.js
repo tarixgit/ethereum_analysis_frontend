@@ -59,6 +59,14 @@ export const secondaryListItems = classes => (
         <ListItemText primary="Logs" />
       </ListItem>
     </Link>
+    <Link to="/update" className={classes.links}>
+      <ListItem button>
+        <ListItemIcon>
+          <AssignmentIcon />
+        </ListItemIcon>
+        <ListItemText primary="Update" />
+      </ListItem>
+    </Link>
     <Link to="/info" className={classes.links}>
       <ListItem button>
         <ListItemIcon>

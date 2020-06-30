@@ -227,6 +227,7 @@ const EthereumGraph = () => {
     data: labelsData,
     called,
     errorLabels,
+    networkStatus,
   } = useQuery(LABELS)
   const [loadNetworkData, { loading, error, data }] = useLazyQuery(TRANSACTION)
   const [loadMoreNetworkData, { data: dataAdd }] = useLazyQuery(
@@ -288,21 +289,26 @@ const EthereumGraph = () => {
     nodes = [...nodes, ...result.nodes]
   }
 
+  let labels
   if (called && !labelLoading) {
     labelsList = get(labelsData, 'labels', null)
+    nodes = uniqBy(nodes, 'id')
+    const nodesCounted = countBy(nodes, 'group')
+    const labelsListKeyed = keyBy(labelsList, 'id')
+    const order = [0, 3, 6, 1, 5, 2, 7, 8, 4, 9]
+    labels = labelsList
+      ? map(order, id => (
+          <div className={classes.labelItem} key={`ethereumgraph_${id}`}>
+            <div className={classes[`circle${labelsListKeyed[id].id}`]} />
+            {nodesCounted[id]
+              ? `${labelsListKeyed[id].name} (${nodesCounted[id]})`
+              : labelsListKeyed[id].name}
+          </div>
+        ))
+      : null
+    labels =
+      !labels && networkStatus === 8 ? 'Cannot connect to the server.' : labels
   }
-  nodes = uniqBy(nodes, 'id')
-  const nodesCounted = countBy(nodes, 'group')
-  const labelsListKeyed = keyBy(labelsList, 'id')
-  const order = [0, 3, 6, 1, 5, 2, 7, 8, 4, 9]
-  const labels = map(order, id => (
-    <div className={classes.labelItem} key={`ethereumgraph_${id}`}>
-      <div className={classes[`circle${labelsListKeyed[id].id}`]} />
-      {nodesCounted[id]
-        ? `${labelsListKeyed[id].name} (${nodesCounted[id]})`
-        : labelsListKeyed[id].name}
-    </div>
-  ))
 
   return (
     <Fragment>

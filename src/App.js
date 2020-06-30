@@ -14,6 +14,7 @@ import SearchNeighbors from './SearchNeighbors/SearchNeighbors'
 import Info from './Info/Info'
 import Logs from './Logs/Logs'
 import SnackbarMessage from './components/SnackbarMessage'
+import Settings from './Settings/Settings'
 /*
 function Copyright() {
     return (
@@ -167,6 +168,9 @@ const App = () => {
                   </Route>
                   <Route path="/logs">
                     <Logs />
+                  </Route>
+                  <Route path="/update">
+                    <Settings />
                   </Route>
                   <Route path="/graph/:hash">
                     <EthereumGraph />

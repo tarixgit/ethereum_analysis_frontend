@@ -1,7 +1,16 @@
 import React, { Fragment, useContext, useEffect, useState } from 'react'
 import { useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
-import { map, get, takeRight, take, shuffle, truncate, compact } from 'lodash'
+import {
+  map,
+  get,
+  filter,
+  take,
+  shuffle,
+  truncate,
+  compact,
+  random,
+} from 'lodash'
 import memoizeOne from 'memoize-one'
 import { makeStyles } from '@material-ui/core/styles'
 import { Paper, Button, CircularProgress, TextField } from '@material-ui/core'
@@ -18,6 +27,13 @@ import WebWorker from 'react-webworker'
 import CollapsibleTable from '../components/CollapsibleTable'
 import { ModelContext } from '../App'
 import { GaussianNB } from 'ml-naivebayes'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
+import Switch from '@material-ui/core/Switch'
+import Grid from '@material-ui/core/Grid'
+import Typography from '@material-ui/core/Typography'
+import CardContent from '@material-ui/core/CardContent'
+import Card from '@material-ui/core/Card'
+import PrecisionTable from '../components/PrecisionTable'
 
 const myWorker = new Worker('./classifier.worker.js', { type: 'module' }) // relative path to the source file, not the public URL
 
@@ -82,6 +98,12 @@ const useStyles = makeStyles(theme => ({
     marginTop: -12,
     marginLeft: -12,
   },
+  title: {
+    fontSize: 14,
+  },
+  card: {
+    minWidth: 275,
+  },
 }))
 const rfOptions = {
   seed: 3, // for random function(MersenneTwister) for bagging
@@ -98,11 +120,11 @@ const loadAndSaveModels = memoizeOne(newModels => {
   const lg = LogisticRegression.load(newModels.lg)
   const knn = KNN.load(newModels.knn)
   const gaussianNB = GaussianNB.load(newModels.gaussianNB)
-  const regression = RFRegression.load(newModels.regression)
+  const rfRegression = RFClassifier.load(newModels.regression)
   sessionStorage.setItem('rf', rf)
   sessionStorage.setItem('lg', lg)
   sessionStorage.setItem('knn', knn)
-  return { rf, lg, knn, newModelsJSON: newModels, gaussianNB, regression }
+  return { rf, lg, knn, newModelsJSON: newModels, gaussianNB, rfRegression }
 })
 
 export const fitAndGetFeature = item => {
@@ -153,26 +175,96 @@ const fitAndGetFeatures = data => {
   return map(data, fitAndGetFeature)
 }
 
-const calcErrorRate = (predicted, predictedMustBe) => {
-  const isCorrect = map(predicted, (x, index) => x === predictedMustBe[index])
+const customRound = number => (number >= 0.5 ? 1 : 0)
+
+const calcAccuracyRate = (predicted, predictedMustBe) => {
+  const isCorrect = map(
+    predicted,
+    (x, index) => x === customRound(predictedMustBe[index])
+  )
   const correctNumber = compact(isCorrect)
   return correctNumber.length / isCorrect.length
 }
+const calcConfusionMatrix = (predicted, predictedMustBe) => {
+  let truePositive = 0
+  let trueNegative = 0
+  let falsePositive = 0
+  let falseNegative = 0
+  for (let i = 0; i < predictedMustBe.length; i++) {
+    if (
+      predictedMustBe[i] === 1 &&
+      predictedMustBe[i] === customRound(predicted[i])
+    ) {
+      truePositive = truePositive + 1
+    }
+    if (
+      predictedMustBe[i] === 1 &&
+      predictedMustBe[i] !== customRound(predicted[i])
+    ) {
+      falseNegative = falseNegative + 1
+    }
+    if (
+      predictedMustBe[i] === 0 &&
+      predictedMustBe[i] === customRound(predicted[i])
+    ) {
+      trueNegative = trueNegative + 1
+    }
+    if (
+      predictedMustBe[i] === 0 &&
+      predictedMustBe[i] !== customRound(predicted[i])
+    ) {
+      falsePositive = falsePositive + 1
+    }
+  }
+  return { truePositive, trueNegative, falsePositive, falseNegative }
+}
 
 const checkAccuracy = (models, testData, testDataPrediction) => {
-  const { lg, rf, knn, gaussianNB, regression } = models
+  const { lg, rf, knn, gaussianNB, rfRegression } = models
+  const confusionMatrix = {}
   const predicted = rf.predict(testData)
   const predictedLogreg = lg.predict(new Matrix(testData))
   const predictedKNN = knn.predict(testData)
   const predictedgaussianNB = gaussianNB.predict(testData)
-  const predictedRegression = regression.predict(testData)
-  console.log(predictedgaussianNB)
-  console.log(predictedRegression)
-  console.log(testDataPrediction)
-  const precisionRf = calcErrorRate(predicted, testDataPrediction)
-  const precisionLR = calcErrorRate(predictedLogreg, testDataPrediction)
-  const precisionKNN = calcErrorRate(predictedKNN, testDataPrediction)
-  return { precisionRf, precisionLR, precisionKNN }
+  const predictedRFRegression = rfRegression.predict(testData)
+
+  confusionMatrix.rf = calcConfusionMatrix(predicted, testDataPrediction)
+  confusionMatrix.lg = calcConfusionMatrix(predictedLogreg, testDataPrediction)
+  confusionMatrix.knn = calcConfusionMatrix(predictedKNN, testDataPrediction)
+  confusionMatrix.nb = calcConfusionMatrix(
+    predictedgaussianNB,
+    testDataPrediction
+  )
+  const precisionRf = calcAccuracyRate(predicted, testDataPrediction)
+  const precisionLR = calcAccuracyRate(predictedLogreg, testDataPrediction)
+  const precisionKNN = calcAccuracyRate(predictedKNN, testDataPrediction)
+  const precisionNB = calcAccuracyRate(predictedgaussianNB, testDataPrediction)
+  return {
+    precisionRf,
+    precisionLR,
+    precisionKNN,
+    precisionNB,
+    confusionMatrix,
+  }
+}
+
+const oversampling = rows => {
+  const scamAdd = filter(rows, { scam: true })
+  const notScamAdd = filter(rows, { scam: false })
+  if (scamAdd.length - notScamAdd.length > 0) {
+    const notScamAddSource = [...notScamAdd]
+    const duplicateCount = scamAdd.length - notScamAddSource.length
+    for (let i = 0; i < duplicateCount; i++) {
+      notScamAdd.push(notScamAddSource[random(notScamAddSource.length - 1)])
+    }
+  } else {
+    const scamAddSource = [...scamAdd]
+    const duplicateCount = notScamAdd.length - scamAddSource.length
+    for (let i = 0; i < duplicateCount; i++) {
+      scamAdd.push(scamAddSource[random(scamAddSource.length - 1)])
+    }
+  }
+  return [...scamAdd, ...notScamAdd]
 }
 
 const ClassificationModelWebWorker = (callback, deps) => {
@@ -186,6 +278,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
   })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [oversamplingOn, setOversamplingOn] = useState(true)
   const { newModelsJSON } = modelsLocal // not neccessary after memoizeOne
   const buttonClassname = clsx({
     [classes.buttonSuccess]: success,
@@ -199,6 +292,13 @@ const ClassificationModelWebWorker = (callback, deps) => {
     precisionRf: 0,
     precisionLR: 0,
     precisionKNN: 0,
+    precisionNB: 0,
+    confusionMatrix: {
+      rf: null,
+      lr: null,
+      knn: null,
+      nb: null,
+    },
   })
   const [rfSettings, onSubmitRf] = useState(rfOptions)
   const [lgSettings, onSubmitLg] = useState(lgOptions)
@@ -212,7 +312,9 @@ const ClassificationModelWebWorker = (callback, deps) => {
   )
   const rows = get(data, 'addressFeatures.rows', [])
   if (!loadingApi && networkStatus === 7 && !trainingData) {
-    const rowsShuffled = shuffle(rows)
+    const rowsShuffled = oversamplingOn
+      ? shuffle(oversampling(rows))
+      : shuffle(rows)
     const fullSet = fitAndGetFeatures(rowsShuffled)
     // separate train and test data
     const fullPredictions = map(rowsShuffled, ({ scam }) => (scam ? 1 : 0))
@@ -228,7 +330,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
   }
   useEffect(() => {
     if (trainingData) {
-      const { lg, rf, knn, gaussianNB, regression } = modelsLocal
+      const { lg, rf, knn, gaussianNB, rfRegression } = modelsLocal
       if (lg && rf && knn) {
         setPrecision(checkAccuracy(modelsLocal, testData, testDataPrediction))
         setModels(modelsLocal)
@@ -242,7 +344,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
   //     // myWorker = undefined
   //   }
   // }, [])
-
+  const { confusionMatrix } = precision
   return (
     <Fragment>
       <WebWorker
@@ -258,71 +360,149 @@ const ClassificationModelWebWorker = (callback, deps) => {
           }
           const spinner = (!updatedAt && lastPostAt) || updatedAt < lastPostAt
           return (
-            <Paper elevation={3} className={classes.root}>
-              <div className={classes.buttonSection}>
-                <Button
-                  color="primary"
-                  className={buttonClassname}
-                  disabled={spinner}
-                  onClick={() =>
-                    postMessage({
-                      trainingData,
-                      trainingDataPredictions,
-                      rfSettings,
-                      lgSettings,
-                    })
-                  }
-                  variant="contained"
-                >
-                  Train
-                </Button>
-              </div>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Paper elevation={3} className={classes.root}>
+                  <div className={classes.buttonSection}>
+                    <Button
+                      color="primary"
+                      className={buttonClassname}
+                      disabled={spinner}
+                      onClick={() =>
+                        postMessage({
+                          trainingData,
+                          trainingDataPredictions,
+                          rfSettings,
+                          lgSettings,
+                        })
+                      }
+                      variant="contained"
+                    >
+                      Train
+                    </Button>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={oversamplingOn}
+                          onChange={e => setOversamplingOn(e.target.checked)}
+                          name="checkedB"
+                          color="primary"
+                        />
+                      }
+                      label="Oversampling"
+                    />
+                  </div>
 
-              <Paper elevation={0} className={classes.paper}>
-                <CollapsibleTable
-                  columns={['name', 'precision']}
-                  rows={[
-                    {
-                      id: 'idPrecision_rf',
-                      name: {
-                        value: 'Random forest',
-                      },
-                      precision: { value: precision.precisionRf },
-                      error: { value: '0.9' },
-                    },
-                    {
-                      id: 'idPrecision_lg',
-                      name: {
-                        value: 'Logistik regression',
-                      },
-                      precision: { value: precision.precisionLR },
-                      error: { value: '0.9' },
-                    },
-
-                    {
-                      id: 'idPrecision_KNN',
-                      name: {
-                        value: 'K-nearest neighbors',
-                      },
-                      precision: { value: precision.precisionKNN },
-                      error: { value: '0.9' },
-                    },
-                  ]}
-                  onSubmitRf={onSubmitRf}
-                  onSubmitLg={onSubmitLg}
-                  onSubmitKNN={onSubmitKNN}
-                  rfSettings={rfSettings}
-                  lgSettings={lgSettings}
-                />
-                {error ? `Something went wrong: ${error.message}` : ''}
-                {spinner && (
-                  <CircularProgress
-                    size={40}
-                    className={classes.buttonProgress}
-                  />
-                )}
-              </Paper>
-            </Paper>
+                  <Paper elevation={0} className={classes.paper}>
+                    <CollapsibleTable
+                      columns={['Classifier', 'Accuracy']}
+                      rows={[
+                        {
+                          id: 'idPrecision_rf',
+                          Classifier: {
+                            value: 'Random forest',
+                          },
+                          Accuracy: { value: precision.precisionRf },
+                        },
+                        {
+                          id: 'idPrecision_lg',
+                          Classifier: {
+                            value: 'Logistik regression',
+                          },
+                          Accuracy: { value: precision.precisionLR },
+                        },
+                        {
+                          id: 'idPrecision_KNN',
+                          Classifier: {
+                            value: 'K-nearest neighbors',
+                          },
+                          Accuracy: { value: precision.precisionKNN },
+                        },
+                        {
+                          id: 'idPrecision_NB',
+                          Classifier: {
+                            value: 'Naive Bayes classifier',
+                          },
+                          Accuracy: { value: precision.precisionNB },
+                        },
+                      ]}
+                      onSubmitRf={onSubmitRf}
+                      onSubmitLg={onSubmitLg}
+                      onSubmitKNN={onSubmitKNN}
+                      rfSettings={rfSettings}
+                      lgSettings={lgSettings}
+                    />
+                    {error ? `Something went wrong: ${error.message}` : ''}
+                    {spinner && (
+                      <CircularProgress
+                        size={40}
+                        className={classes.buttonProgress}
+                      />
+                    )}
+                  </Paper>
+                </Paper>
+              </Grid>
+              <Grid item xs={12}>
+                <Paper elevation={2} className={classes.paper}>
+                  {confusionMatrix.rf && (
+                    <Card className={classes.card}>
+                      <CardContent>
+                        <Typography
+                          className={classes.title}
+                          color="textSecondary"
+                          gutterBottom
+                        >
+                          Random forest
+                        </Typography>
+                        <PrecisionTable precisionData={confusionMatrix.rf} />
+                      </CardContent>
+                    </Card>
+                  )}
+                  {confusionMatrix.lg && (
+                    <Card className={classes.card}>
+                      <CardContent>
+                        <Typography
+                          className={classes.title}
+                          color="textSecondary"
+                          gutterBottom
+                        >
+                          Logistik regression
+                        </Typography>
+                        <PrecisionTable precisionData={confusionMatrix.lg} />
+                      </CardContent>
+                    </Card>
+                  )}
+                  {confusionMatrix.knn && (
+                    <Card className={classes.card}>
+                      <CardContent>
+                        <Typography
+                          className={classes.title}
+                          color="textSecondary"
+                          gutterBottom
+                        >
+                          K-nearest neighbors
+                        </Typography>
+                        <PrecisionTable precisionData={confusionMatrix.knn} />
+                      </CardContent>
+                    </Card>
+                  )}
+                  {confusionMatrix.nb && (
+                    <Card className={classes.card}>
+                      <CardContent>
+                        <Typography
+                          className={classes.title}
+                          color="textSecondary"
+                          gutterBottom
+                        >
+                          Naive Bayes classifier
+                        </Typography>
+                        <PrecisionTable precisionData={confusionMatrix.nb} />
+                      </CardContent>
+                    </Card>
+                  )}
+                </Paper>
+              </Grid>
+            </Grid>
           )
         }}
       </WebWorker>

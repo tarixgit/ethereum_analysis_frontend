@@ -9,6 +9,8 @@ import BubbleChartIcon from '@material-ui/icons/BubbleChart'
 import AssignmentIcon from '@material-ui/icons/Assignment'
 import InfoIcon from '@material-ui/icons/Info'
 import PlaylistAddCheckIcon from '@material-ui/icons/PlaylistAddCheck'
+import SettingsIcon from '@material-ui/icons/Settings'
+
 import { Link } from 'react-router-dom'
 // compare_arrows
 export const mainListItems = classes => (
@@ -62,7 +64,7 @@ export const secondaryListItems = classes => (
     <Link to="/update" className={classes.links}>
       <ListItem button>
         <ListItemIcon>
-          <AssignmentIcon />
+          <SettingsIcon />
         </ListItemIcon>
         <ListItemText primary="Update" />
       </ListItem>

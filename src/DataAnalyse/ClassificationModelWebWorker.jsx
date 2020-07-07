@@ -379,28 +379,31 @@ const ClassificationModelWebWorker = (callback, deps) => {
     }
   )
   const rows = get(data, 'addressFeatures.rows', [])
-  if (!loadingApi && networkStatus === 7 && !trainingData) {
-    const rowsShuffled = oversamplingOn
-      ? shuffle(oversampling(rows))
-      : shuffle(rows)
-    const fullSet = fitAndGetFeatures(rowsShuffled)
-    // separate train and test data
-    const fullPredictions = map(rowsShuffled, ({ scam }) => (scam ? 1 : 0))
-    if (trainSplit === 1) {
-      setTrainingData(fullSet)
-      setTrainingDataPredictions(fullPredictions)
-      setTestData(fullSet)
-      setTestDataPrediction(fullPredictions)
-    } else {
-      const split = typeof trainSplit === 'number' ? trainSplit : 0.9
-      setTrainingData(take(fullSet, rows.length * split))
-      setTrainingDataPredictions(take(fullPredictions, rows.length * split))
-      setTestData(takeRight(fullSet, rows.length * (1 - split)))
-      setTestDataPrediction(
-        takeRight(fullPredictions, rows.length * (1 - split))
-      )
+  useEffect(() => {
+    if (!loadingApi && networkStatus === 7) {
+      const rowsShuffled = oversamplingOn
+        ? shuffle(oversampling(rows))
+        : shuffle(rows)
+      const fullSet = fitAndGetFeatures(rowsShuffled)
+      // separate train and test data
+      const fullPredictions = map(rowsShuffled, ({ scam }) => (scam ? 1 : 0))
+      if (trainSplit === 1) {
+        setTrainingData(fullSet)
+        setTrainingDataPredictions(fullPredictions)
+        setTestData(fullSet)
+        setTestDataPrediction(fullPredictions)
+      } else {
+        const split = typeof trainSplit === 'number' ? trainSplit : 0.9
+        setTrainingData(take(fullSet, rows.length * split))
+        setTrainingDataPredictions(take(fullPredictions, rows.length * split))
+        setTestData(takeRight(fullSet, rows.length * (1 - split)))
+        setTestDataPrediction(
+          takeRight(fullPredictions, rows.length * (1 - split))
+        )
+      }
     }
-  }
+  }, [loadingApi, networkStatus, trainSplit])
+
   useEffect(() => {
     if (trainingData) {
       const { lg, rf, knn, gaussianNB, rfRegression } = modelsLocal

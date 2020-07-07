@@ -200,6 +200,7 @@ const Classification = (callback, deps) => {
                 <Button
                   variant="contained"
                   color="primary"
+                  disabled={step === steps.length - 1}
                   onClick={handleNext}
                 >
                   {step === steps.length - 1 ? 'Finish' : 'Next'}

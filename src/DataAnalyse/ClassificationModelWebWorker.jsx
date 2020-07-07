@@ -7,7 +7,7 @@ import {
   filter,
   take,
   shuffle,
-  truncate,
+  takeRight,
   compact,
   random,
   ceil,
@@ -35,6 +35,7 @@ import Typography from '@material-ui/core/Typography'
 import CardContent from '@material-ui/core/CardContent'
 import Card from '@material-ui/core/Card'
 import PrecisionTable from '../components/PrecisionTable'
+import Slider from '@material-ui/core/Slider'
 
 const myWorker = new Worker('./classifier.worker.js', { type: 'module' }) // relative path to the source file, not the public URL
 
@@ -106,6 +107,48 @@ const useStyles = makeStyles(theme => ({
     minWidth: 275,
   },
 }))
+const sliderMarks = [
+  {
+    value: 0.1,
+    label: 0.1,
+  },
+  {
+    value: 0.2,
+    label: 0.2,
+  },
+  {
+    value: 0.3,
+    label: 0.3,
+  },
+  {
+    value: 0.4,
+    label: 0.4,
+  },
+  {
+    value: 0.5,
+    label: 0.5,
+  },
+  {
+    value: 0.6,
+    label: 0.6,
+  },
+  {
+    value: 0.7,
+    label: 0.7,
+  },
+  {
+    value: 0.8,
+    label: 0.8,
+  },
+  {
+    value: 0.9,
+    label: 0.9,
+  },
+  {
+    value: 1,
+    label: 1,
+  },
+]
 const rfOptions = {
   seed: 3, // for random function(MersenneTwister) for bagging
   maxFeatures: 0.8, // part of features used for bagging
@@ -296,6 +339,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [oversamplingOn, setOversamplingOn] = useState(true)
+  const [trainSplit, setTrainSplit] = useState(1)
   const { newModelsJSON } = modelsLocal // not neccessary after memoizeOne
   const buttonClassname = clsx({
     [classes.buttonSuccess]: success,
@@ -342,15 +386,20 @@ const ClassificationModelWebWorker = (callback, deps) => {
     const fullSet = fitAndGetFeatures(rowsShuffled)
     // separate train and test data
     const fullPredictions = map(rowsShuffled, ({ scam }) => (scam ? 1 : 0))
-    setTrainingData(fullSet)
-    setTrainingDataPredictions(fullPredictions)
-    setTestData(fullSet)
-    setTestDataPrediction(fullPredictions)
-
-    // setTrainingData(take(fullSet, rows.length * 0.9))
-    // setTrainingDataPredictions(take(fullPredictions, rows.length * 0.9))
-    // setTestData(takeRight(fullSet, rows.length * 0.1))
-    // setTestDataPrediction(takeRight(fullPredictions, rows.length * 0.1))
+    if (trainSplit === 1) {
+      setTrainingData(fullSet)
+      setTrainingDataPredictions(fullPredictions)
+      setTestData(fullSet)
+      setTestDataPrediction(fullPredictions)
+    } else {
+      const split = typeof trainSplit === 'number' ? trainSplit : 0.9
+      setTrainingData(take(fullSet, rows.length * split))
+      setTrainingDataPredictions(take(fullPredictions, rows.length * split))
+      setTestData(takeRight(fullSet, rows.length * (1 - split)))
+      setTestDataPrediction(
+        takeRight(fullPredictions, rows.length * (1 - split))
+      )
+    }
   }
   useEffect(() => {
     if (trainingData) {
@@ -399,40 +448,80 @@ const ClassificationModelWebWorker = (callback, deps) => {
                 get(data, 'newModels.lg', null) &&
                 get(data, 'newModels.knn', null)
               ))
+
+          function valuetext(value) {
+            return `${value}°C`
+          }
           return (
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Paper elevation={3} className={classes.root}>
-                  <div className={classes.buttonSection}>
-                    <Button
-                      color="primary"
-                      className={buttonClassname}
-                      disabled={spinner}
-                      onClick={() =>
-                        postMessage({
-                          trainingData,
-                          trainingDataPredictions,
-                          rfSettings,
-                          lgSettings,
-                        })
-                      }
-                      variant="contained"
-                    >
-                      Train
-                    </Button>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={oversamplingOn}
-                          onChange={e => setOversamplingOn(e.target.checked)}
-                          name="checkedB"
-                          color="primary"
+                  <Grid
+                    container
+                    spacing={2}
+                    direction="row"
+                    justify="center"
+                    alignItems="center"
+                  >
+                    <Grid item xs={4}>
+                      <FormControlLabel
+                        labelPlacement="start"
+                        control={
+                          <Slider
+                            onChange={(e, val) => setTrainSplit(val)}
+                            style={{ width: 300, margin: 5 }}
+                            aria-labelledby="discrete-slider-custom"
+                            valueLabelDisplay="off"
+                            step={0.1}
+                            marks={sliderMarks}
+                            value={
+                              typeof trainSplit === 'number' ? trainSplit : 0
+                            }
+                            min={0.1}
+                            max={1}
+                          />
+                        }
+                        label="Train data split:"
+                      />
+                    </Grid>
+                    <Grid item xs={4}>
+                      <div className={classes.buttonSection}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={oversamplingOn}
+                              onChange={e =>
+                                setOversamplingOn(e.target.checked)
+                              }
+                              name="checkedB"
+                              color="primary"
+                            />
+                          }
+                          label="Oversampling"
                         />
-                      }
-                      label="Oversampling"
-                    />
-                  </div>
-
+                      </div>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <div className={classes.buttonSection}>
+                        <Button
+                          color="primary"
+                          className={buttonClassname}
+                          disabled={spinner}
+                          onClick={() =>
+                            postMessage({
+                              trainingData,
+                              trainingDataPredictions,
+                              rfSettings,
+                              lgSettings,
+                            })
+                          }
+                          variant="contained"
+                        >
+                          Train
+                        </Button>
+                      </div>
+                    </Grid>
+                  </Grid>
                   <Paper elevation={0} className={classes.paper}>
                     <CollapsibleTable
                       columns={[

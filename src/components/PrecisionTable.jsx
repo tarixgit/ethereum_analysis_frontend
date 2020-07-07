@@ -54,11 +54,11 @@ const PrecisionTable = ({ precisionData }) => {
             </TableCell>
             <TableCell align="right">
               True positive rate:
-              {ceil(truePositive / (truePositive + falseNegative), 4) * 100}%
+              {ceil((truePositive / (truePositive + falseNegative)) * 100, 2)}%
             </TableCell>
             <TableCell align="right">
               False positive rate:
-              {ceil(falsePositive / (falsePositive + trueNegative), 4) * 100}%
+              {ceil((falsePositive / (falsePositive + trueNegative)) * 100, 2)}%
             </TableCell>
           </TableRow>
           <TableRow key="PredictedConditionNeg">
@@ -67,11 +67,11 @@ const PrecisionTable = ({ precisionData }) => {
             </TableCell>
             <TableCell align="right">
               False negative rate:
-              {ceil(falseNegative / (truePositive + falseNegative), 4) * 100}%
+              {ceil((falseNegative / (truePositive + falseNegative)) * 100, 2)}%
             </TableCell>
             <TableCell align="right">
               True negative rate:
-              {ceil(trueNegative / (falsePositive + trueNegative), 4) * 100}%
+              {ceil((trueNegative / (falsePositive + trueNegative)) * 100, 2)}%
             </TableCell>
           </TableRow>
         </TableBody>

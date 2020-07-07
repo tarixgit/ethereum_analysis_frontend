@@ -10,6 +10,7 @@ import {
   truncate,
   compact,
   random,
+  ceil,
 } from 'lodash'
 import memoizeOne from 'memoize-one'
 import { makeStyles } from '@material-ui/core/styles'
@@ -116,11 +117,15 @@ const lgOptions = {
   learningRate: 5e-3,
 }
 const loadAndSaveModels = memoizeOne(newModels => {
-  const rf = RFClassifier.load(newModels.rf)
-  const lg = LogisticRegression.load(newModels.lg)
-  const knn = KNN.load(newModels.knn)
-  const gaussianNB = GaussianNB.load(newModels.gaussianNB)
-  const rfRegression = RFClassifier.load(newModels.regression)
+  const rf = newModels.rf ? RFClassifier.load(newModels.rf) : null
+  const lg = newModels.lg ? LogisticRegression.load(newModels.lg) : null
+  const knn = newModels.knn ? KNN.load(newModels.knn) : null
+  const gaussianNB = newModels.gaussianNB
+    ? GaussianNB.load(newModels.gaussianNB)
+    : null
+  const rfRegression = newModels.regression
+    ? RFClassifier.load(newModels.regression)
+    : null
   sessionStorage.setItem('rf', rf)
   sessionStorage.setItem('lg', lg)
   sessionStorage.setItem('knn', knn)
@@ -222,23 +227,35 @@ const calcConfusionMatrix = (predicted, predictedMustBe) => {
 const checkAccuracy = (models, testData, testDataPrediction) => {
   const { lg, rf, knn, gaussianNB, rfRegression } = models
   const confusionMatrix = {}
-  const predicted = rf.predict(testData)
-  const predictedLogreg = lg.predict(new Matrix(testData))
-  const predictedKNN = knn.predict(testData)
-  const predictedgaussianNB = gaussianNB.predict(testData)
-  const predictedRFRegression = rfRegression.predict(testData)
+  let precisionRf, precisionLR, precisionKNN, precisionNB
+  if (rf) {
+    const predicted = rf.predict(testData)
+    confusionMatrix.rf = calcConfusionMatrix(predicted, testDataPrediction)
+    precisionRf = calcAccuracyRate(predicted, testDataPrediction)
+  }
+  if (lg) {
+    const predictedLogreg = lg.predict(new Matrix(testData))
+    confusionMatrix.lg = calcConfusionMatrix(
+      predictedLogreg,
+      testDataPrediction
+    )
+    precisionLR = calcAccuracyRate(predictedLogreg, testDataPrediction)
+  }
+  if (knn) {
+    const predictedKNN = knn.predict(testData)
+    confusionMatrix.knn = calcConfusionMatrix(predictedKNN, testDataPrediction)
+    precisionKNN = calcAccuracyRate(predictedKNN, testDataPrediction)
+  }
+  if (gaussianNB) {
+    const predictedgaussianNB = gaussianNB.predict(testData)
+    confusionMatrix.nb = calcConfusionMatrix(
+      predictedgaussianNB,
+      testDataPrediction
+    )
+    precisionNB = calcAccuracyRate(predictedgaussianNB, testDataPrediction)
+  }
+  //const predictedRFRegression = rfRegression.predict(testData)
 
-  confusionMatrix.rf = calcConfusionMatrix(predicted, testDataPrediction)
-  confusionMatrix.lg = calcConfusionMatrix(predictedLogreg, testDataPrediction)
-  confusionMatrix.knn = calcConfusionMatrix(predictedKNN, testDataPrediction)
-  confusionMatrix.nb = calcConfusionMatrix(
-    predictedgaussianNB,
-    testDataPrediction
-  )
-  const precisionRf = calcAccuracyRate(predicted, testDataPrediction)
-  const precisionLR = calcAccuracyRate(predictedLogreg, testDataPrediction)
-  const precisionKNN = calcAccuracyRate(predictedKNN, testDataPrediction)
-  const precisionNB = calcAccuracyRate(predictedgaussianNB, testDataPrediction)
   return {
     precisionRf,
     precisionLR,
@@ -331,9 +348,15 @@ const ClassificationModelWebWorker = (callback, deps) => {
   useEffect(() => {
     if (trainingData) {
       const { lg, rf, knn, gaussianNB, rfRegression } = modelsLocal
+      const stats = checkAccuracy(modelsLocal, testData, testDataPrediction)
+      setPrecision(stats)
       if (lg && rf && knn) {
-        const stats = checkAccuracy(modelsLocal, testData, testDataPrediction)
-        setPrecision(stats)
+        const fullStats = checkAccuracy(
+          modelsLocal,
+          testData,
+          testDataPrediction
+        )
+        setPrecision(fullStats)
         setModels({ ...modelsLocal, stats })
       }
     }
@@ -406,28 +429,28 @@ const ClassificationModelWebWorker = (callback, deps) => {
                           classifier: {
                             value: 'Random forest',
                           },
-                          accuracy: { value: precision.precisionRf },
+                          accuracy: { value: ceil(precision.precisionRf, 4) },
                         },
                         {
                           id: 'idPrecision_lg',
                           classifier: {
                             value: 'Logistik regression',
                           },
-                          accuracy: { value: precision.precisionLR },
+                          accuracy: { value: ceil(precision.precisionLR, 4) },
                         },
                         {
                           id: 'idPrecision_KNN',
                           classifier: {
                             value: 'K-nearest neighbors',
                           },
-                          accuracy: { value: precision.precisionKNN },
+                          accuracy: { value: ceil(precision.precisionKNN, 4) },
                         },
                         {
                           id: 'idPrecision_NB',
                           classifier: {
                             value: 'Naive Bayes',
                           },
-                          accuracy: { value: precision.precisionNB },
+                          accuracy: { value: ceil(precision.precisionNB, 4) },
                         },
                       ]}
                       onSubmitRf={onSubmitRf}

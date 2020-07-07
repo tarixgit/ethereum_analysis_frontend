@@ -243,7 +243,11 @@ const SearchNeighbors = () => {
       <main className={classes.content}>
         <div className={classes.appBarSpacer} />
         <Container maxWidth="xl" className={classes.container}>
-          <Grid container spacing={2} style={{ height: '100%' }}>
+          <Grid
+            container
+            spacing={2}
+            style={{ height: '100%', position: 'relative' }}
+          >
             <Grid item xs={12}>
               <Paper>
                 <form onSubmit={submit}>

@@ -92,7 +92,7 @@ const ClassificationModel = (callback, deps) => {
   const history = useHistory()
   const { models } = useContext(ModelContext)
   const { step, setStep } = useContext(StepContext)
-  const { lg, rf, knn } = models
+  const { lg, rf, knn, gaussianNB, stats } = models
   const [address, setAddress] = useState(
     '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
@@ -101,6 +101,7 @@ const ClassificationModel = (callback, deps) => {
   const [rfResult, setRfResult] = useState('')
   const [logregResult, setLogregResult] = useState('')
   const [KNNResult, setKNNResult] = useState('')
+  const [NBResult, setNBResult] = useState('')
 
   const [
     loadAddressFeature,
@@ -124,15 +125,54 @@ const ClassificationModel = (callback, deps) => {
     () => loadAddressFeature({ variables: { address: address.toLowerCase() } }),
     [loadAddressFeature, address]
   )
+  const getTruePositiveRate = ({ truePositive, falseNegative }) =>
+    Math.round((truePositive / (truePositive + falseNegative)) * 100)
+  const getTrueNegativeRate = ({ trueNegative, falsePositive }) =>
+    Math.round((trueNegative / (trueNegative + falsePositive)) * 100)
   useEffect(() => {
     if (networkStatus === 7 && called) {
       const addressFeature = [fitAndGetFeature(addressInfo)]
       const rfResult = rf.predict(addressFeature)
       const predictedLogreg = lg.predict(new Matrix(addressFeature))
       const predictedKNN = knn.predict(addressFeature)
-      setRfResult(rfResult[0] === 1 ? 'scam' : 'not scam')
-      setLogregResult(predictedLogreg[0] === 1 ? 'scam' : 'not scam')
-      setKNNResult(predictedKNN[0] === 1 ? 'scam' : 'not scam')
+      const predictedNB = gaussianNB.predict(addressFeature)
+      setRfResult(
+        rfResult[0] === 1
+          ? `With the probability ${getTruePositiveRate(
+              stats.confusionMatrix.rf
+            )}% this address is a scam`
+          : `With the probability ${getTrueNegativeRate(
+              stats.confusionMatrix.rf
+            )}% this address is not a scam`
+      )
+      setLogregResult(
+        predictedLogreg[0] === 1
+          ? `With the probability ${getTruePositiveRate(
+              stats.confusionMatrix.lg
+            )}% this address is a scam`
+          : `With the probability ${getTrueNegativeRate(
+              stats.confusionMatrix.lg
+            )}% this address is not a scam`
+      )
+      setKNNResult(
+        predictedKNN[0] === 1
+          ? `With the probability ${getTruePositiveRate(
+              stats.confusionMatrix.knn
+            )}% this address is a scam`
+          : `With the probability ${getTrueNegativeRate(
+              stats.confusionMatrix.knn
+            )}% this address is not a scam`
+      )
+      setNBResult(
+        predictedNB[0] >= 0.5
+          ? `With the probability ${getTruePositiveRate(
+              stats.confusionMatrix.nb
+            )}% this address is a scam`
+          : `With the probability ${getTrueNegativeRate(
+              stats.confusionMatrix.nb
+            )}% this address is not a scam`
+      )
+      console.log(predictedNB[0])
     }
   }, [addressInfo])
 
@@ -174,31 +214,37 @@ const ClassificationModel = (callback, deps) => {
           <div>
             <TextField
               id="address-input"
-              label="Result of rf classifcier"
+              label="Result of random forest classifier"
               fullWidth
-              multiline
-              rows="4"
+              disableUnderline
               value={rfResult}
             />
           </div>
           <div>
             <TextField
               id="address-input"
-              label="Result of regression"
+              label="Result of logistik regression classifier"
               fullWidth
-              multiline
-              rows="4"
+              disableUnderline
               value={logregResult}
             />
           </div>
           <div>
             <TextField
               id="address-input"
-              label="Result of KNN"
+              label="Result of k-nearest neighbors classifier"
               fullWidth
-              multiline
-              rows="4"
+              disableUnderline
               value={KNNResult}
+            />
+          </div>
+          <div>
+            <TextField
+              id="address-input"
+              label="Result of naive Bayes classifier"
+              fullWidth
+              disableUnderline
+              value={NBResult}
             />
           </div>
         </Paper>

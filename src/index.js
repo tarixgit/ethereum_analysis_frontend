@@ -13,7 +13,7 @@ import { ApolloClient } from 'apollo-client'
 import { onError } from 'apollo-link-error'
 import { InMemoryCache } from 'apollo-cache-inmemory'
 import { ApolloProvider } from '@apollo/react-hooks'
-
+// use priduction flag to remove this devtool
 // Create an http link:
 const httpLink = new HttpLink({
   uri: process.env.REACT_APP_GRAPHQL,
@@ -71,5 +71,4 @@ ReactDOM.render(
   </ThemeProvider>,
   document.querySelector('#root')
 )
-
 // serviceWorker.unregister();

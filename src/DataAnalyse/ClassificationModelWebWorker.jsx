@@ -332,8 +332,9 @@ const ClassificationModelWebWorker = (callback, deps) => {
     if (trainingData) {
       const { lg, rf, knn, gaussianNB, rfRegression } = modelsLocal
       if (lg && rf && knn) {
-        setPrecision(checkAccuracy(modelsLocal, testData, testDataPrediction))
-        setModels(modelsLocal)
+        const stats = checkAccuracy(modelsLocal, testData, testDataPrediction)
+        setPrecision(stats)
+        setModels({ ...modelsLocal, stats })
       }
     }
   }, [newModelsJSON, trainingData])
@@ -395,35 +396,38 @@ const ClassificationModelWebWorker = (callback, deps) => {
 
                   <Paper elevation={0} className={classes.paper}>
                     <CollapsibleTable
-                      columns={['Classifier', 'Accuracy']}
+                      columns={[
+                        { id: 'classifier', name: 'Classifier' },
+                        { id: 'accuracy', name: 'Accuracy [0;1]' },
+                      ]}
                       rows={[
                         {
                           id: 'idPrecision_rf',
-                          Classifier: {
+                          classifier: {
                             value: 'Random forest',
                           },
-                          Accuracy: { value: precision.precisionRf },
+                          accuracy: { value: precision.precisionRf },
                         },
                         {
                           id: 'idPrecision_lg',
-                          Classifier: {
+                          classifier: {
                             value: 'Logistik regression',
                           },
-                          Accuracy: { value: precision.precisionLR },
+                          accuracy: { value: precision.precisionLR },
                         },
                         {
                           id: 'idPrecision_KNN',
-                          Classifier: {
+                          classifier: {
                             value: 'K-nearest neighbors',
                           },
-                          Accuracy: { value: precision.precisionKNN },
+                          accuracy: { value: precision.precisionKNN },
                         },
                         {
                           id: 'idPrecision_NB',
-                          Classifier: {
-                            value: 'Naive Bayes classifier',
+                          classifier: {
+                            value: 'Naive Bayes',
                           },
-                          Accuracy: { value: precision.precisionNB },
+                          accuracy: { value: precision.precisionNB },
                         },
                       ]}
                       onSubmitRf={onSubmitRf}

@@ -7,6 +7,7 @@ import TableContainer from '@material-ui/core/TableContainer'
 import TableHead from '@material-ui/core/TableHead'
 import TableRow from '@material-ui/core/TableRow'
 import Paper from '@material-ui/core/Paper'
+import { ceil } from 'lodash'
 
 const useStyles = makeStyles({
   table: {
@@ -46,6 +47,32 @@ const PrecisionTable = ({ precisionData }) => {
             </TableCell>
             <TableCell align="right">{falseNegative}</TableCell>
             <TableCell align="right">{trueNegative}</TableCell>
+          </TableRow>
+          <TableRow key="PredictedConditionPos">
+            <TableCell component="th" scope="row">
+              [True, False] rate
+            </TableCell>
+            <TableCell align="right">
+              True positive rate:
+              {ceil(truePositive / (truePositive + falseNegative), 4) * 100}%
+            </TableCell>
+            <TableCell align="right">
+              False positive rate:
+              {ceil(falsePositive / (falsePositive + trueNegative), 4) * 100}%
+            </TableCell>
+          </TableRow>
+          <TableRow key="PredictedConditionNeg">
+            <TableCell component="th" scope="row">
+              [False, True] rate
+            </TableCell>
+            <TableCell align="right">
+              False negative rate:
+              {ceil(falseNegative / (truePositive + falseNegative), 4) * 100}%
+            </TableCell>
+            <TableCell align="right">
+              True negative rate:
+              {ceil(trueNegative / (falsePositive + trueNegative), 4) * 100}%
+            </TableCell>
           </TableRow>
         </TableBody>
       </Table>

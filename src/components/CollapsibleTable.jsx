@@ -52,8 +52,14 @@ const Row = ({
   //const classes = useRowStyles();
   const getCells = (row, columns) =>
     map(columns, col => (
-      <TableCell component="th" scope="row" key={`cell_${row.id}_${col}`}>
-        {String(row[col].value)}
+      <TableCell
+        component="th"
+        scope="row"
+        key={`cell_${row.id}_${col.id}`}
+        align={col.id === 'accuracy' ? 'center' : 'left'}
+        size="small"
+      >
+        {String(row[col.id].value)}
       </TableCell>
     ))
   return (
@@ -286,9 +292,15 @@ const CollapsibleTable = ({
         <TableHead>
           <TableRow>
             <TableCell key="head_empty" />
-            {map(columns, col => (
-              <TableCell key={`head_${col}`}>{String(col)}</TableCell>
-            ))}
+            {map(columns, col =>
+              col.id === 'accuracy' ? (
+                <TableCell key={`head_${col}`} align="center" size="small">
+                  Accuracy <br /> [0;1]
+                </TableCell>
+              ) : (
+                <TableCell key={`head_${col}`}>{String(col.name)}</TableCell>
+              )
+            )}
           </TableRow>
         </TableHead>
         <TableBody>{rowsRendered}</TableBody>

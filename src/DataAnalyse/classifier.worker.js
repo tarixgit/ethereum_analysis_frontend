@@ -55,31 +55,52 @@ onmessage = function(e) {
   // var regression = new RFRegression(options)
   // regression.train(trainingData, trainingDataPredictions)
   // console.log(regression)
+  const newModels = {
+    lg: null,
+    rf: null,
+    knn: null,
+    gaussianNB: null,
+    regression: null,
+  }
+  const time = {
+    lg: null,
+    rf: null,
+    knn: null,
+    nb: null,
+  }
+  let start = new Date()
+  const knn = new KNN(trainingData, trainingDataPredictions)
+  time.knn = new Date() - start
+  newModels.knn = knn
+  postMessage(JSON.stringify({ newModels, time }))
 
+  start = new Date()
   var gaussianNB = new GaussianNB()
   gaussianNB.train(trainingData, trainingDataPredictions)
-  // var predictions1 = model1.predict(trainingSet)
-  // postMessage(JSON.stringify({ newModels }))
+  time.nb = new Date() - start
+  newModels.gaussianNB = gaussianNB
+  postMessage(JSON.stringify({ newModels, time }))
 
+  start = new Date()
   const newClassifierRF = new RFClassifier(rfClassifierOpt)
   newClassifierRF.train(trainingData, trainingDataPredictions)
-  // postMessage(JSON.stringify({ newModels }))
+  time.rf = new Date() - start
+  newModels.rf = newClassifierRF
+  postMessage(JSON.stringify({ newModels, time }))
 
+  start = new Date()
   const X = new Matrix(trainingData)
   const Y = Matrix.columnVector(trainingDataPredictions)
   const logreg = new LogisticRegression(lgClassifierOpt)
   logreg.train(X, Y)
-  // postMessage(JSON.stringify({ newModels }))
-
-  const knn = new KNN(trainingData, trainingDataPredictions)
-  const newModels = {
-    lg: logreg,
-    rf: newClassifierRF,
-    knn,
-    gaussianNB,
-    regression: newClassifierRF,
-  }
+  time.lg = new Date() - start
+  newModels.lg = logreg
 
   console.log('Posting message back to main script')
-  postMessage(JSON.stringify({ newModels }))
+  postMessage(
+    JSON.stringify({
+      newModels,
+      time,
+    })
+  )
 }

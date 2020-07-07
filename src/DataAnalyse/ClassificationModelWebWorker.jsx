@@ -317,6 +317,13 @@ const ClassificationModelWebWorker = (callback, deps) => {
       nb: null,
     },
   })
+  const [duration, setDuration] = useState({
+    nb: null,
+    rf: null,
+    lg: null,
+    knn: null,
+  })
+
   const [rfSettings, onSubmitRf] = useState(rfOptions)
   const [lgSettings, onSubmitLg] = useState(lgOptions)
   const [knnSettings, onSubmitKNN] = useState(null) // empty now
@@ -379,10 +386,19 @@ const ClassificationModelWebWorker = (callback, deps) => {
       >
         {({ data, error, postMessage, updatedAt, lastPostAt }) => {
           if (data) {
-            const { newModels } = data
+            const { newModels, time } = data
             setModelsLocal(loadAndSaveModels(newModels))
+            setDuration(time)
           }
-          const spinner = (!updatedAt && lastPostAt) || updatedAt < lastPostAt
+          const spinner =
+            (!updatedAt && lastPostAt) ||
+            updatedAt < lastPostAt ||
+            (updatedAt &&
+              !(
+                get(data, 'newModels.rf', null) &&
+                get(data, 'newModels.lg', null) &&
+                get(data, 'newModels.knn', null)
+              ))
           return (
             <Grid container spacing={2}>
               <Grid item xs={12}>
@@ -422,6 +438,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
                       columns={[
                         { id: 'classifier', name: 'Classifier' },
                         { id: 'accuracy', name: 'Accuracy [0;1]' },
+                        { id: 'duration', name: 'Duration (ms)' },
                       ]}
                       rows={[
                         {
@@ -430,6 +447,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
                             value: 'Random forest',
                           },
                           accuracy: { value: ceil(precision.precisionRf, 4) },
+                          duration: { value: duration.rf },
                         },
                         {
                           id: 'idPrecision_lg',
@@ -437,6 +455,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
                             value: 'Logistik regression',
                           },
                           accuracy: { value: ceil(precision.precisionLR, 4) },
+                          duration: { value: duration.lg },
                         },
                         {
                           id: 'idPrecision_KNN',
@@ -444,6 +463,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
                             value: 'K-nearest neighbors',
                           },
                           accuracy: { value: ceil(precision.precisionKNN, 4) },
+                          duration: { value: duration.knn },
                         },
                         {
                           id: 'idPrecision_NB',
@@ -451,6 +471,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
                             value: 'Naive Bayes',
                           },
                           accuracy: { value: ceil(precision.precisionNB, 4) },
+                          duration: { value: duration.nb },
                         },
                       ]}
                       onSubmitRf={onSubmitRf}

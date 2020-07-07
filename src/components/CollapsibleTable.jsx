@@ -59,7 +59,7 @@ const Row = ({
         align={col.id === 'accuracy' ? 'center' : 'left'}
         size="small"
       >
-        {String(row[col.id].value)}
+        {String(row[col.id].value ? row[col.id].value : 0)}
       </TableCell>
     ))
   return (

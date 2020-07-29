@@ -25,6 +25,9 @@ import TextField from '@material-ui/core/TextField'
 import Switch from '@material-ui/core/Switch'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import { SnackbarContext } from '../App'
+import IconButton from '@material-ui/core/IconButton'
+import ClearIcon from '@material-ui/icons/Clear'
+import { withStyles } from '@material-ui/core'
 
 const LOAD_IMPORT_ADDRESSES = gql`
   query ImportAddresses($orderBy: Order, $offset: Int!, $limit: Int!) {
@@ -69,8 +72,22 @@ const ADD_ADDRESS = gql`
     }
   }
 `
+const DELETE_ADDRESS = gql`
+  mutation DeleteAddressToImport($id: Int!) {
+    deleteAddressToImport(id: $id) {
+      success
+      message
+    }
+  }
+`
 
-const headCells = [
+const LinkButton = withStyles({
+  root: {
+    boxShadow: 'none',
+    textTransform: 'none',
+  },
+})(Button)
+const getHeadCells = deleteImportAddressCallback => [
   {
     id: 'id',
     numeric: false,
@@ -85,13 +102,13 @@ const headCells = [
     render: (val, row, column, classes) => (
       <TableCell padding="none" key={`table_${row.id}_${column.id}`}>
         <Link to={`graph/${val}`} className={classes.links}>
-          <Button color="primary">
+          <LinkButton color="primary">
             {val.length > 42
               ? `${truncate(val, {
                   length: 42,
                 })}`
               : val}
-          </Button>
+          </LinkButton>
         </Link>
       </TableCell>
     ),
@@ -114,6 +131,24 @@ const headCells = [
   },
   { id: 'status', numeric: false, disablePadding: false, label: 'Status' },
   { id: 'scam', numeric: false, disablePadding: false, label: 'Scam' },
+  {
+    id: 'remove',
+    numeric: false,
+    disablePadding: true,
+    noFilter: false,
+    label: '',
+    render: (val, row, column, classes) => (
+      <TableCell padding="none" key={`table_${row.id}_${column.id}`}>
+        <IconButton
+          aria-label="expand row"
+          size="small"
+          onClick={() => deleteImportAddressCallback(Number(row.id))}
+        >
+          <ClearIcon />
+        </IconButton>
+      </TableCell>
+    ),
+  },
 ]
 
 const useStyles = makeStyles(theme => ({
@@ -177,7 +212,7 @@ const ImportAddressTable = ({ importData, openInfo }) => {
   const [selected, setSelected] = useState([])
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
-  const { data, loading } = useQuery(LOAD_IMPORT_ADDRESSES, {
+  const { data, refetch } = useQuery(LOAD_IMPORT_ADDRESSES, {
     variables: {
       orderBy: orderByQuery,
       offset: page * rowsPerPage,
@@ -194,7 +229,6 @@ const ImportAddressTable = ({ importData, openInfo }) => {
   ] = useLazyQuery(ADDRESS)
   const [addNewImportAddress] = useMutation(ADD_ADDRESS, {
     onCompleted: data => {
-      console.log(data)
       const importDataResponse = get(data, 'addAddressToImport', {
         success: null,
         message: null,
@@ -213,9 +247,29 @@ const ImportAddressTable = ({ importData, openInfo }) => {
             ? importDataResponse.message
             : 'new address added',
         })
+        refetch()
         return
       }
-      setSnackbarMessage({ type: 'error', message: 'Error happend' })
+      setSnackbarMessage({ type: 'error', message: 'Error occur' })
+    },
+  })
+  const [deleteImportAddress] = useMutation(DELETE_ADDRESS, {
+    onCompleted: data => {
+      const importDataResponse = get(data, 'deleteAddressToImport', {
+        success: null,
+        message: null,
+      })
+      refetch()
+      if (importDataResponse.success) {
+        setSnackbarMessage({
+          type: 'success',
+          message: importDataResponse.message
+            ? importDataResponse.message
+            : 'address deleted',
+        })
+        return
+      }
+      setSnackbarMessage({ type: 'error', message: 'Error occur' })
     },
   })
   const rows = get(data, 'importAddresses.rows', [])
@@ -313,9 +367,19 @@ const ImportAddressTable = ({ importData, openInfo }) => {
     setNewImportAddress({ ...newImportAddress })
   })
   const onSubmitNewAddress = useCallback(() => {
-    addNewImportAddress({ variables: { address: newImportAddress } })
+    if (newImportAddress.hash) {
+      addNewImportAddress({ variables: { address: newImportAddress } })
+    } else {
+      setSnackbarMessage({
+        type: 'warning',
+        message: 'The field hash is empty.',
+      })
+    }
   })
-
+  const deleteImportAddressCallback = useCallback(id => {
+    deleteImportAddress({ variables: { id } })
+  })
+  const headCells = getHeadCells(deleteImportAddressCallback)
   return (
     <Paper elevation={3} className={classes.root}>
       <Grid container justify="space-between" alignItems="center">

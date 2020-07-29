@@ -35,7 +35,7 @@ const BUILD_FEATURES = gql`
   }
 `
 const RECALC_FEATURES = gql`
-  mutation BuildFeatures {
+  mutation RecalcFeatures {
     recalcFeaturesThread {
       success
       message

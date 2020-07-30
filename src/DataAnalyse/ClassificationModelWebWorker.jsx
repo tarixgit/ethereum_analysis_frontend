@@ -241,24 +241,24 @@ const getPrec = ({ truePositive, falsePositive }) =>
 const getRecalc = ({ truePositive, falseNegative }) =>
   truePositive / (truePositive + falseNegative)
 const calcStats = confMatrix => {
-  const empty = {
+  const empty = () => ({
     rf: null,
-    lr: null,
+    lg: null,
     knn: null,
     nb: null,
-  }
-  const accuracy = empty
-  const precision = empty
-  const recall = empty
+  })
+  const accuracy = empty()
+  const precision = empty()
+  const recall = empty()
   if (confMatrix.rf) {
     accuracy.rf = getAcc(confMatrix.rf)
     precision.rf = getPrec(confMatrix.rf)
     recall.rf = getRecalc(confMatrix.rf)
   }
-  if (confMatrix.lr) {
-    accuracy.lr = getAcc(confMatrix.lr)
-    precision.lr = getPrec(confMatrix.lr)
-    recall.lr = getRecalc(confMatrix.lr)
+  if (confMatrix.lg) {
+    accuracy.lg = getAcc(confMatrix.lg)
+    precision.lg = getPrec(confMatrix.lg)
+    recall.lg = getRecalc(confMatrix.lg)
   }
   if (confMatrix.knn) {
     accuracy.knn = getAcc(confMatrix.knn)
@@ -316,7 +316,7 @@ const checkAccuracy = (models, testData, testDataPrediction) => {
   if (rf) {
     const predicted = rf.predict(testData)
     confusionMatrix.rf = calcConfusionMatrix(predicted, testDataPrediction)
-    console.log(calcAccuracyRate(predicted, testDataPrediction))
+    // console.log(calcAccuracyRate(predicted, testDataPrediction))
   }
   if (lg) {
     const predictedLogreg = lg.predict(new Matrix(testData))
@@ -324,12 +324,12 @@ const checkAccuracy = (models, testData, testDataPrediction) => {
       predictedLogreg,
       testDataPrediction
     )
-    console.log(calcAccuracyRate(predictedLogreg, testDataPrediction))
+    // console.log(calcAccuracyRate(predictedLogreg, testDataPrediction))
   }
   if (knn) {
     const predictedKNN = knn.predict(testData)
     confusionMatrix.knn = calcConfusionMatrix(predictedKNN, testDataPrediction)
-    console.log(calcAccuracyRate(predictedKNN, testDataPrediction))
+    // console.log(calcAccuracyRate(predictedKNN, testDataPrediction))
   }
   if (gaussianNB) {
     const predictedgaussianNB = gaussianNB.predict(testData)
@@ -337,7 +337,7 @@ const checkAccuracy = (models, testData, testDataPrediction) => {
       predictedgaussianNB,
       testDataPrediction
     )
-    console.log(calcAccuracyRate(predictedgaussianNB, testDataPrediction))
+    // console.log(calcAccuracyRate(predictedgaussianNB, testDataPrediction))
   }
   //const predictedRFRegression = rfRegression.predict(testData)
 
@@ -387,7 +387,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
   const [testDataPrediction, setTestDataPrediction] = useState(null)
   const [confusionMatrix, setConfusionMatrix] = useState({
     rf: null,
-    lr: null,
+    lg: null,
     knn: null,
     nb: null,
   })
@@ -458,6 +458,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
   //   }
   // }, [])
   const stats = calcStats(confusionMatrix)
+  console.log(stats)
   return (
     <Fragment>
       <WebWorker
@@ -580,9 +581,9 @@ const ClassificationModelWebWorker = (callback, deps) => {
                           classifier: {
                             value: 'Logistik regression',
                           },
-                          precision: { value: ceil(stats.precision.lr, 4) },
-                          recall: { value: ceil(stats.recall.lr, 4) },
-                          accuracy: { value: ceil(stats.accuracy.lr, 4) },
+                          precision: { value: ceil(stats.precision.lg, 4) },
+                          recall: { value: ceil(stats.recall.lg, 4) },
+                          accuracy: { value: ceil(stats.accuracy.lg, 4) },
                           duration: { value: duration.lg },
                         },
                         {

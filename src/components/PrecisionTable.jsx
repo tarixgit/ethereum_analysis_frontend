@@ -34,21 +34,21 @@ const PrecisionTable = ({ precisionData }) => {
           </TableRow>
         </TableHead>
         <TableBody>
-          <TableRow key="PredictedConditionPos">
+          <TableRow key="PredictedConditionPos_0">
             <TableCell component="th" scope="row">
               Predicted condition positive
             </TableCell>
             <TableCell align="right">{truePositive}</TableCell>
             <TableCell align="right">{falsePositive}</TableCell>
           </TableRow>
-          <TableRow key="PredictedConditionNeg">
+          <TableRow key="PredictedConditionNeg_0">
             <TableCell component="th" scope="row">
               Predicted condition negative
             </TableCell>
             <TableCell align="right">{falseNegative}</TableCell>
             <TableCell align="right">{trueNegative}</TableCell>
           </TableRow>
-          <TableRow key="PredictedConditionPos">
+          <TableRow key="PredictedConditionPos_1">
             <TableCell component="th" scope="row">
               [True, False] rate
             </TableCell>
@@ -61,7 +61,7 @@ const PrecisionTable = ({ precisionData }) => {
               {ceil((falsePositive / (falsePositive + trueNegative)) * 100, 2)}%
             </TableCell>
           </TableRow>
-          <TableRow key="PredictedConditionNeg">
+          <TableRow key="PredictedConditionNeg_1">
             <TableCell component="th" scope="row">
               [False, True] rate
             </TableCell>

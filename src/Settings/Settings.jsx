@@ -10,9 +10,17 @@ import { SnackbarContext } from '../App'
 
 import { get } from 'lodash'
 
-const BUILD_FEATURES = gql`
+const IMPORT_FROM_BLOCKCHAIN = gql`
   mutation UpdateDataFromBlockchain {
     updateDataFromBlockchain {
+      success
+      message
+    }
+  }
+`
+const IMPORT_LABEL = gql`
+  mutation ImportLabels($type: Int!) {
+    updateLabelFromEther(type: $type) {
       success
       message
     }
@@ -52,27 +60,64 @@ const Settings = (callback, deps) => {
   const classes = useStyles()
   const { setSnackbarMessage } = useContext(SnackbarContext)
 
-  const [buildFeatures, { loading }] = useMutation(BUILD_FEATURES, {
+  const [buildFeatures, { loading }] = useMutation(IMPORT_FROM_BLOCKCHAIN, {
     cachePolicy: 'no-cache',
     ignoreResults: true,
     onCompleted: data => {
-      const importDataResponse = get(data, 'buildFeaturesThread', {
+      const response = get(data, 'updateDataFromBlockchain', {
         success: null,
         message: null,
       })
-      if (!importDataResponse.message) {
+      if (!response.message) {
         return
       }
-      setSnackbarMessage(importDataResponse)
+      setSnackbarMessage(response)
     },
   })
-
+  const [importLabel] = useMutation(IMPORT_LABEL, {
+    cachePolicy: 'no-cache',
+    ignoreResults: true,
+    onCompleted: data => {
+      const response = get(data, 'updateLabelFromEther', {
+        success: null,
+        message: null,
+      })
+      if (!response.message) {
+        return
+      }
+      setSnackbarMessage(response)
+    },
+  })
   return (
     <main className={classes.content}>
       <div className={classes.appBarSpacer} />
       <Container maxWidth="xl" className={classes.container}>
         <Button variant="contained" color="primary" onClick={buildFeatures}>
           Update database from blockchain
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => importLabel({ variables: { type: 7 } })}
+        >
+          Import ERC20 addresses
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => importLabel({ variables: { type: 8 } })}
+        >
+          Import ERC721 addresses
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => importLabel({ variables: { type: 6 } })}
+        >
+          Import Exchanges
+        </Button>
+        <Button variant="contained" color="primary" onClick={() => null}>
+          Update Labels
         </Button>
       </Container>
     </main>

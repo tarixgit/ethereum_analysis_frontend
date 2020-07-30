@@ -220,9 +220,9 @@ const Classification = (callback, deps) => {
                 openInfo={openInfo}
               />
             )}
-            {step === 2 && typeof Worker === 'undefined' && (
-              <ClassificationModel />
-            )}
+            {step === 2 &&
+              typeof Worker === 'undefined' &&
+              "Your browser doesn't support the webworker. Please change your browser or contact the administrator"}
             {step === 2 && typeof Worker !== 'undefined' && (
               <ClassificationModelWebWorker />
             )}

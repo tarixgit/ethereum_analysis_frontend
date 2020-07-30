@@ -56,7 +56,8 @@ const Row = ({
         component="th"
         scope="row"
         key={`cell_${row.id}_${col.id}`}
-        align={col.id === 'accuracy' ? 'center' : 'left'}
+        // align={col.id === 'accuracy' ? 'center' : 'left'}
+        align="left"
         size="small"
       >
         {String(row[col.id].value ? row[col.id].value : 0)}
@@ -292,15 +293,14 @@ const CollapsibleTable = ({
         <TableHead>
           <TableRow>
             <TableCell key="head_empty" />
-            {map(columns, col =>
-              col.id === 'accuracy' ? (
-                <TableCell key={`head_${col}`} align="center" size="small">
-                  Accuracy <br /> [0;1]
-                </TableCell>
-              ) : (
-                <TableCell key={`head_${col}`}>{String(col.name)}</TableCell>
-              )
-            )}
+            {map(columns, col => (
+              // col.id === 'accuracy' ? (
+              //   <TableCell key={`head_${col}`} align="center" size="small">
+              //     Accuracy <br /> [0;1]
+              //   </TableCell>
+              // ) :
+              <TableCell key={`head_${col}`}>{String(col.name)}</TableCell>
+            ))}
           </TableRow>
         </TableHead>
         <TableBody>{rowsRendered}</TableBody>

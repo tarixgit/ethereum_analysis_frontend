@@ -233,6 +233,49 @@ const calcAccuracyRate = (predicted, predictedMustBe) => {
   const correctNumber = compact(isCorrect)
   return correctNumber.length / isCorrect.length
 }
+const getAcc = ({ truePositive, trueNegative, falsePositive, falseNegative }) =>
+  (truePositive + trueNegative) /
+  (truePositive + trueNegative + falsePositive + falseNegative)
+const getPrec = ({ truePositive, falsePositive }) =>
+  truePositive / (truePositive + falsePositive)
+const getRecalc = ({ truePositive, falseNegative }) =>
+  truePositive / (truePositive + falseNegative)
+const calcStats = confMatrix => {
+  const empty = {
+    rf: null,
+    lr: null,
+    knn: null,
+    nb: null,
+  }
+  const accuracy = empty
+  const precision = empty
+  const recall = empty
+  if (confMatrix.rf) {
+    accuracy.rf = getAcc(confMatrix.rf)
+    precision.rf = getPrec(confMatrix.rf)
+    recall.rf = getRecalc(confMatrix.rf)
+  }
+  if (confMatrix.lr) {
+    accuracy.lr = getAcc(confMatrix.lr)
+    precision.lr = getPrec(confMatrix.lr)
+    recall.lr = getRecalc(confMatrix.lr)
+  }
+  if (confMatrix.knn) {
+    accuracy.knn = getAcc(confMatrix.knn)
+    precision.knn = getPrec(confMatrix.knn)
+    recall.knn = getRecalc(confMatrix.knn)
+  }
+  if (confMatrix.nb) {
+    accuracy.nb = getAcc(confMatrix.nb)
+    precision.nb = getPrec(confMatrix.nb)
+    recall.nb = getRecalc(confMatrix.nb)
+  }
+  return {
+    accuracy,
+    precision,
+    recall,
+  }
+}
 const calcConfusionMatrix = (predicted, predictedMustBe) => {
   let truePositive = 0
   let trueNegative = 0
@@ -270,11 +313,10 @@ const calcConfusionMatrix = (predicted, predictedMustBe) => {
 const checkAccuracy = (models, testData, testDataPrediction) => {
   const { lg, rf, knn, gaussianNB, rfRegression } = models
   const confusionMatrix = {}
-  let precisionRf, precisionLR, precisionKNN, precisionNB
   if (rf) {
     const predicted = rf.predict(testData)
     confusionMatrix.rf = calcConfusionMatrix(predicted, testDataPrediction)
-    precisionRf = calcAccuracyRate(predicted, testDataPrediction)
+    console.log(calcAccuracyRate(predicted, testDataPrediction))
   }
   if (lg) {
     const predictedLogreg = lg.predict(new Matrix(testData))
@@ -282,12 +324,12 @@ const checkAccuracy = (models, testData, testDataPrediction) => {
       predictedLogreg,
       testDataPrediction
     )
-    precisionLR = calcAccuracyRate(predictedLogreg, testDataPrediction)
+    console.log(calcAccuracyRate(predictedLogreg, testDataPrediction))
   }
   if (knn) {
     const predictedKNN = knn.predict(testData)
     confusionMatrix.knn = calcConfusionMatrix(predictedKNN, testDataPrediction)
-    precisionKNN = calcAccuracyRate(predictedKNN, testDataPrediction)
+    console.log(calcAccuracyRate(predictedKNN, testDataPrediction))
   }
   if (gaussianNB) {
     const predictedgaussianNB = gaussianNB.predict(testData)
@@ -295,17 +337,11 @@ const checkAccuracy = (models, testData, testDataPrediction) => {
       predictedgaussianNB,
       testDataPrediction
     )
-    precisionNB = calcAccuracyRate(predictedgaussianNB, testDataPrediction)
+    console.log(calcAccuracyRate(predictedgaussianNB, testDataPrediction))
   }
   //const predictedRFRegression = rfRegression.predict(testData)
 
-  return {
-    precisionRf,
-    precisionLR,
-    precisionKNN,
-    precisionNB,
-    confusionMatrix,
-  }
+  return confusionMatrix
 }
 
 const oversampling = rows => {
@@ -349,17 +385,11 @@ const ClassificationModelWebWorker = (callback, deps) => {
   const [trainingDataPredictions, setTrainingDataPredictions] = useState(null)
   const [testData, setTestData] = useState(null)
   const [testDataPrediction, setTestDataPrediction] = useState(null)
-  const [precision, setPrecision] = useState({
-    precisionRf: 0,
-    precisionLR: 0,
-    precisionKNN: 0,
-    precisionNB: 0,
-    confusionMatrix: {
-      rf: null,
-      lr: null,
-      knn: null,
-      nb: null,
-    },
+  const [confusionMatrix, setConfusionMatrix] = useState({
+    rf: null,
+    lr: null,
+    knn: null,
+    nb: null,
   })
   const [duration, setDuration] = useState({
     nb: null,
@@ -407,16 +437,16 @@ const ClassificationModelWebWorker = (callback, deps) => {
   useEffect(() => {
     if (trainingData) {
       const { lg, rf, knn, gaussianNB, rfRegression } = modelsLocal
-      const stats = checkAccuracy(modelsLocal, testData, testDataPrediction)
-      setPrecision(stats)
+      const conMatrix = checkAccuracy(modelsLocal, testData, testDataPrediction)
+      setConfusionMatrix(conMatrix)
       if (lg && rf && knn) {
-        const fullStats = checkAccuracy(
+        const fullConMatrix = checkAccuracy(
           modelsLocal,
           testData,
           testDataPrediction
         )
-        setPrecision(fullStats)
-        setModels({ ...modelsLocal, stats })
+        setConfusionMatrix(fullConMatrix)
+        setModels({ ...modelsLocal })
       }
     }
   }, [newModelsJSON, trainingData])
@@ -427,7 +457,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
   //     // myWorker = undefined
   //   }
   // }, [])
-  const { confusionMatrix } = precision
+  const stats = calcStats(confusionMatrix)
   return (
     <Fragment>
       <WebWorker
@@ -529,6 +559,8 @@ const ClassificationModelWebWorker = (callback, deps) => {
                     <CollapsibleTable
                       columns={[
                         { id: 'classifier', name: 'Classifier' },
+                        { id: 'precision', name: 'Precision [0;1]' },
+                        { id: 'recall', name: 'Recall [0;1]' },
                         { id: 'accuracy', name: 'Accuracy [0;1]' },
                         { id: 'duration', name: 'Duration (ms)' },
                       ]}
@@ -538,7 +570,9 @@ const ClassificationModelWebWorker = (callback, deps) => {
                           classifier: {
                             value: 'Random forest',
                           },
-                          accuracy: { value: ceil(precision.precisionRf, 4) },
+                          precision: { value: ceil(stats.precision.rf, 4) },
+                          recall: { value: ceil(stats.recall.rf, 4) },
+                          accuracy: { value: ceil(stats.accuracy.rf, 4) },
                           duration: { value: duration.rf },
                         },
                         {
@@ -546,7 +580,9 @@ const ClassificationModelWebWorker = (callback, deps) => {
                           classifier: {
                             value: 'Logistik regression',
                           },
-                          accuracy: { value: ceil(precision.precisionLR, 4) },
+                          precision: { value: ceil(stats.precision.lr, 4) },
+                          recall: { value: ceil(stats.recall.lr, 4) },
+                          accuracy: { value: ceil(stats.accuracy.lr, 4) },
                           duration: { value: duration.lg },
                         },
                         {
@@ -554,7 +590,9 @@ const ClassificationModelWebWorker = (callback, deps) => {
                           classifier: {
                             value: 'K-nearest neighbors',
                           },
-                          accuracy: { value: ceil(precision.precisionKNN, 4) },
+                          precision: { value: ceil(stats.precision.knn, 4) },
+                          recall: { value: ceil(stats.recall.knn, 4) },
+                          accuracy: { value: ceil(stats.accuracy.knn, 4) },
                           duration: { value: duration.knn },
                         },
                         {
@@ -562,7 +600,9 @@ const ClassificationModelWebWorker = (callback, deps) => {
                           classifier: {
                             value: 'Naive Bayes',
                           },
-                          accuracy: { value: ceil(precision.precisionNB, 4) },
+                          precision: { value: ceil(stats.precision.nb, 4) },
+                          recall: { value: ceil(stats.recall.nb, 4) },
+                          accuracy: { value: ceil(stats.accuracy.nb, 4) },
                           duration: { value: duration.nb },
                         },
                       ]}

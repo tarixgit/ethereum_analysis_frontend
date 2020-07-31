@@ -4,7 +4,7 @@ import Container from '@material-ui/core/Container'
 import Button from '@material-ui/core/Button'
 
 import { gql } from 'apollo-boost'
-import { useMutation } from '@apollo/react-hooks'
+import { useMutation, useQuery } from '@apollo/react-hooks'
 
 import { SnackbarContext } from '../App'
 
@@ -12,6 +12,7 @@ import { get } from 'lodash'
 import Grid from '@material-ui/core/Grid'
 import TextField from '@material-ui/core/TextField'
 import Divider from '@material-ui/core/Divider'
+import Typography from '@material-ui/core/Typography'
 
 const IMPORT_FROM_BLOCKCHAIN = gql`
   mutation UpdateDataFromBlockchain {
@@ -26,6 +27,15 @@ const IMPORT_LABEL = gql`
     updateLabelFromEther(type: $type) {
       success
       message
+    }
+  }
+`
+const UPDATE_STATE = gql`
+  query GetUpdateState {
+    getUpdateState {
+      lastAddress
+      lastBlock
+      lastTransaction
     }
   }
 `
@@ -63,6 +73,7 @@ const Settings = (callback, deps) => {
   const classes = useStyles()
   const { setSnackbarMessage } = useContext(SnackbarContext)
   const [updateForm, setUpdateForm] = useState({ from: 6000, to: 0 })
+  const { data, called, statsLoading } = useQuery(UPDATE_STATE)
   const [buildFeatures, { loading }] = useMutation(IMPORT_FROM_BLOCKCHAIN, {
     cachePolicy: 'no-cache',
     ignoreResults: true,
@@ -94,6 +105,14 @@ const Settings = (callback, deps) => {
   const changeForm = (e, field) => {
     setUpdateForm({ ...updateForm, [field]: e.target.value })
   }
+  let stats
+  if (called && !statsLoading) {
+    stats = get(data, 'getUpdateState', {
+      lastAddress: 0,
+      lastBlock: 0,
+      lastTransaction: 0,
+    })
+  }
   return (
     <main className={classes.content}>
       <div className={classes.appBarSpacer} />
@@ -102,17 +121,25 @@ const Settings = (callback, deps) => {
           <Grid item xs={12}>
             <Grid container>
               <Grid item xs={12}>
-                Last block:
+                <Typography variant="body1" gutterBottom>
+                  Last block: {stats.lastBlock}
+                </Typography>
               </Grid>
               <Grid item xs={12}>
-                Last address id:
+                <Typography variant="body1" gutterBottom>
+                  Last address id: {stats.lastAddress}
+                </Typography>
               </Grid>
               <Grid item xs={12}>
-                Last transaction id:
+                <Typography variant="body1" gutterBottom>
+                  Last transaction id: {stats.lastTransaction}
+                </Typography>
               </Grid>
               <Grid item xs={12}>
-                Please remember the last address id. You will need this for
-                updating the labels later
+                <Typography variant="body2" gutterBottom>
+                  Please remember the last address id. You will need this for
+                  updating the labels later.
+                </Typography>
               </Grid>
               <Grid item xs={12} style={{ marginTop: '8px' }}>
                 <Button

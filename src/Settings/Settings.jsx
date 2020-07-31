@@ -80,7 +80,7 @@ const useStyles = makeStyles(theme => ({
 const Settings = (callback, deps) => {
   const classes = useStyles()
   const { setSnackbarMessage } = useContext(SnackbarContext)
-  const [updateForm, setUpdateForm] = useState({ from: 6000, to: 0 })
+  const [updateForm, setUpdateForm] = useState({ from: 60000000, to: 0 })
   const { data, called, statsLoading } = useQuery(UPDATE_STATE)
   const [buildFeatures, { loading }] = useMutation(IMPORT_FROM_BLOCKCHAIN, {
     cachePolicy: 'no-cache',

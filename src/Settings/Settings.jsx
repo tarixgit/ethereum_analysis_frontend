@@ -24,7 +24,15 @@ const IMPORT_FROM_BLOCKCHAIN = gql`
 `
 const IMPORT_LABEL = gql`
   mutation ImportLabels($type: Int!) {
-    updateLabelFromEther(type: $type) {
+    importLabelFromEther(type: $type) {
+      success
+      message
+    }
+  }
+`
+const UPDATE_LABEL = gql`
+  mutation UpdateLabels {
+    updateLabelsOnAddress {
       success
       message
     }
@@ -92,7 +100,7 @@ const Settings = (callback, deps) => {
     cachePolicy: 'no-cache',
     ignoreResults: true,
     onCompleted: data => {
-      const response = get(data, 'updateLabelFromEther', {
+      const response = get(data, 'importLabelFromEther', {
         success: null,
         message: null,
       })
@@ -102,6 +110,21 @@ const Settings = (callback, deps) => {
       setSnackbarMessage(response)
     },
   })
+  const [updateLabel] = useMutation(UPDATE_LABEL, {
+    cachePolicy: 'no-cache',
+    ignoreResults: true,
+    onCompleted: data => {
+      const response = get(data, 'updateLabelsOnAddress', {
+        success: null,
+        message: null,
+      })
+      if (!response.message) {
+        return
+      }
+      setSnackbarMessage(response)
+    },
+  })
+
   const changeForm = (e, field) => {
     setUpdateForm({ ...updateForm, [field]: e.target.value })
   }
@@ -188,7 +211,7 @@ const Settings = (callback, deps) => {
             alignItems="flex-start"
           >
             <Grid item xs={2}>
-              <Button variant="contained" color="primary" onClick={() => null}>
+              <Button variant="contained" color="primary" onClick={updateLabel}>
                 Update Labels
               </Button>
             </Grid>

@@ -31,8 +31,8 @@ const IMPORT_LABEL = gql`
   }
 `
 const UPDATE_LABEL = gql`
-  mutation UpdateLabels {
-    updateLabelsOnAddress {
+  mutation UpdateLabels($from: Int!, $to: Int!) {
+    updateLabelsOnAddress(from: $from, to: $to) {
       success
       message
     }
@@ -211,7 +211,11 @@ const Settings = (callback, deps) => {
             alignItems="flex-start"
           >
             <Grid item xs={2}>
-              <Button variant="contained" color="primary" onClick={updateLabel}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => updateLabel({ variables: { ...updateForm } })}
+              >
                 Update Labels
               </Button>
             </Grid>

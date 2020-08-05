@@ -60,6 +60,31 @@ const LOAD_ADDRESS_FEATURES = gql`
         numberOfTransInput
         numberOfTransOutput
         numberOfTransactions
+        numberOfNoneInput
+        numberOfOneTimeInput
+        numberOfExchangeInput
+        numberOfMiningPoolInput
+        numberOfMinerInput
+        numberOfSmContractInput
+        numberOfERC20Input
+        numberOfERC721Input
+        numberOfTraceInput
+        transInputMedian
+        transOutputMedian
+        transInputAverage
+        transOutputAverage
+        minEth
+        maxEth
+        transInputMinEth
+        transInputMaxEth
+        transOutputMinEth
+        transOutputMaxEth
+        transInputMedianEth
+        transInputAverageEth
+        transOutputMedianMinEth
+        transOutputAverageEth
+        numberOfScamNeighbor
+        numberOfScamNeighborInput
       }
       count
     }

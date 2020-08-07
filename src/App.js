@@ -37,7 +37,17 @@ export const ModelContext = React.createContext({
     knn: null,
     newModelsJSON: null,
   },
-  setModel: () => {},
+  setModels: () => {},
+})
+
+export const ConfMatrix = React.createContext({
+  confusionMatrix: {
+    rf: null,
+    lg: null,
+    knn: null,
+    nb: null,
+  },
+  setConfMatrix: () => {},
 })
 
 export const StepContext = React.createContext({
@@ -111,6 +121,12 @@ const App = () => {
     knn: null,
     newModelsJSON: null,
   })
+  const [confusionMatrix, setConfMatrix] = useState({
+    rf: null,
+    lg: null,
+    knn: null,
+    nb: null,
+  })
   const [snackbarMessage, setSnackbarMessage] = useState({
     type: null,
     message: null,
@@ -141,50 +157,58 @@ const App = () => {
   }
   return (
     <ModelContext.Provider value={{ models, setModels }}>
-      <StepContext.Provider value={{ step, setStep }}>
-        <SnackbarContext.Provider
-          value={{ snackbarMessage, setSnackbarMessage }}
-        >
-          <ScamNeighborContext.Provider
-            value={{ neighborsScamFounded, setNeighborsScamFounded }}
+      <ConfMatrix.Provider value={{ confusionMatrix, setConfMatrix }}>
+        <StepContext.Provider value={{ step, setStep }}>
+          <SnackbarContext.Provider
+            value={{ snackbarMessage, setSnackbarMessage }}
           >
-            <BrowserRouter>
-              <div className={classes.root}>
-                <CustomAppBar open={open} handleDrawerOpen={handleDrawerOpen} />
-                <LeftPanel open={open} handleDrawerClose={handleDrawerClose} />
-                <Switch>
-                  <Redirect exact from="/" to="/graph" />
-                  <Route path="/class">
-                    <Classification />
-                  </Route>
-                  <Route path="/model">
-                    <ClassificationTest />
-                  </Route>
-                  <Route path="/searchneighbors">
-                    <SearchNeighbors />
-                  </Route>
-                  <Route path="/info">
-                    <Info />
-                  </Route>
-                  <Route path="/logs">
-                    <Logs />
-                  </Route>
-                  <Route path="/update">
-                    <Settings />
-                  </Route>
-                  <Route path="/graph/:hash">
-                    <EthereumGraph />
-                  </Route>
-                  <Route path="/graph">
-                    <EthereumGraph />
-                  </Route>
-                </Switch>
-                <SnackbarMessage snackbarMessage={snackbarMessage} />
-              </div>
-            </BrowserRouter>
-          </ScamNeighborContext.Provider>
-        </SnackbarContext.Provider>
-      </StepContext.Provider>
+            <ScamNeighborContext.Provider
+              value={{ neighborsScamFounded, setNeighborsScamFounded }}
+            >
+              <BrowserRouter>
+                <div className={classes.root}>
+                  <CustomAppBar
+                    open={open}
+                    handleDrawerOpen={handleDrawerOpen}
+                  />
+                  <LeftPanel
+                    open={open}
+                    handleDrawerClose={handleDrawerClose}
+                  />
+                  <Switch>
+                    <Redirect exact from="/" to="/graph" />
+                    <Route path="/class">
+                      <Classification />
+                    </Route>
+                    <Route path="/model">
+                      <ClassificationTest />
+                    </Route>
+                    <Route path="/searchneighbors">
+                      <SearchNeighbors />
+                    </Route>
+                    <Route path="/info">
+                      <Info />
+                    </Route>
+                    <Route path="/logs">
+                      <Logs />
+                    </Route>
+                    <Route path="/update">
+                      <Settings />
+                    </Route>
+                    <Route path="/graph/:hash">
+                      <EthereumGraph />
+                    </Route>
+                    <Route path="/graph">
+                      <EthereumGraph />
+                    </Route>
+                  </Switch>
+                  <SnackbarMessage snackbarMessage={snackbarMessage} />
+                </div>
+              </BrowserRouter>
+            </ScamNeighborContext.Provider>
+          </SnackbarContext.Provider>
+        </StepContext.Provider>
+      </ConfMatrix.Provider>
     </ModelContext.Provider>
   )
 }

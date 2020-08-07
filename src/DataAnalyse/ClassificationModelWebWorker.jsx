@@ -26,7 +26,7 @@ import { Matrix } from 'ml-matrix' //"ml-matrix": "5.3.0",
 import KNN from 'ml-knn'
 import WebWorker from 'react-webworker'
 import CollapsibleTable from '../components/CollapsibleTable'
-import { ConfMatrix, ModelContext } from '../App'
+import { ConfMatrixContext, ModelContext } from '../App'
 import { GaussianNB } from 'ml-naivebayes'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Switch from '@material-ui/core/Switch'
@@ -391,7 +391,7 @@ const oversampling = rows => {
 const ClassificationModelWebWorker = (callback, deps) => {
   const classes = useStyles()
   const { setModels } = useContext(ModelContext)
-  const { setConfMatrix } = useContext(ConfMatrix)
+  const { setConfMatrix } = useContext(ConfMatrixContext)
   const [modelsLocal, setModelsLocal] = useState({
     lg: null,
     rf: null,

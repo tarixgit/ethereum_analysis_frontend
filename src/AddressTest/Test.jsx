@@ -14,7 +14,7 @@ import { gql } from 'apollo-boost'
 import TextField from '@material-ui/core/TextField'
 import { Matrix } from 'ml-matrix' // "ml-matrix": "5.3.0",
 import { fitAndGetFeature } from '../DataAnalyse/ClassificationModel'
-import { ConfMatrix, ModelContext, StepContext } from '../App'
+import { ConfMatrixContext, ModelContext, StepContext } from '../App'
 import Link from '@material-ui/core/Link'
 import { useHistory } from 'react-router-dom'
 
@@ -115,7 +115,7 @@ const ClassificationModel = (callback, deps) => {
   const classes = useStyles()
   const history = useHistory()
   const { models } = useContext(ModelContext)
-  const { confusionMatrix } = useContext(ConfMatrix)
+  const { confusionMatrix } = useContext(ConfMatrixContext)
   const { step, setStep } = useContext(StepContext)
   const { lg, rf, knn, gaussianNB, stats } = models
   const [address, setAddress] = useState(

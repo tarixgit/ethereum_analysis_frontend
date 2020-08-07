@@ -40,7 +40,7 @@ export const ModelContext = React.createContext({
   setModels: () => {},
 })
 
-export const ConfMatrix = React.createContext({
+export const ConfMatrixContext = React.createContext({
   confusionMatrix: {
     rf: null,
     lg: null,
@@ -157,7 +157,7 @@ const App = () => {
   }
   return (
     <ModelContext.Provider value={{ models, setModels }}>
-      <ConfMatrix.Provider value={{ confusionMatrix, setConfMatrix }}>
+      <ConfMatrixContext.Provider value={{ confusionMatrix, setConfMatrix }}>
         <StepContext.Provider value={{ step, setStep }}>
           <SnackbarContext.Provider
             value={{ snackbarMessage, setSnackbarMessage }}
@@ -208,7 +208,7 @@ const App = () => {
             </ScamNeighborContext.Provider>
           </SnackbarContext.Provider>
         </StepContext.Provider>
-      </ConfMatrix.Provider>
+      </ConfMatrixContext.Provider>
     </ModelContext.Provider>
   )
 }

@@ -174,7 +174,7 @@ const ClassificationModel = (callback, deps) => {
         predictedLogreg[0] === 1
           ? `Scam: with the probability ${getTruePositiveRate(
               confusionMatrix.lg
-            )}% this address is a scam`
+            )}%`
           : `Not scam: with the probability ${getTrueNegativeRate(
               confusionMatrix.lg
             )}%`

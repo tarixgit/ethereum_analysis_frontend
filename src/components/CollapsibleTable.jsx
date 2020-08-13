@@ -47,6 +47,7 @@ const Row = ({
   onSubmitKNN,
   rfSettings,
   lgSettings,
+  knnSettings,
 }) => {
   const [open, setOpen] = React.useState(false)
   //const classes = useRowStyles();
@@ -230,13 +231,8 @@ const Row = ({
               )}
               {row.id === 'idPrecision_KNN' && (
                 <Form
-                  onSubmit={onSubmitRf}
-                  initialValues={{
-                    seed: 3,
-                    maxFeatures: 0.8,
-                    replacement: true,
-                    nEstimators: 25,
-                  }}
+                  onSubmit={onSubmitKNN}
+                  initialValues={knnSettings}
                   render={({ handleSubmit, submitting, pristine }) => (
                     <form onSubmit={handleSubmit}>
                       <Grid
@@ -246,7 +242,30 @@ const Row = ({
                         alignItems="center"
                       >
                         <Grid item xs={2}>
-                          No settings for KNN classifier
+                          <label>Number of neighbors</label>
+                          <Field name="k" parse={Number}>
+                            {props => (
+                              <div>
+                                <TextField
+                                  name={props.input.name}
+                                  value={props.input.value}
+                                  onChange={props.input.onChange}
+                                />
+                              </div>
+                            )}
+                          </Field>
+                        </Grid>
+                        <Grid item xs={2}>
+                          <IconButton
+                            aria-label="expand row"
+                            size="small"
+                            type="submit"
+                            color="primary"
+                            onClick={handleSubmit}
+                            disabled={submitting || pristine}
+                          >
+                            <CheckCircleOutlineIcon />
+                          </IconButton>
                         </Grid>
                       </Grid>
                     </form>
@@ -272,6 +291,7 @@ const CollapsibleTable = ({
   onSubmitKNN,
   rfSettings,
   lgSettings,
+  knnSettings,
 }) => {
   const classes = useStyles()
   const rowsRendered = map(rows, row => (
@@ -284,6 +304,7 @@ const CollapsibleTable = ({
       onSubmitKNN={onSubmitKNN}
       rfSettings={rfSettings}
       lgSettings={lgSettings}
+      knnSettings={knnSettings}
     />
   ))
 

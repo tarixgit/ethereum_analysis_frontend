@@ -184,6 +184,9 @@ const lgOptions = {
   numSteps: 1000,
   learningRate: 5e-3,
 }
+const knnOptions = {
+  k: 3,
+}
 const loadAndSaveModels = memoizeOne(newModels => {
   const rf = newModels.rf ? RFClassifier.load(newModels.rf) : null
   const lg = newModels.lg ? LogisticRegression.load(newModels.lg) : null
@@ -426,7 +429,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
 
   const [rfSettings, onSubmitRf] = useState(rfOptions)
   const [lgSettings, onSubmitLg] = useState(lgOptions)
-  const [knnSettings, onSubmitKNN] = useState(null) // empty now
+  const [knnSettings, onSubmitKNN] = useState(knnOptions)
 
   const { data, loading: loadingApi, networkStatus } = useQuery(
     LOAD_ADDRESS_FEATURES,
@@ -574,6 +577,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
                               trainingDataPredictions,
                               rfSettings,
                               lgSettings,
+                              knnSettings,
                             })
                           }
                           variant="contained"
@@ -639,6 +643,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
                       onSubmitKNN={onSubmitKNN}
                       rfSettings={rfSettings}
                       lgSettings={lgSettings}
+                      knnSettings={knnSettings}
                     />
                     {error ? `Something went wrong: ${error.message}` : ''}
                     {spinner && (

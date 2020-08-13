@@ -24,8 +24,18 @@ onmessage = function(e) {
     trainingDataPredictions,
     rfSettings,
     lgSettings,
+    knnSettings,
   } = dataParsed
-  let rfClassifierOpt = rfSettings ? rfSettings : options
+  let rfClassifierOpt = rfSettings
+    ? rfSettings
+    : {
+        seed: 42,
+        maxFeatures: 1.0,
+        replacement: true,
+        nEstimators: 20,
+        selectionMethod: 'median',
+        useSampleBagging: true,
+      }
   rfClassifierOpt = {
     seed: Number(rfClassifierOpt.seed),
     maxFeatures: Number(rfClassifierOpt.maxFeatures),
@@ -42,16 +52,14 @@ onmessage = function(e) {
     numSteps: Number(lgClassifierOpt.numSteps),
     learningRate: Number(lgClassifierOpt.learningRate),
   }
-
-  var options = {
-    seed: 42,
-    maxFeatures: 1.0,
-    replacement: true,
-    nEstimators: 20,
-    selectionMethod: 'median',
-    useSampleBagging: true,
+  let knnClassifierOpt = knnSettings
+    ? knnSettings
+    : {
+        k: 3,
+      }
+  knnClassifierOpt = {
+    k: Number(knnClassifierOpt.k),
   }
-
   // var regression = new RFRegression(options)
   // regression.train(trainingData, trainingDataPredictions)
   // console.log(regression)
@@ -69,7 +77,7 @@ onmessage = function(e) {
     nb: null,
   }
   let start = new Date()
-  const knn = new KNN(trainingData, trainingDataPredictions)
+  const knn = new KNN(trainingData, trainingDataPredictions, knnClassifierOpt)
   time.knn = new Date() - start
   newModels.knn = knn
   postMessage(JSON.stringify({ newModels, time }))

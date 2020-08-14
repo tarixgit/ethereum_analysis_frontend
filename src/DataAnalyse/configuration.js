@@ -260,4 +260,58 @@ export const headCells = [
     disablePadding: true,
     label: 'numberOfScamNeighborInput',
   },
+  {
+    id: 'numberOfScamNeighborInput',
+    numeric: true,
+    disablePadding: true,
+    label: 'numberOfScamNeighborInput',
+  },
+  {
+    id: 'numberOfScamNeighborInput',
+    numeric: true,
+    disablePadding: true,
+    label: 'numberOfScamNeighborInput',
+  },
+  {
+    id: 'numberOfNoneTr',
+    numeric: true,
+    disablePadding: true,
+    label: 'noneTr',
+  },
+  {
+    id: 'numberOfOneTimeTr',
+    numeric: true,
+    disablePadding: true,
+    label: 'oneTimeTr',
+  },
+  {
+    id: 'numberOfExchangeTr',
+    numeric: true,
+    disablePadding: true,
+    label: 'exchangeTr',
+  },
+  {
+    id: 'numberOfMinerTr',
+    numeric: true,
+    disablePadding: true,
+    label: 'minerTr',
+  },
+  {
+    id: 'numberOfSmContractTr',
+    numeric: true,
+    disablePadding: true,
+    label: 'SmContractTr',
+  },
+  {
+    id: 'numberOfERC20Tr',
+    numeric: true,
+    disablePadding: true,
+    label: 'ERC20Tr',
+  },
+  {
+    id: 'numberOfERC721Tr',
+    numeric: true,
+    disablePadding: true,
+    label: 'ERC721Tr',
+  },
 ]

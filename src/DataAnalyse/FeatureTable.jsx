@@ -65,6 +65,15 @@ const LOAD_ADDRESS_FEATURES = gql`
         transOutputAverageEth
         numberOfScamNeighbor
         numberOfScamNeighborInput
+        numberOfNoneTr
+        numberOfOneTimeTr
+        numberOfExchangeTr
+        numberOfMiningPoolTr
+        numberOfMinerTr
+        numberOfSmContractTr
+        numberOfERC20Tr
+        numberOfERC721Tr
+        numberOfTraceTr
       }
       count
     }

@@ -18,6 +18,9 @@ import { ApolloProvider } from '@apollo/react-hooks'
 const httpLink = new HttpLink({
   uri: process.env.REACT_APP_GRAPHQL,
   credentials: 'same-origin',
+  headers: {
+    'Accept-Encoding': 'gzip',
+  },
 })
 
 // Create a WebSocket link:

@@ -11,6 +11,7 @@ export const networkOptions = {
   },
   edges: {
     width: 0.15,
+    selectionWidth: 2,
     color: { inherit: 'from' },
     smooth: {
       type: 'continuous',

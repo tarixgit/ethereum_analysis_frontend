@@ -179,15 +179,16 @@ const TRANSACTION_MORE = gql`
 const getNodeEdgeFromTrans = (
   { id, hash, alias, labelId, scam },
   mainAddressId,
-  isInputTrans
+  isInputTrans,
+  amount
 ) => ({
   // scam flag updated manually in addersses
   node: scam
     ? { id: Number(id), label: alias || hash, group: labelId, shape: 'star' }
     : { id: Number(id), label: alias || hash, group: labelId },
   edge: isInputTrans
-    ? { from: Number(id), to: mainAddressId }
-    : { from: mainAddressId, to: Number(id) },
+    ? { from: Number(id), to: mainAddressId, value: amount }
+    : { from: mainAddressId, to: Number(id), value: amount },
 })
 export const getNodesAndEdges = addressesWithInfo => {
   let edges = []
@@ -208,17 +209,23 @@ export const getNodesAndEdges = addressesWithInfo => {
       : { id: Number(id), label: alias || hash, group: labelId },
   ]
   edges = []
-  forEach(transactionsInput, ({ fromAddress }) => {
+  forEach(transactionsInput, ({ fromAddress, amount }) => {
     const { node, edge } = getNodeEdgeFromTrans(
       fromAddress,
       mainAddressId,
-      true
+      true,
+      amount
     )
     nodes.push(node)
     edges.push(edge)
   })
-  forEach(transactionsOutput, ({ toAddress }) => {
-    const { node, edge } = getNodeEdgeFromTrans(toAddress, mainAddressId, false)
+  forEach(transactionsOutput, ({ toAddress, amount }) => {
+    const { node, edge } = getNodeEdgeFromTrans(
+      toAddress,
+      mainAddressId,
+      false,
+      amount
+    )
     nodes.push(node)
     edges.push(edge)
   })

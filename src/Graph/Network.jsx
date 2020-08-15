@@ -133,7 +133,7 @@ function useBuildNetworkHook(nodes, edges, loadMore) {
   return [setRef, ref, networkForAnswer]
 }
 
-const Network = ({ nodes, edges, loadMore, labels }) => {
+const Network = ({ nodes, edges, loadMore, labels, direction }) => {
   const classes = useStyles()
   const [ref, refObject, network] = useBuildNetworkHook(
     nodesSet,
@@ -157,33 +157,58 @@ const Network = ({ nodes, edges, loadMore, labels }) => {
   }, [])
   nodesSet.update([...nodes]) // doesn't remove not included address
   edgesSet.update(edges)
-  if (nodes.length > 1000) {
-    network.setOptions({
-      ...networkOptions,
-      improvedLayout: false,
-      edges: {
-        width: 0.15,
-        color: { inherit: 'from' },
-        smooth: {
-          enabled: false,
+  if (network) {
+    if (Number(direction)) {
+      const edgesConfig = networkOptions.edges
+      edgesConfig.arrows = {
+        to: {
+          enabled: true,
+          type: 'vee',
+          scaleFactor: 3,
         },
-      },
-      physics: {
-        stabilization: true,
-        barnesHut: {
-          gravitationalConstant: -80000,
-          springConstant: 0.001,
-          springLength: 250,
+      }
+      network.setOptions({
+        ...networkOptions,
+        edges: edgesConfig,
+      })
+    } else {
+      const edgesConfig = networkOptions.edges
+      edgesConfig.arrows = {
+        to: false,
+      }
+      network.setOptions({
+        ...networkOptions,
+        edges: edgesConfig,
+      })
+    }
+    if (nodes.length > 1000) {
+      network.setOptions({
+        ...networkOptions,
+        improvedLayout: false,
+        edges: {
+          width: 0.15,
+          color: { inherit: 'from' },
+          smooth: {
+            enabled: false,
+          },
         },
-        minVelocity: 1,
-        timestep: 0.4,
-      },
-      interaction: {
-        dragNodes: false,
-        navigationButtons: false,
-        hideEdgesOnDrag: true,
-      },
-    })
+        physics: {
+          stabilization: true,
+          barnesHut: {
+            gravitationalConstant: -80000,
+            springConstant: 0.001,
+            springLength: 250,
+          },
+          minVelocity: 1,
+          timestep: 0.4,
+        },
+        interaction: {
+          dragNodes: false,
+          navigationButtons: false,
+          hideEdgesOnDrag: true,
+        },
+      })
+    }
   }
   return (
     <Fragment>

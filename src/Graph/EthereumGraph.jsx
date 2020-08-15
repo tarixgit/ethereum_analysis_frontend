@@ -19,6 +19,9 @@ import {
   keyBy,
 } from 'lodash'
 import { networkOptions } from './config'
+import FormControl from '@material-ui/core/FormControl'
+import InputLabel from '@material-ui/core/InputLabel'
+import Select from '@material-ui/core/Select'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -186,10 +189,10 @@ const getNodeEdgeFromTrans = (
     ? { from: Number(id), to: mainAddressId }
     : { from: mainAddressId, to: Number(id) },
 })
-export const getNodesAndEdges = addressesWithIndo => {
+export const getNodesAndEdges = addressesWithInfo => {
   let edges = []
   let nodes = []
-  const mainAddressId = Number(addressesWithIndo.id)
+  const mainAddressId = Number(addressesWithInfo.id)
   const {
     id,
     hash,
@@ -198,7 +201,7 @@ export const getNodesAndEdges = addressesWithIndo => {
     scam,
     transactionsInput,
     transactionsOutput,
-  } = addressesWithIndo
+  } = addressesWithInfo
   nodes = [
     scam
       ? { id: Number(id), label: alias || hash, group: labelId, shape: 'star' }
@@ -231,6 +234,7 @@ const EthereumGraph = () => {
   const [address, setAddress] = useState(
     hash || '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
+  const [direction, setDirection] = useState(0)
   //Labels
   const {
     loading: labelLoading,
@@ -298,7 +302,6 @@ const EthereumGraph = () => {
     edges = [...edges, ...result.edges]
     nodes = [...nodes, ...result.nodes]
   }
-
   let labels
   if (called && !labelLoading) {
     labelsList = get(labelsData, 'labels', null)
@@ -317,12 +320,13 @@ const EthereumGraph = () => {
         ))
       : null
     labels = labels
-      ? labels.push(
+      ? [
+          ...labels,
           <div className={classes.labelItem} key="ethereumgraph_circleAll">
             <div className={classes.circleAll} />
             {nodes.length ? `All (${nodes.length})` : 'All'}
-          </div>
-        )
+          </div>,
+        ]
       : labels
 
     labels =
@@ -340,19 +344,47 @@ const EthereumGraph = () => {
             style={{ height: '100%', position: 'relative' }}
           >
             <Grid item xs={12}>
-              <Paper>
-                <form onSubmit={submit}>
-                  <TextField
-                    id="address-input"
-                    label="Address"
-                    style={{ marginLeft: 1, paddingRight: 1 }}
-                    autoFocus
-                    fullWidth
-                    value={address}
-                    onChange={changeAddress}
-                  />
-                </form>
-              </Paper>
+              <form onSubmit={submit}>
+                <Grid
+                  container
+                  direction="row"
+                  justify="flex-start"
+                  alignItems="center"
+                  spacing={1}
+                >
+                  <Grid item xs={11}>
+                    <TextField
+                      id="address-input"
+                      label="Address"
+                      style={{ marginLeft: 1, paddingRight: 1 }}
+                      autoFocus
+                      fullWidth
+                      value={address}
+                      onChange={changeAddress}
+                    />
+                  </Grid>
+                  <Grid item xs={1}>
+                    <FormControl className={classes.formControl}>
+                      <InputLabel htmlFor="outlined-age-native-simple">
+                        Show direction
+                      </InputLabel>
+                      <Select
+                        native
+                        value={direction}
+                        onChange={e => setDirection(e.target.value)}
+                        label="Age"
+                        inputProps={{
+                          name: 'age',
+                          id: 'outlined-age-native-simple',
+                        }}
+                      >
+                        <option value={0}>No direction</option>
+                        <option value={1}>Direction</option>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+              </form>
             </Grid>
             <Grid item xs={12} className={classes.labelWrapper}>
               {labels}
@@ -365,6 +397,7 @@ const EthereumGraph = () => {
                 edges={edges}
                 loadMore={loadMore}
                 labels={labelsList}
+                direction={direction}
               />
             </Grid>
           </Grid>

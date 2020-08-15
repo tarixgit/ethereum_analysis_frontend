@@ -14,7 +14,7 @@ import { gql } from 'apollo-boost'
 import TextField from '@material-ui/core/TextField'
 import { Matrix } from 'ml-matrix' // "ml-matrix": "5.3.0",
 import { fitAndGetFeature } from '../DataAnalyse/ClassificationModel'
-import { ModelContext, StepContext } from '../App'
+import { ConfMatrixContext, ModelContext, StepContext } from '../App'
 import Link from '@material-ui/core/Link'
 import { useHistory } from 'react-router-dom'
 
@@ -22,7 +22,6 @@ const LOAD_ADDRESS_FEATURE = gql`
   query GetAndCalculateAddressFeatures($address: String!) {
     getAndCalculateAddressFeatures(address: $address) {
       hash
-      scam
       numberOfNone
       numberOfOneTime
       numberOfExchange
@@ -37,6 +36,31 @@ const LOAD_ADDRESS_FEATURE = gql`
       numberOfTransInput
       numberOfTransOutput
       numberOfTransactions
+      numberOfNoneInput
+      numberOfOneTimeInput
+      numberOfExchangeInput
+      numberOfMiningPoolInput
+      numberOfMinerInput
+      numberOfSmContractInput
+      numberOfERC20Input
+      numberOfERC721Input
+      numberOfTraceInput
+      transInputMedian
+      transOutputMedian
+      transInputAverage
+      transOutputAverage
+      minEth
+      maxEth
+      transInputMinEth
+      transInputMaxEth
+      transOutputMinEth
+      transOutputMaxEth
+      transInputMedianEth
+      transInputAverageEth
+      transOutputMedianMinEth
+      transOutputAverageEth
+      numberOfScamNeighbor
+      numberOfScamNeighborInput
     }
   }
 `
@@ -91,8 +115,9 @@ const ClassificationModel = (callback, deps) => {
   const classes = useStyles()
   const history = useHistory()
   const { models } = useContext(ModelContext)
+  const { confusionMatrix } = useContext(ConfMatrixContext)
   const { step, setStep } = useContext(StepContext)
-  const { lg, rf, knn } = models
+  const { lg, rf, knn, gaussianNB, stats } = models
   const [address, setAddress] = useState(
     '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
@@ -101,6 +126,7 @@ const ClassificationModel = (callback, deps) => {
   const [rfResult, setRfResult] = useState('')
   const [logregResult, setLogregResult] = useState('')
   const [KNNResult, setKNNResult] = useState('')
+  const [NBResult, setNBResult] = useState('')
 
   const [
     loadAddressFeature,
@@ -124,15 +150,53 @@ const ClassificationModel = (callback, deps) => {
     () => loadAddressFeature({ variables: { address: address.toLowerCase() } }),
     [loadAddressFeature, address]
   )
+  const getTruePositiveRate = ({ truePositive, falseNegative }) =>
+    Math.round((truePositive / (truePositive + falseNegative)) * 100)
+  const getTrueNegativeRate = ({ trueNegative, falsePositive }) =>
+    Math.round((trueNegative / (trueNegative + falsePositive)) * 100)
   useEffect(() => {
     if (networkStatus === 7 && called) {
       const addressFeature = [fitAndGetFeature(addressInfo)]
       const rfResult = rf.predict(addressFeature)
       const predictedLogreg = lg.predict(new Matrix(addressFeature))
       const predictedKNN = knn.predict(addressFeature)
-      setRfResult(rfResult[0] === 1 ? 'scam' : 'not scam')
-      setLogregResult(predictedLogreg[0] === 1 ? 'scam' : 'not scam')
-      setKNNResult(predictedKNN[0] === 1 ? 'scam' : 'not scam')
+      const predictedNB = gaussianNB.predict(addressFeature)
+      setRfResult(
+        rfResult[0] === 1
+          ? `Scam: with the probability ${getTruePositiveRate(
+              confusionMatrix.rf
+            )}%`
+          : `Not scam: with the probability ${getTrueNegativeRate(
+              confusionMatrix.rf
+            )}%`
+      )
+      setLogregResult(
+        predictedLogreg[0] === 1
+          ? `Scam: with the probability ${getTruePositiveRate(
+              confusionMatrix.lg
+            )}%`
+          : `Not scam: with the probability ${getTrueNegativeRate(
+              confusionMatrix.lg
+            )}%`
+      )
+      setKNNResult(
+        predictedKNN[0] === 1
+          ? `Scam: with the probability ${getTruePositiveRate(
+              confusionMatrix.knn
+            )}%`
+          : `Not scam: with the probability ${getTrueNegativeRate(
+              confusionMatrix.knn
+            )}%`
+      )
+      setNBResult(
+        predictedNB[0] >= 0.5
+          ? `Scam: with the probability ${getTruePositiveRate(
+              confusionMatrix.nb
+            )}%`
+          : `Not scam: with the probability ${getTrueNegativeRate(
+              confusionMatrix.nb
+            )}%`
+      )
     }
   }, [addressInfo])
 
@@ -174,31 +238,37 @@ const ClassificationModel = (callback, deps) => {
           <div>
             <TextField
               id="address-input"
-              label="Result of rf classifcier"
+              label="Result of random forest classifier"
               fullWidth
-              multiline
-              rows="4"
+              disableUnderline
               value={rfResult}
             />
           </div>
           <div>
             <TextField
               id="address-input"
-              label="Result of regression"
+              label="Result of logistik regression classifier"
               fullWidth
-              multiline
-              rows="4"
+              disableUnderline
               value={logregResult}
             />
           </div>
           <div>
             <TextField
               id="address-input"
-              label="Result of KNN"
+              label="Result of k-nearest neighbors classifier"
               fullWidth
-              multiline
-              rows="4"
+              disableUnderline
               value={KNNResult}
+            />
+          </div>
+          <div>
+            <TextField
+              id="address-input"
+              label="Result of naive Bayes classifier"
+              fullWidth
+              disableUnderline
+              value={NBResult}
             />
           </div>
         </Paper>
@@ -208,5 +278,3 @@ const ClassificationModel = (callback, deps) => {
 }
 
 export default ClassificationModel
-
-// accuracy

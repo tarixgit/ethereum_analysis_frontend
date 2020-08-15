@@ -1,12 +1,13 @@
 import TableRow from '@material-ui/core/TableRow'
 import TableCell from '@material-ui/core/TableCell'
-import React from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import { map } from 'lodash'
 import TableBody from '@material-ui/core/TableBody'
 import { FormattedNumber } from 'react-intl'
 
 const TableBodyEnhanced = ({ classes, rows, headCells, emptyRows }) => {
+  const [selectedId, setSelectedId] = useState(null)
   const getCells = (row, headCells) =>
     map(headCells, column => {
       const { id, render, numeric = false, disablePadding = true } = column
@@ -46,7 +47,13 @@ const TableBodyEnhanced = ({ classes, rows, headCells, emptyRows }) => {
     })
   //FormattedNumber
   const rowsRendered = map(rows, row => (
-    <TableRow hover tabIndex={-1} key={row.id}>
+    <TableRow
+      hover
+      tabIndex={-1}
+      key={row.id}
+      selected={selectedId === row.id}
+      onClick={() => setSelectedId(row.id)}
+    >
       {getCells(row, headCells)}
     </TableRow>
   ))

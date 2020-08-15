@@ -17,6 +17,7 @@ import TableMenu from '../components/TableMenu'
 import Tooltip from '@material-ui/core/Tooltip'
 import EnhancedTableHead from '../components/EnhancedTableHead'
 import TableBodyEnhanced from '../components/TableBodyEnhanced'
+import { headCells } from './configuration'
 
 const LOAD_ADDRESS_FEATURES = gql`
   query AddressFeatures($orderBy: Order, $offset: Int!, $limit: Int!) {
@@ -35,8 +36,44 @@ const LOAD_ADDRESS_FEATURES = gql`
         numberOfERC721
         numberOfTrace
         numberOfTransactions
+        numberOfTransInput
+        numberOfTransOutput
         medianOfEthProTrans
         averageOfEthProTrans
+        numberOfNoneInput
+        numberOfOneTimeInput
+        numberOfExchangeInput
+        numberOfMiningPoolInput
+        numberOfMinerInput
+        numberOfSmContractInput
+        numberOfERC20Input
+        numberOfERC721Input
+        numberOfTraceInput
+        transInputMedian
+        transOutputMedian
+        transInputAverage
+        transOutputAverage
+        minEth
+        maxEth
+        transInputMinEth
+        transInputMaxEth
+        transOutputMinEth
+        transOutputMaxEth
+        transInputMedianEth
+        transInputAverageEth
+        transOutputMedianMinEth
+        transOutputAverageEth
+        numberOfScamNeighbor
+        numberOfScamNeighborInput
+        numberOfNoneTr
+        numberOfOneTimeTr
+        numberOfExchangeTr
+        numberOfMiningPoolTr
+        numberOfMinerTr
+        numberOfSmContractTr
+        numberOfERC20Tr
+        numberOfERC721Tr
+        numberOfTraceTr
       }
       count
     }
@@ -61,107 +98,6 @@ const headTransactionCells = [
   { id: 'scam' },
   { id: 'amount' },
   { id: 'timestamp' },
-]
-
-const headCells = [
-  {
-    id: 'id',
-    numeric: true,
-    disablePadding: true,
-    label: 'Ids',
-  },
-  {
-    id: 'hash',
-    numeric: false,
-    disablePadding: true,
-    label: 'hash',
-    render: (val, row, column, classes) => (
-      <TableCell padding="none" key={`table_${row.id}_${column.id}`}>
-        <Tooltip title={val} aria-label="add">
-          <Link to={`graph/${val}`} className={classes.links}>
-            <Button color="primary" className={classes.button} size="small">
-              {truncate(val, {
-                length: 10,
-              })}
-            </Button>
-          </Link>
-        </Tooltip>
-      </TableCell>
-    ),
-  },
-  { id: 'scam', numeric: false, disablePadding: false, label: 'Scam' },
-  {
-    id: 'numberOfNone',
-    numeric: true,
-    disablePadding: true,
-    label: 'n.None',
-  },
-  {
-    id: 'numberOfOneTime',
-    numeric: true,
-    disablePadding: true,
-    label: 'n.OneTime',
-  },
-  {
-    id: 'numberOfExchange',
-    numeric: true,
-    disablePadding: false,
-    label: 'n.Exch.',
-  },
-  {
-    id: 'numberOfMiningPool',
-    numeric: true,
-    disablePadding: false,
-    label: 'n.MiningP',
-  },
-  {
-    id: 'numberOfMiner',
-    numeric: true,
-    disablePadding: false,
-    label: 'n.Miner',
-  },
-  {
-    id: 'numberOfSmContract',
-    numeric: true,
-    disablePadding: false,
-    label: 'n.S.Contr',
-  },
-  {
-    id: 'numberOfERC20',
-    numeric: true,
-    disablePadding: false,
-    label: 'n.ERC20',
-  },
-  {
-    id: 'numberOfERC721',
-    numeric: true,
-    disablePadding: false,
-    label: 'n.ERC721',
-  },
-  {
-    id: 'numberOfTrace',
-    numeric: true,
-    disablePadding: false,
-    label: 'n.Trace',
-  },
-  {
-    id: 'numberOfTransactions',
-    numeric: true,
-    disablePadding: false,
-    label: 'n.Trans.',
-  },
-  {
-    id: 'medianOfEthProTrans',
-    numeric: true,
-    disablePadding: true,
-    label: 'medianOfEth',
-  },
-  {
-    id: 'averageOfEthProTrans',
-    numeric: true,
-    disablePadding: true,
-    label: 'Avg.OfEth',
-  },
 ]
 
 const useStyles = makeStyles(theme => ({
@@ -196,7 +132,7 @@ const useStyles = makeStyles(theme => ({
   },
   tableContainer: {
     maxHeight: 440,
-    overflowX: 'hidden',
+    overflowX: 'auto',
     overflowY: 'auto',
   },
 }))

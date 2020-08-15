@@ -1,4 +1,10 @@
-import React, { useState, useCallback } from 'react'
+import React, {
+  useState,
+  useCallback,
+  Fragment,
+  useEffect,
+  useContext,
+} from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Table from '@material-ui/core/Table'
 import TableCell from '@material-ui/core/TableCell'
@@ -7,13 +13,21 @@ import TablePagination from '@material-ui/core/TablePagination'
 import Paper from '@material-ui/core/Paper'
 import { map, get, truncate } from 'lodash'
 import Button from '@material-ui/core/Button'
-import { useQuery } from '@apollo/react-hooks'
+import { useLazyQuery, useMutation, useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import { Link } from 'react-router-dom'
 import Grid from '@material-ui/core/Grid'
 import TableMenu from '../components/TableMenu'
 import EnhancedTableHead from '../components/EnhancedTableHead'
 import TableBodyEnhanced from '../components/TableBodyEnhanced'
+import ModalDialog from '../components/ModalDialog'
+import TextField from '@material-ui/core/TextField'
+import Switch from '@material-ui/core/Switch'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
+import { SnackbarContext } from '../App'
+import IconButton from '@material-ui/core/IconButton'
+import ClearIcon from '@material-ui/icons/Clear'
+import { withStyles } from '@material-ui/core'
 
 const LOAD_IMPORT_ADDRESSES = gql`
   query ImportAddresses($orderBy: Order, $offset: Int!, $limit: Int!) {
@@ -35,7 +49,45 @@ const LOAD_IMPORT_ADDRESSES = gql`
   }
 `
 
-const headCells = [
+const ADDRESS = gql`
+  query Addresses($address: String!) {
+    addresses(address: $address) {
+      id
+      scam
+      hash
+      alias
+      labelId
+      label {
+        id
+        name
+      }
+    }
+  }
+`
+const ADD_ADDRESS = gql`
+  mutation AddAddressToImport($address: ImportAddressInput!) {
+    addAddressToImport(address: $address) {
+      success
+      message
+    }
+  }
+`
+const DELETE_ADDRESS = gql`
+  mutation DeleteAddressToImport($id: Int!) {
+    deleteAddressToImport(id: $id) {
+      success
+      message
+    }
+  }
+`
+
+const LinkButton = withStyles({
+  root: {
+    boxShadow: 'none',
+    textTransform: 'none',
+  },
+})(Button)
+const getHeadCells = deleteImportAddressCallback => [
   {
     id: 'id',
     numeric: false,
@@ -50,13 +102,13 @@ const headCells = [
     render: (val, row, column, classes) => (
       <TableCell padding="none" key={`table_${row.id}_${column.id}`}>
         <Link to={`graph/${val}`} className={classes.links}>
-          <Button color="primary">
+          <LinkButton color="primary">
             {val.length > 42
               ? `${truncate(val, {
                   length: 42,
                 })}`
               : val}
-          </Button>
+          </LinkButton>
         </Link>
       </TableCell>
     ),
@@ -79,6 +131,24 @@ const headCells = [
   },
   { id: 'status', numeric: false, disablePadding: false, label: 'Status' },
   { id: 'scam', numeric: false, disablePadding: false, label: 'Scam' },
+  {
+    id: 'remove',
+    numeric: false,
+    disablePadding: true,
+    noFilter: false,
+    label: '',
+    render: (val, row, column, classes) => (
+      <TableCell padding="none" key={`table_${row.id}_${column.id}`}>
+        <IconButton
+          aria-label="expand row"
+          size="small"
+          onClick={() => deleteImportAddressCallback(Number(row.id))}
+        >
+          <ClearIcon />
+        </IconButton>
+      </TableCell>
+    ),
+  },
 ]
 
 const useStyles = makeStyles(theme => ({
@@ -116,15 +186,25 @@ const useStyles = makeStyles(theme => ({
   },
   tableContainer: {
     maxHeight: 440,
-    overflowX: 'hidden',
+    overflowX: 'auto',
     overflowY: 'auto',
   },
 }))
 
 const ImportAddressTable = ({ importData, openInfo }) => {
   const classes = useStyles()
+  const { setSnackbarMessage } = useContext(SnackbarContext)
   const [order, setOrder] = useState('asc')
   const [orderBy, setOrderBy] = useState('id')
+  const [isAddAddressOpen, setAddAddressOpen] = useState(false)
+  const [addressHash, setAddressHash] = useState('')
+  const [newImportAddress, setNewImportAddress] = useState({
+    hash: '',
+    name: '',
+    category: '',
+    reporter: '',
+    scam: false,
+  })
   const [orderByQuery, setOrderQuery] = useState({
     field: 'id',
     type: 'ASC',
@@ -132,11 +212,64 @@ const ImportAddressTable = ({ importData, openInfo }) => {
   const [selected, setSelected] = useState([])
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
-  const { data, loading } = useQuery(LOAD_IMPORT_ADDRESSES, {
+  const { data, refetch } = useQuery(LOAD_IMPORT_ADDRESSES, {
     variables: {
       orderBy: orderByQuery,
       offset: page * rowsPerPage,
       limit: rowsPerPage,
+    },
+  })
+  const [
+    loadAddressData,
+    {
+      data: addressData,
+      loading: addressLoading,
+      networkStatus: networkStatusAddress,
+    },
+  ] = useLazyQuery(ADDRESS)
+  const [addNewImportAddress] = useMutation(ADD_ADDRESS, {
+    onCompleted: data => {
+      const importDataResponse = get(data, 'addAddressToImport', {
+        success: null,
+        message: null,
+      })
+      if (importDataResponse.success) {
+        setNewImportAddress({
+          hash: '',
+          name: '',
+          category: '',
+          reporter: '',
+          scam: false,
+        })
+        setSnackbarMessage({
+          type: 'success',
+          message: importDataResponse.message
+            ? importDataResponse.message
+            : 'new address added',
+        })
+        refetch()
+        return
+      }
+      setSnackbarMessage({ type: 'error', message: 'Error occur' })
+    },
+  })
+  const [deleteImportAddress] = useMutation(DELETE_ADDRESS, {
+    onCompleted: data => {
+      const importDataResponse = get(data, 'deleteAddressToImport', {
+        success: null,
+        message: null,
+      })
+      refetch()
+      if (importDataResponse.success) {
+        setSnackbarMessage({
+          type: 'success',
+          message: importDataResponse.message
+            ? importDataResponse.message
+            : 'address deleted',
+        })
+        return
+      }
+      setSnackbarMessage({ type: 'error', message: 'Error occur' })
     },
   })
   const rows = get(data, 'importAddresses.rows', [])
@@ -196,6 +329,57 @@ const ImportAddressTable = ({ importData, openInfo }) => {
         'Here you see the addresses that was used for calculation of features. The pool consist of black(scam) and white(not scam) addresses. If you want to import the new black addresses from https://etherscamdb.info please select menu "Import blacklist data" ',
     })
   })
+  useEffect(() => {
+    const address = get(addressData, 'addresses[0]', null)
+    if (address && !addressLoading) {
+      // prepare NewImportAddress
+      const {
+        scam,
+        hash,
+        alias,
+        label: { name },
+      } = address
+      setNewImportAddress({
+        hash,
+        name: alias,
+        category: name,
+        reporter: 'manual',
+        scam,
+      })
+    }
+  }, [networkStatusAddress, addressLoading, loadAddressData])
+  const changeAddress = useCallback(
+    e => {
+      const { value } = e.target
+      if (value.length >= 42) {
+        loadAddressData({
+          variables: { address: value.toLowerCase() },
+        })
+      }
+      setNewImportAddress({ ...newImportAddress, hash: value })
+      //setAddressHash(value)
+    },
+    [loadAddressData, setAddressHash]
+  )
+  const changeNewImportAddress = useCallback((e, field) => {
+    const { value, checked } = e.target
+    newImportAddress[field] = field === 'scam' ? checked : value
+    setNewImportAddress({ ...newImportAddress })
+  })
+  const onSubmitNewAddress = useCallback(() => {
+    if (newImportAddress.hash) {
+      addNewImportAddress({ variables: { address: newImportAddress } })
+    } else {
+      setSnackbarMessage({
+        type: 'warning',
+        message: 'The field hash is empty.',
+      })
+    }
+  })
+  const deleteImportAddressCallback = useCallback(id => {
+    deleteImportAddress({ variables: { id } })
+  })
+  const headCells = getHeadCells(deleteImportAddressCallback)
   return (
     <Paper elevation={3} className={classes.root}>
       <Grid container justify="space-between" alignItems="center">
@@ -210,6 +394,10 @@ const ImportAddressTable = ({ importData, openInfo }) => {
               {
                 label: 'Import blacklist data',
                 handler: importData,
+              },
+              {
+                label: 'Add address to list',
+                handler: () => setAddAddressOpen(true),
               },
               { label: 'Info', handler: openInfoModal },
             ]}
@@ -253,6 +441,63 @@ const ImportAddressTable = ({ importData, openInfo }) => {
           onChangeRowsPerPage={handleChangeRowsPerPage}
         />
       </Paper>
+      {isAddAddressOpen && (
+        <ModalDialog
+          applyHandler={onSubmitNewAddress}
+          applyText="Add"
+          closeHandler={() => setAddAddressOpen(false)}
+          closeText="Close"
+          title={'Add new address to the list'}
+          infoText={
+            <Fragment>
+              <TextField
+                id="address-input"
+                label="Address"
+                style={{ marginLeft: 1, paddingRight: 1 }}
+                autoFocus
+                fullWidth
+                value={newImportAddress.hash}
+                onChange={changeAddress}
+              />
+              <TextField
+                id="address-input"
+                label="Name"
+                style={{ marginLeft: 1, paddingRight: 1 }}
+                autoFocus
+                value={newImportAddress.name}
+                onChange={e => changeNewImportAddress(e, 'name')}
+              />
+              <TextField
+                id="address-input"
+                label="Category"
+                style={{ marginLeft: 1, paddingRight: 1 }}
+                autoFocus
+                value={newImportAddress.category}
+                onChange={e => changeNewImportAddress(e, 'category')}
+              />
+              <TextField
+                id="address-input"
+                label="Reporter"
+                style={{ marginLeft: 1, paddingRight: 1 }}
+                autoFocus
+                value={newImportAddress.reporter}
+                onChange={e => changeNewImportAddress(e, 'reporter')}
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={newImportAddress.scam}
+                    onChange={e => changeNewImportAddress(e, 'scam')}
+                    name="scam"
+                    color="primary"
+                  />
+                }
+                label="Scam"
+              />
+            </Fragment>
+          }
+        />
+      )}
     </Paper>
   )
 }

@@ -35,7 +35,7 @@ const BUILD_FEATURES = gql`
   }
 `
 const RECALC_FEATURES = gql`
-  mutation BuildFeatures {
+  mutation RecalcFeatures {
     recalcFeaturesThread {
       success
       message
@@ -81,7 +81,7 @@ const getStepContent = stepIndex => {
     case 1:
       return 'Features Analyse'
     case 2:
-      return 'Model training. The algorithm are running with WebWorker, so the page will not freeze.'
+      return 'Model training'
     default:
       return 'Unknown stepIndex'
   }
@@ -200,6 +200,7 @@ const Classification = (callback, deps) => {
                 <Button
                   variant="contained"
                   color="primary"
+                  disabled={step === steps.length - 1}
                   onClick={handleNext}
                 >
                   {step === steps.length - 1 ? 'Finish' : 'Next'}
@@ -219,9 +220,9 @@ const Classification = (callback, deps) => {
                 openInfo={openInfo}
               />
             )}
-            {step === 2 && typeof Worker === 'undefined' && (
-              <ClassificationModel />
-            )}
+            {step === 2 &&
+              typeof Worker === 'undefined' &&
+              "Your browser doesn't support the webworker. Please change your browser or contact the administrator"}
             {step === 2 && typeof Worker !== 'undefined' && (
               <ClassificationModelWebWorker />
             )}

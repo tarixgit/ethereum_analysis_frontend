@@ -69,6 +69,16 @@ const useStyles = makeStyles(theme => ({
       background,
     })
   ),
+  circleAll: {
+    borderRadius: '50%',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    height: '25px',
+    width: '25px',
+    marginRight: '2px',
+    border: '#2B7CE9',
+    background: '#ffffff',
+  },
 }))
 
 const LABELS = gql`
@@ -306,6 +316,15 @@ const EthereumGraph = () => {
           </div>
         ))
       : null
+    labels = labels
+      ? labels.push(
+          <div className={classes.labelItem} key="ethereumgraph_circleAll">
+            <div className={classes.circleAll} />
+            {nodes.length ? `All (${nodes.length})` : 'All'}
+          </div>
+        )
+      : labels
+
     labels =
       !labels && networkStatus === 8 ? 'Cannot connect to the server.' : labels
   }

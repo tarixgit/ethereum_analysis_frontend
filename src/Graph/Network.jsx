@@ -117,6 +117,13 @@ function useBuildNetworkHook(nodes, edges, loadMore) {
     if (node) {
       network = new vis.Network(node, { nodes, edges }, networkOptions)
       network.on('oncontext', onContextBounded)
+      network.on('configChange', function() {
+        // this will immediately fix the height of the configuration
+        // wrapper to prevent unecessary scrolls in chrome.
+        // see https://github.com/almende/vis/issues/1568
+        var div = node.getElementsByClassName('vis-configuration-wrapper')[0]
+        div.style['height'] = div.getBoundingClientRect().height + 'px'
+      })
       setNetworkForAnswer(network)
     }
     // Save a reference to the node
@@ -150,6 +157,34 @@ const Network = ({ nodes, edges, loadMore, labels }) => {
   }, [])
   nodesSet.update([...nodes]) // doesn't remove not included address
   edgesSet.update(edges)
+  if (nodes.length > 1000) {
+    network.setOptions({
+      ...networkOptions,
+      improvedLayout: false,
+      edges: {
+        width: 0.15,
+        color: { inherit: 'from' },
+        smooth: {
+          enabled: false,
+        },
+      },
+      physics: {
+        stabilization: true,
+        barnesHut: {
+          gravitationalConstant: -80000,
+          springConstant: 0.001,
+          springLength: 250,
+        },
+        minVelocity: 1,
+        timestep: 0.4,
+      },
+      interaction: {
+        dragNodes: false,
+        navigationButtons: false,
+        hideEdgesOnDrag: true,
+      },
+    })
+  }
   return (
     <Fragment>
       <div ref={ref} className={classes.root}>

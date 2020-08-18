@@ -355,7 +355,7 @@ const calcStats = confMatrix => {
     recall,
   }
 }
-const calcConfusionMatrix = (predicted, predictedMustBe) => {
+export const calcConfusionMatrix = (predicted, predictedMustBe) => {
   let truePositive = 0
   let trueNegative = 0
   let falsePositive = 0
@@ -637,6 +637,8 @@ const ClassificationModelWebWorker = (callback, deps) => {
                             postMessage({
                               trainingData,
                               trainingDataPredictions,
+                              testData,
+                              testDataPrediction,
                               rfSettings,
                               lgSettings,
                               knnSettings,

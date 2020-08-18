@@ -6,6 +6,7 @@ import LogisticRegression from 'ml-logistic-regression'
 import { Matrix } from 'ml-matrix' //"ml-matrix": "5.3.0",
 import KNN from 'ml-knn'
 import { GaussianNB } from 'ml-naivebayes'
+import { calcConfusionMatrix } from './ClassificationModelWebWorker'
 
 // const options = {
 //   seed: 3, // for random function(MersenneTwister) for bagging
@@ -22,6 +23,8 @@ onmessage = function(e) {
   const {
     trainingData,
     trainingDataPredictions,
+    testData,
+    testDataPrediction,
     rfSettings,
     lgSettings,
     knnSettings,
@@ -76,6 +79,23 @@ onmessage = function(e) {
     knn: null,
     nb: null,
   }
+  for (let i = 1; i < 5; i++) {
+    let start2 = new Date()
+    const knn = new KNN(trainingData, trainingDataPredictions, { k: i })
+    time.knn = new Date() - start2
+    newModels.knn = knn
+    postMessage(JSON.stringify({ newModels, time }))
+    const predicted = knn.predict(testData)
+    const confM = calcConfusionMatrix(predicted, testDataPrediction)
+    console.log(confM)
+    console.log([
+      confM.truePositive,
+      confM.trueNegative,
+      confM.falsePositive,
+      confM.falseNegative,
+    ])
+  }
+
   let start = new Date()
   const knn = new KNN(trainingData, trainingDataPredictions, knnClassifierOpt)
   time.knn = new Date() - start

@@ -36,6 +36,7 @@ import CardContent from '@material-ui/core/CardContent'
 import Card from '@material-ui/core/Card'
 import PrecisionTable from '../components/PrecisionTable'
 import Slider from '@material-ui/core/Slider'
+import normed from 'ml-array-normed'
 
 const myWorker = new Worker('./classifier.worker.js', { type: 'module' }) // relative path to the source file, not the public URL
 
@@ -219,6 +220,31 @@ export const fitAndGetFeature = item => {
     numberOfTransInput,
     numberOfTransOutput,
     numberOfTransactions,
+    numberOfNoneInput,
+    numberOfOneTimeInput,
+    numberOfExchangeInput,
+    numberOfMiningPoolInput,
+    numberOfMinerInput,
+    numberOfSmContractInput,
+    numberOfERC20Input,
+    numberOfERC721Input,
+    numberOfTraceInput,
+    transInputMedian,
+    transOutputMedian,
+    transInputAverage,
+    transOutputAverage,
+    minEth,
+    maxEth,
+    transInputMinEth,
+    transInputMaxEth,
+    transOutputMinEth,
+    transOutputMaxEth,
+    transInputMedianEth,
+    transInputAverageEth,
+    transOutputMedianMinEth,
+    transOutputAverageEth,
+    numberOfScamNeighbor,
+    numberOfScamNeighborInput,
   } = item
   const sumOfNeigbours =
     numberOfNone +
@@ -244,6 +270,31 @@ export const fitAndGetFeature = item => {
     averageOfEthProTrans,
     numberOfTransInput / numberOfTransactions,
     numberOfTransOutput / numberOfTransactions,
+    numberOfNoneInput,
+    numberOfOneTimeInput,
+    numberOfExchangeInput,
+    numberOfMiningPoolInput,
+    numberOfMinerInput,
+    numberOfSmContractInput,
+    numberOfERC20Input,
+    numberOfERC721Input,
+    numberOfTraceInput,
+    transInputMedian,
+    transOutputMedian,
+    transInputAverage,
+    transOutputAverage,
+    minEth,
+    maxEth,
+    transInputMinEth,
+    transInputMaxEth,
+    transOutputMinEth,
+    transOutputMaxEth,
+    transInputMedianEth,
+    transInputAverageEth,
+    transOutputMedianMinEth,
+    transOutputAverageEth,
+    numberOfScamNeighbor,
+    numberOfScamNeighborInput,
     // numberOfTransaction,
   ]
 }
@@ -443,9 +494,20 @@ const ClassificationModelWebWorker = (callback, deps) => {
       const rowsShuffled = oversamplingOn
         ? shuffle(oversampling(rows))
         : shuffle(rows)
-      const fullSet = fitAndGetFeatures(rowsShuffled)
+      let fullSet = fitAndGetFeatures(rowsShuffled)
       // separate train and test data
       const fullPredictions = map(rowsShuffled, ({ scam }) => (scam ? 1 : 0))
+      // data is fitted
+      // normalising, to separate function
+      const fullMatrix = new Matrix(fullSet)
+      let x = []
+      for (let i = 0; i < fullMatrix.columns; i++) {
+        const col = fullMatrix.getColumn(i)
+        x = normed(col, { algorithm: 'max' })
+        fullMatrix.setColumn(i, normed(col, { algorithm: 'max' }))
+      }
+      fullSet = fullMatrix.to2DArray()
+      // now splitting
       if (trainSplit === 1) {
         setTrainingData(fullSet)
         setTrainingDataPredictions(fullPredictions)

@@ -265,7 +265,7 @@ const Row = ({
     </Fragment>
   )
 }
-// seed: 3, // for random function(MersenneTwister) for bagging
+// seed: undefined, // for random function(MersenneTwister) for bagging
 //   maxFeatures: 0.8, // part of features used for bagging replacement:
 //   true, // for bagging nEstimators: 25,
 

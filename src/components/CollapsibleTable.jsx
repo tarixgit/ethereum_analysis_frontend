@@ -98,21 +98,7 @@ const Row = ({
                         alignItems="center"
                       >
                         <Grid item xs={2}>
-                          <label>Seed</label>
-                          <Field name="seed" parse={Number}>
-                            {({ input: { value, onChange, name } }) => (
-                              <div>
-                                <TextField
-                                  name={name}
-                                  value={value}
-                                  onChange={onChange}
-                                />
-                              </div>
-                            )}
-                          </Field>
-                        </Grid>
-                        <Grid item xs={2}>
-                          <label>maxFeatures</label>
+                          <label>Max number/precent of features</label>
                           <Field name="maxFeatures" parse={Number}>
                             {({ input: { value, onChange, name } }) => (
                               <div>
@@ -126,7 +112,7 @@ const Row = ({
                           </Field>
                         </Grid>
                         <Grid item xs={2}>
-                          <label>replacement</label>
+                          <label>Replacement</label>
                           <Field name="replacement">
                             {({ input: { value, onChange, name } }) => (
                               <Checkbox
@@ -142,7 +128,7 @@ const Row = ({
                           </Field>
                         </Grid>
                         <Grid item xs={2}>
-                          <label>nEstimators</label>
+                          <label>Number of estimators</label>
                           <Field name="nEstimators" parse={Number}>
                             {({ input: { value, onChange, name } }) => (
                               <div>
@@ -320,7 +306,7 @@ const CollapsibleTable = ({
               //     Accuracy <br /> [0;1]
               //   </TableCell>
               // ) :
-              <TableCell key={`head_${col}`}>{String(col.name)}</TableCell>
+              <TableCell key={`head_${col.id}`}>{String(col.name)}</TableCell>
             ))}
           </TableRow>
         </TableHead>

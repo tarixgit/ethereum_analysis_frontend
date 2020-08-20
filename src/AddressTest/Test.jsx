@@ -96,28 +96,13 @@ const useStyles = makeStyles(theme => ({
   },
 }))
 
-const options = {
-  seed: 3, // for random function(MersenneTwister) for bagging
-  maxFeatures: 0.8, // part of features used for bagging
-  replacement: true, // for bagging
-  nEstimators: 25,
-}
-// todo needed useSampleBagging to true - hillft gegen overfiting, default false
-// featureBagging always run, cause we have nEstimators
-const regressionOptions = {
-  seed: 3,
-  maxFeatures: 1,
-  replacement: true,
-  nEstimators: 1,
-}
-
 const ClassificationModel = (callback, deps) => {
   const classes = useStyles()
   const history = useHistory()
   const { models } = useContext(ModelContext)
   const { confusionMatrix } = useContext(ConfMatrixContext)
   const { step, setStep } = useContext(StepContext)
-  const { lg, rf, knn, gaussianNB, stats } = models
+  const { lg, rf, knn, stats } = models
   const [address, setAddress] = useState(
     '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
@@ -126,7 +111,7 @@ const ClassificationModel = (callback, deps) => {
   const [rfResult, setRfResult] = useState('')
   const [logregResult, setLogregResult] = useState('')
   const [KNNResult, setKNNResult] = useState('')
-  const [NBResult, setNBResult] = useState('')
+  // const [NBResult, setNBResult] = useState('')
 
   const [
     loadAddressFeature,
@@ -160,7 +145,7 @@ const ClassificationModel = (callback, deps) => {
       const rfResult = rf.predict(addressFeature)
       const predictedLogreg = lg.predict(new Matrix(addressFeature))
       const predictedKNN = knn.predict(addressFeature)
-      const predictedNB = gaussianNB.predict(addressFeature)
+      // const predictedNB = gaussianNB.predict(addressFeature)
       setRfResult(
         rfResult[0] === 1
           ? `Scam: with the probability ${getTruePositiveRate(
@@ -188,15 +173,15 @@ const ClassificationModel = (callback, deps) => {
               confusionMatrix.knn
             )}%`
       )
-      setNBResult(
-        predictedNB[0] >= 0.5
-          ? `Scam: with the probability ${getTruePositiveRate(
-              confusionMatrix.nb
-            )}%`
-          : `Not scam: with the probability ${getTrueNegativeRate(
-              confusionMatrix.nb
-            )}%`
-      )
+      // setNBResult(
+      //   predictedNB[0] >= 0.5
+      //     ? `Scam: with the probability ${getTruePositiveRate(
+      //         confusionMatrix.nb
+      //       )}%`
+      //     : `Not scam: with the probability ${getTrueNegativeRate(
+      //         confusionMatrix.nb
+      //       )}%`
+      // )
     }
   }, [addressInfo])
 
@@ -262,7 +247,7 @@ const ClassificationModel = (callback, deps) => {
               value={KNNResult}
             />
           </div>
-          <div>
+          {/* <div>
             <TextField
               id="address-input"
               label="Result of naive Bayes classifier"
@@ -270,7 +255,7 @@ const ClassificationModel = (callback, deps) => {
               disableUnderline
               value={NBResult}
             />
-          </div>
+          </div>*/}
         </Paper>
       </Paper>
     </Fragment>

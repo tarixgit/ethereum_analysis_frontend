@@ -199,7 +199,7 @@ const Network = ({ nodes, edges, loadMore, labels, direction }) => {
             springConstant: 0.001,
             springLength: 250,
           },
-          minVelocity: 1,
+          // minVelocity: 1,
           timestep: 0.4,
         },
         interaction: {

@@ -61,7 +61,6 @@ onmessage = function(e) {
   }
   // var regression = new RFRegression(options)
   // regression.train(trainingData, trainingDataPredictions)
-  // console.log(regression)
   const newModels = {
     lg: null,
     rf: null,

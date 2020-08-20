@@ -16,10 +16,7 @@ import memoizeOne from 'memoize-one'
 import { makeStyles } from '@material-ui/core/styles'
 import { Paper, Button, CircularProgress, TextField } from '@material-ui/core'
 import { green } from '@material-ui/core/colors'
-import {
-  RandomForestClassifier as RFClassifier,
-  RandomForestRegression as RFRegression,
-} from 'ml-random-forest'
+import { RandomForestClassifier as RFClassifier } from 'ml-random-forest'
 import clsx from 'clsx'
 import LogisticRegression from 'ml-logistic-regression'
 import { Matrix } from 'ml-matrix' //"ml-matrix": "5.3.0",
@@ -27,7 +24,7 @@ import KNN from 'ml-knn'
 import WebWorker from 'react-webworker'
 import CollapsibleTable from '../components/CollapsibleTable'
 import { ConfMatrixContext, ModelContext } from '../App'
-import { GaussianNB } from 'ml-naivebayes'
+// import { GaussianNB } from 'ml-naivebayes'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Switch from '@material-ui/core/Switch'
 import Grid from '@material-ui/core/Grid'
@@ -176,32 +173,29 @@ const sliderMarks = [
   },
 ]
 const rfOptions = {
-  seed: 3, // for random function(MersenneTwister) for bagging
+  seed: 3, // for random function(MersenneTwister) for bagging 42 default
   maxFeatures: 0.8, // part of features used for bagging
-  replacement: true, // for bagging
-  nEstimators: 25,
+  replacement: false, // for bagging
+  nEstimators: 5,
 }
 const lgOptions = {
-  numSteps: 1000,
+  numSteps: 1500,
   learningRate: 5e-3,
 }
 const knnOptions = {
-  k: 3,
+  k: 1,
 }
 const loadAndSaveModels = memoizeOne(newModels => {
   const rf = newModels.rf ? RFClassifier.load(newModels.rf) : null
   const lg = newModels.lg ? LogisticRegression.load(newModels.lg) : null
   const knn = newModels.knn ? KNN.load(newModels.knn) : null
-  const gaussianNB = newModels.gaussianNB
-    ? GaussianNB.load(newModels.gaussianNB)
-    : null
-  const rfRegression = newModels.regression
-    ? RFClassifier.load(newModels.regression)
-    : null
+  // const gaussianNB = newModels.gaussianNB
+  //   ? GaussianNB.load(newModels.gaussianNB)
+  //   : null
   sessionStorage.setItem('rf', rf)
   sessionStorage.setItem('lg', lg)
   sessionStorage.setItem('knn', knn)
-  return { rf, lg, knn, newModelsJSON: newModels, gaussianNB, rfRegression }
+  return { rf, lg, knn, newModelsJSON: newModels }
 })
 
 export const fitAndGetFeature = item => {
@@ -264,8 +258,8 @@ export const fitAndGetFeature = item => {
     numberOfMiner / sumOfNeigbours,
     numberOfSmContract / sumOfNeigbours,
     numberOfERC20 / sumOfNeigbours,
-    numberOfERC721 / sumOfNeigbours,
-    numberOfTrace / sumOfNeigbours,
+    // numberOfERC721 / sumOfNeigbours,
+    // numberOfTrace / sumOfNeigbours,
     medianOfEthProTrans,
     averageOfEthProTrans,
     numberOfTransInput / numberOfTransactions,
@@ -277,8 +271,8 @@ export const fitAndGetFeature = item => {
     numberOfMinerInput,
     numberOfSmContractInput,
     numberOfERC20Input,
-    numberOfERC721Input,
-    numberOfTraceInput,
+    // numberOfERC721Input,
+    // numberOfTraceInput,
     transInputMedian,
     transOutputMedian,
     transInputAverage,
@@ -295,7 +289,7 @@ export const fitAndGetFeature = item => {
     transOutputAverageEth,
     numberOfScamNeighbor,
     numberOfScamNeighborInput,
-    // numberOfTransaction,
+    numberOfTransactions, // was disabled
   ]
 }
 const fitAndGetFeatures = data => {
@@ -355,7 +349,7 @@ const calcStats = confMatrix => {
     recall,
   }
 }
-export const calcConfusionMatrix = (predicted, predictedMustBe) => {
+const calcConfusionMatrix = (predicted, predictedMustBe) => {
   let truePositive = 0
   let trueNegative = 0
   let falsePositive = 0
@@ -390,12 +384,11 @@ export const calcConfusionMatrix = (predicted, predictedMustBe) => {
 }
 
 const checkAccuracy = (models, testData, testDataPrediction) => {
-  const { lg, rf, knn, gaussianNB, rfRegression } = models
+  const { lg, rf, knn } = models
   const confusionMatrix = {}
   if (rf) {
     const predicted = rf.predict(testData)
     confusionMatrix.rf = calcConfusionMatrix(predicted, testDataPrediction)
-    // console.log(calcAccuracyRate(predicted, testDataPrediction))
   }
   if (lg) {
     const predictedLogreg = lg.predict(new Matrix(testData))
@@ -403,22 +396,18 @@ const checkAccuracy = (models, testData, testDataPrediction) => {
       predictedLogreg,
       testDataPrediction
     )
-    // console.log(calcAccuracyRate(predictedLogreg, testDataPrediction))
   }
   if (knn) {
     const predictedKNN = knn.predict(testData)
     confusionMatrix.knn = calcConfusionMatrix(predictedKNN, testDataPrediction)
-    // console.log(calcAccuracyRate(predictedKNN, testDataPrediction))
   }
-  if (gaussianNB) {
-    const predictedgaussianNB = gaussianNB.predict(testData)
-    confusionMatrix.nb = calcConfusionMatrix(
-      predictedgaussianNB,
-      testDataPrediction
-    )
-    // console.log(calcAccuracyRate(predictedgaussianNB, testDataPrediction))
-  }
-  //const predictedRFRegression = rfRegression.predict(testData)
+  // if (gaussianNB) {
+  //   const predictedgaussianNB = gaussianNB.predict(testData)
+  //   confusionMatrix.nb = calcConfusionMatrix(
+  //     predictedgaussianNB,
+  //     testDataPrediction
+  //   )
+  // }
 
   return confusionMatrix
 }
@@ -515,11 +504,13 @@ const ClassificationModelWebWorker = (callback, deps) => {
         setTestDataPrediction(fullPredictions)
       } else {
         const split = typeof trainSplit === 'number' ? trainSplit : 0.9
-        setTrainingData(take(fullSet, rows.length * split))
-        setTrainingDataPredictions(take(fullPredictions, rows.length * split))
-        setTestData(takeRight(fullSet, rows.length * (1 - split)))
+        setTrainingData(take(fullSet, rowsShuffled.length * split))
+        setTrainingDataPredictions(
+          take(fullPredictions, rowsShuffled.length * split)
+        )
+        setTestData(takeRight(fullSet, rowsShuffled.length * (1 - split)))
         setTestDataPrediction(
-          takeRight(fullPredictions, rows.length * (1 - split))
+          takeRight(fullPredictions, rowsShuffled.length * (1 - split))
         )
       }
     }
@@ -527,7 +518,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
 
   useEffect(() => {
     if (trainingData) {
-      const { lg, rf, knn, gaussianNB, rfRegression } = modelsLocal
+      const { lg, rf, knn } = modelsLocal
       const conMatrix = checkAccuracy(modelsLocal, testData, testDataPrediction)
       setConfusionMatrix(conMatrix)
       if (lg && rf && knn) {
@@ -550,7 +541,6 @@ const ClassificationModelWebWorker = (callback, deps) => {
   //   }
   // }, [])
   const stats = calcStats(confusionMatrix)
-  console.log(stats)
   return (
     <Fragment>
       <WebWorker
@@ -632,7 +622,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
                         <Button
                           color="primary"
                           className={buttonClassname}
-                          disabled={spinner}
+                          disabled={!!spinner}
                           onClick={() =>
                             postMessage({
                               trainingData,
@@ -691,16 +681,16 @@ const ClassificationModelWebWorker = (callback, deps) => {
                           accuracy: { value: ceil(stats.accuracy.knn, 4) },
                           duration: { value: duration.knn },
                         },
-                        {
-                          id: 'idPrecision_NB',
-                          classifier: {
-                            value: 'Naive Bayes',
-                          },
-                          precision: { value: ceil(stats.precision.nb, 4) },
-                          recall: { value: ceil(stats.recall.nb, 4) },
-                          accuracy: { value: ceil(stats.accuracy.nb, 4) },
-                          duration: { value: duration.nb },
-                        },
+                        // {
+                        //   id: 'idPrecision_NB',
+                        //   classifier: {
+                        //     value: 'Naive Bayes',
+                        //   },
+                        //   precision: { value: ceil(stats.precision.nb, 4) },
+                        //   recall: { value: ceil(stats.recall.nb, 4) },
+                        //   accuracy: { value: ceil(stats.accuracy.nb, 4) },
+                        //   duration: { value: duration.nb },
+                        // },
                       ]}
                       onSubmitRf={onSubmitRf}
                       onSubmitLg={onSubmitLg}

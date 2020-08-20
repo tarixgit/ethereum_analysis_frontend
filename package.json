@@ -51,6 +51,7 @@
   },
   "scripts": {
     "start": "react-app-rewired start",
+    "startOld": "react-scripts start",
     "build": "react-app-rewired build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

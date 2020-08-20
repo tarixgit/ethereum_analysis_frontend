@@ -34,6 +34,7 @@ import Card from '@material-ui/core/Card'
 import PrecisionTable from '../components/PrecisionTable'
 import Slider from '@material-ui/core/Slider'
 import normed from 'ml-array-normed'
+import download from 'downloadjs'
 
 const myWorker = new Worker('./classifier.worker.js', { type: 'module' }) // relative path to the source file, not the public URL
 
@@ -173,14 +174,14 @@ const sliderMarks = [
   },
 ]
 const rfOptions = {
-  seed: 3, // for random function(MersenneTwister) for bagging 42 default
-  maxFeatures: 0.8, // part of features used for bagging
+  seed: undefined, // for random function(MersenneTwister) for bagging 42 default
+  maxFeatures: 0.7, // part of features used for bagging
   replacement: false, // for bagging
-  nEstimators: 5,
+  nEstimators: 7,
 }
 const lgOptions = {
   numSteps: 1500,
-  learningRate: 5e-3,
+  learningRate: 55e-4,
 }
 const knnOptions = {
   k: 1,
@@ -413,16 +414,16 @@ const checkAccuracy = (models, testData, testDataPrediction) => {
 }
 
 const oversampling = rows => {
-  const scamAdd = filter(rows, { scam: true })
-  const notScamAdd = filter(rows, { scam: false })
+  const scamAddSource = filter(rows, { scam: true })
+  const notScamAddSource = filter(rows, { scam: false })
+  const scamAdd = [...scamAddSource]
+  const notScamAdd = [...notScamAddSource]
   if (scamAdd.length - notScamAdd.length > 0) {
-    const notScamAddSource = [...notScamAdd]
     const duplicateCount = scamAdd.length - notScamAddSource.length
     for (let i = 0; i < duplicateCount; i++) {
       notScamAdd.push(notScamAddSource[random(notScamAddSource.length - 1)])
     }
   } else {
-    const scamAddSource = [...scamAdd]
     const duplicateCount = notScamAdd.length - scamAddSource.length
     for (let i = 0; i < duplicateCount; i++) {
       scamAdd.push(scamAddSource[random(scamAddSource.length - 1)])
@@ -471,15 +472,15 @@ const ClassificationModelWebWorker = (callback, deps) => {
   const [lgSettings, onSubmitLg] = useState(lgOptions)
   const [knnSettings, onSubmitKNN] = useState(knnOptions)
 
-  const { data, loading: loadingApi, networkStatus } = useQuery(
+  const { data: dataQ, loading: loadingApi, networkStatus } = useQuery(
     LOAD_ADDRESS_FEATURES,
     {
       variables: { offset: 0, limit: 0 },
     }
   )
-  const rows = get(data, 'addressFeatures.rows', [])
+  const rows = get(dataQ, 'addressFeatures.rows', [])
   useEffect(() => {
-    if (!loadingApi && networkStatus === 7) {
+    if (!loadingApi && networkStatus === 7 && rows.length) {
       const rowsShuffled = oversamplingOn
         ? shuffle(oversampling(rows))
         : shuffle(rows)
@@ -551,9 +552,42 @@ const ClassificationModelWebWorker = (callback, deps) => {
       >
         {({ data, error, postMessage, updatedAt, lastPostAt }) => {
           if (data) {
-            const { newModels, time } = data
-            setModelsLocal(loadAndSaveModels(newModels))
-            setDuration(time)
+            const { rfStatsArray, lgStatsArray, knnStatsArray } = data
+            const headers = ['precision', 'recall', 'accuracy'].join(';')
+            const rowsString1 = map(rfStatsArray, row => row.join(';')).join(
+              '\r\n'
+            )
+            const rowsString2 = map(lgStatsArray, row => row.join(';')).join(
+              '\r\n'
+            )
+            const rowsString3 = map(knnStatsArray, row => row.join(';')).join(
+              '\r\n'
+            )
+            // TODO add improvement with unit8Byte
+            download(
+              `data:text/csv;charset=utf-8,\ufeff${encodeURI(
+                `${headers}\r\n${rowsString1}`
+              )}`,
+              `addressFeature-${new Date().toISOString()}.csv`,
+              'text/csv'
+            )
+            download(
+              `data:text/csv;charset=utf-8,\ufeff${encodeURI(
+                `${headers}\r\n${rowsString2}`
+              )}`,
+              `addressFeature-${new Date().toISOString()}.csv`,
+              'text/csv'
+            )
+            download(
+              `data:text/csv;charset=utf-8,\ufeff${encodeURI(
+                `${headers}\r\n${rowsString3}`
+              )}`,
+              `addressFeature-${new Date().toISOString()}.csv`,
+              'text/csv'
+            )
+            // const { newModels, time } = data
+            // setModelsLocal(loadAndSaveModels(newModels))
+            // setDuration(time)
           }
           const spinner =
             (!updatedAt && lastPostAt) ||
@@ -565,9 +599,6 @@ const ClassificationModelWebWorker = (callback, deps) => {
                 get(data, 'newModels.knn', null)
               ))
 
-          function valuetext(value) {
-            return `${value}°C`
-          }
           return (
             <Grid container spacing={2}>
               <Grid item xs={12}>
@@ -625,6 +656,7 @@ const ClassificationModelWebWorker = (callback, deps) => {
                           disabled={!!spinner}
                           onClick={() =>
                             postMessage({
+                              allData: get(dataQ, 'addressFeatures.rows', []),
                               trainingData,
                               trainingDataPredictions,
                               testData,

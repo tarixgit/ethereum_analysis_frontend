@@ -81,7 +81,7 @@ onmessage = function(e) {
   const knn = new KNN(trainingData, trainingDataPredictions, knnClassifierOpt)
   time.knn = new Date() - start
   newModels.knn = knn
-  // postMessage(JSON.stringify({ newModels, time }))
+  postMessage(JSON.stringify({ newModels, time }))
 
   // start = new Date()
   // var gaussianNB = new GaussianNB()
@@ -95,7 +95,7 @@ onmessage = function(e) {
   newClassifierRF.train(trainingData, trainingDataPredictions)
   time.rf = new Date() - start
   newModels.rf = newClassifierRF
-  // postMessage(JSON.stringify({ newModels, time }))
+  postMessage(JSON.stringify({ newModels, time }))
 
   start = new Date()
   const X = new Matrix(trainingData)

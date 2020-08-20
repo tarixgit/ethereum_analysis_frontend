@@ -173,14 +173,14 @@ const sliderMarks = [
   },
 ]
 const rfOptions = {
-  seed: 3, // for random function(MersenneTwister) for bagging 42 default
-  maxFeatures: 0.8, // part of features used for bagging
+  seed: undefined, // for random function(MersenneTwister) for bagging 42 default
+  maxFeatures: 0.7, // part of features used for bagging
   replacement: false, // for bagging
-  nEstimators: 5,
+  nEstimators: 7,
 }
 const lgOptions = {
   numSteps: 1500,
-  learningRate: 5e-3,
+  learningRate: 55e-4,
 }
 const knnOptions = {
   k: 1,
@@ -413,16 +413,16 @@ const checkAccuracy = (models, testData, testDataPrediction) => {
 }
 
 const oversampling = rows => {
-  const scamAdd = filter(rows, { scam: true })
-  const notScamAdd = filter(rows, { scam: false })
+  const scamAddSource = filter(rows, { scam: true })
+  const notScamAddSource = filter(rows, { scam: false })
+  const scamAdd = [...scamAddSource]
+  const notScamAdd = [...notScamAddSource]
   if (scamAdd.length - notScamAdd.length > 0) {
-    const notScamAddSource = [...notScamAdd]
     const duplicateCount = scamAdd.length - notScamAddSource.length
     for (let i = 0; i < duplicateCount; i++) {
       notScamAdd.push(notScamAddSource[random(notScamAddSource.length - 1)])
     }
   } else {
-    const scamAddSource = [...scamAdd]
     const duplicateCount = notScamAdd.length - scamAddSource.length
     for (let i = 0; i < duplicateCount; i++) {
       scamAdd.push(scamAddSource[random(scamAddSource.length - 1)])
@@ -565,9 +565,6 @@ const ClassificationModelWebWorker = (callback, deps) => {
                 get(data, 'newModels.knn', null)
               ))
 
-          function valuetext(value) {
-            return `${value}°C`
-          }
           return (
             <Grid container spacing={2}>
               <Grid item xs={12}>

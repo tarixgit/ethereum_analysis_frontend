@@ -1,13 +1,18 @@
-import React, { Fragment, useCallback, useEffect, useState } from 'react'
+import React, {
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 import { makeStyles } from '@material-ui/core/styles'
 import Container from '@material-ui/core/Container'
 import { useParams } from 'react-router-dom'
 import { useLazyQuery, useQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import Grid from '@material-ui/core/Grid'
-import Paper from '@material-ui/core/Paper'
 import TextField from '@material-ui/core/TextField'
-import Network from './Network'
+import memoizeOne from 'memoize-one'
 import {
   countBy,
   forEach,
@@ -17,6 +22,7 @@ import {
   mapKeys,
   mapValues,
   keyBy,
+  differenceBy,
 } from 'lodash'
 import { networkOptions } from './config'
 import FormControl from '@material-ui/core/FormControl'
@@ -24,6 +30,8 @@ import InputLabel from '@material-ui/core/InputLabel'
 import Select from '@material-ui/core/Select'
 import { CircularProgress } from '@material-ui/core'
 import InputAdornment from '@material-ui/core/InputAdornment'
+import { SnackbarContext } from '../App'
+import Network from './Network'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -192,9 +200,12 @@ const getNodeEdgeFromTrans = (
     ? { from: Number(id), to: mainAddressId, value: amount }
     : { from: mainAddressId, to: Number(id), value: amount },
 })
-export const getNodesAndEdges = addressesWithInfo => {
+export const getNodesAndEdges = memoizeOne(addressesWithInfo => {
   let edges = []
   let nodes = []
+  if (!addressesWithInfo) {
+    return { nodes, edges }
+  }
   const mainAddressId = Number(addressesWithInfo.id)
   const {
     id,
@@ -232,14 +243,15 @@ export const getNodesAndEdges = addressesWithInfo => {
     edges.push(edge)
   })
   return { nodes, edges }
-}
+})
 
 const EthereumGraph = () => {
   const classes = useStyles()
   const { hash } = useParams()
-  let edges = []
-  let nodes = []
+  const [edges, setEdges] = useState([])
+  const [nodes, setNodes] = useState([])
   let labelsList = []
+  const { setSnackbarMessage } = useContext(SnackbarContext)
   const [address, setAddress] = useState(
     hash || '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
   )
@@ -258,7 +270,11 @@ const EthereumGraph = () => {
   ] = useLazyQuery(TRANSACTION)
   const [
     loadMoreNetworkData,
-    { data: dataAdd, loading: loadingTransMore },
+    {
+      data: dataAdd,
+      loading: loadingTransMore,
+      networkStatus: networkStatusLazy,
+    },
   ] = useLazyQuery(TRANSACTION_MORE)
   useEffect(() => {
     if (hash) {
@@ -299,26 +315,38 @@ const EthereumGraph = () => {
     },
     [loadMoreNetworkData]
   )
-
-  if (labelLoading) return <p>labelLoading...</p>
-  if (errorLabels) return <p>Error :(</p>
   const addressesWithInfo = get(data, 'addresses[0]', null)
-  if (addressesWithInfo) {
-    const result = getNodesAndEdges(addressesWithInfo)
-    edges = result.edges
-    nodes = result.nodes
-  }
+  useEffect(() => {
+    if (addressesWithInfo) {
+      const result = getNodesAndEdges(addressesWithInfo)
+      setEdges(result.edges)
+      setNodes(uniqBy(result.nodes, 'id'))
+    }
+  }, [addressesWithInfo])
+
   // nachladen
   const addressAdditional = get(dataAdd, 'address', null)
-  if (addressAdditional) {
-    const result = getNodesAndEdges(addressAdditional)
-    edges = [...edges, ...result.edges]
-    nodes = [...nodes, ...result.nodes]
-  }
+  useEffect(() => {
+    let news = []
+    if (networkStatusLazy === 7) {
+      const result = getNodesAndEdges(addressAdditional)
+      news = differenceBy(result.nodes, nodes, 'id')
+      setEdges([...edges, ...result.edges])
+      setNodes(uniqBy([...nodes, ...result.nodes], 'id'))
+    }
+    if (!news.length && !loadingTransMore) {
+      setSnackbarMessage({
+        type: 'warning',
+        message: 'No new nodes',
+      })
+    }
+  }, [addressAdditional])
+  if (labelLoading) return <p>labelLoading...</p>
+  if (errorLabels) return <p>Error :(</p>
+
   let labels
   if (called && !labelLoading) {
     labelsList = get(labelsData, 'labels', null)
-    nodes = uniqBy(nodes, 'id')
     const nodesCounted = countBy(nodes, 'group')
     const labelsListKeyed = keyBy(labelsList, 'id')
     const order = [0, 3, 6, 1, 5, 2, 7, 8, 4, 9]

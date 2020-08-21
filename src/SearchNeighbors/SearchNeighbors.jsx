@@ -23,6 +23,7 @@ import {
   mapValues,
   keyBy,
   countBy,
+  differenceBy,
 } from 'lodash'
 import { networkOptions } from '../Graph/config'
 import { SnackbarContext, ScamNeighborContext } from '../App'
@@ -164,11 +165,9 @@ const SearchNeighbors = () => {
   const { setSnackbarMessage } = useContext(SnackbarContext)
   const { neighborsScamFounded } = useContext(ScamNeighborContext)
   const [direction, setDirection] = useState(0)
-  let edges = get(neighborsScamFounded, 'edges') || []
-  let nodes = get(neighborsScamFounded, 'nodes') || []
-  console.log(nodes)
-  const startNode = find(nodes, { main: true })
-  const [address, setAddress] = useState(get(startNode, 'label') || ' ')
+  const [edges, setEdges] = useState([])
+  const [nodes, setNodes] = useState([])
+  const [address, setAddress] = useState(' ')
 
   const [level, setLevel] = useState(3)
 
@@ -189,12 +188,19 @@ const SearchNeighbors = () => {
       if (!dataMessage.message) {
         return
       }
-      setSnackbarMessage(dataMessage)
+      setSnackbarMessage({
+        ...dataMessage,
+        type: dataMessage.success ? 'success' : null,
+      })
     },
   })
   const [
     loadMoreNetworkData,
-    { data: dataAdd, loading: loadingTransMore },
+    {
+      data: dataAdd,
+      loading: loadingTransMore,
+      networkStatus: networkStatusLazy,
+    },
   ] = useLazyQuery(TRANSACTION_MORE)
 
   const changeLevel = useCallback(
@@ -234,21 +240,38 @@ const SearchNeighbors = () => {
     },
     [loadMoreNetworkData]
   )
-
-  if (labelLoading) return <p>labelLoading...</p>
-  if (errorLabels) return <p>Error :(</p>
+  useEffect(() => {
+    let edges = get(neighborsScamFounded, 'edges') || []
+    let nodes = get(neighborsScamFounded, 'nodes') || []
+    const startNode = find(nodes, { main: true })
+    setAddress(get(startNode, 'label'))
+    setEdges(edges)
+    setNodes(uniqBy(nodes, 'id'))
+  }, [neighborsScamFounded])
 
   // nachladen
   const addressAdditional = get(dataAdd, 'address', null)
-  if (addressAdditional) {
-    const result = getNodesAndEdges(addressAdditional)
-    edges = [...edges, ...result.edges]
-    nodes = [...nodes, ...result.nodes]
-  }
+  useEffect(() => {
+    let news = []
+    if (networkStatusLazy === 7) {
+      const result = getNodesAndEdges(addressAdditional)
+      news = differenceBy(result.nodes, nodes, 'id')
+      setEdges([...edges, ...result.edges])
+      setNodes(uniqBy([...nodes, ...result.nodes], 'id'))
+    }
+    if (!news.length && !loadingTransMore) {
+      setSnackbarMessage({
+        type: 'warning',
+        message: 'No new nodes',
+      })
+    }
+  }, [addressAdditional])
+  if (labelLoading) return <p>labelLoading...</p>
+  if (errorLabels) return <p>Error :(</p>
+
   let labels
   if (called && !labelLoading) {
     labelsList = get(labelsData, 'labels', null)
-    nodes = uniqBy(nodes, 'id')
     const nodesCounted = countBy(nodes, 'group')
     const labelsListKeyed = keyBy(labelsList, 'id')
     const order = [0, 3, 6, 1, 5, 2, 7, 8, 4, 9]

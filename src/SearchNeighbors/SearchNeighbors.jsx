@@ -165,9 +165,12 @@ const SearchNeighbors = () => {
   const { setSnackbarMessage } = useContext(SnackbarContext)
   const { neighborsScamFounded } = useContext(ScamNeighborContext)
   const [direction, setDirection] = useState(0)
-  const [edges, setEdges] = useState([])
-  const [nodes, setNodes] = useState([])
-  const [address, setAddress] = useState(' ')
+  let edgesC = get(neighborsScamFounded, 'edges') || []
+  let nodesC = get(neighborsScamFounded, 'nodes') || []
+  const startNode = find(nodesC, { main: true })
+  const [edges, setEdges] = useState(edgesC)
+  const [nodes, setNodes] = useState(uniqBy(nodesC, 'id'))
+  const [address, setAddress] = useState(get(startNode, 'label', ' '))
 
   const [level, setLevel] = useState(3)
 
@@ -240,14 +243,6 @@ const SearchNeighbors = () => {
     },
     [loadMoreNetworkData]
   )
-  useEffect(() => {
-    let edges = get(neighborsScamFounded, 'edges') || []
-    let nodes = get(neighborsScamFounded, 'nodes') || []
-    const startNode = find(nodes, { main: true })
-    setAddress(get(startNode, 'label'))
-    setEdges(edges)
-    setNodes(uniqBy(nodes, 'id'))
-  }, [neighborsScamFounded])
 
   // nachladen
   const addressAdditional = get(dataAdd, 'address', null)

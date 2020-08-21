@@ -379,9 +379,9 @@ const EthereumGraph = () => {
                         native
                         value={direction}
                         onChange={e => setDirection(e.target.value)}
-                        label="Age"
+                        label="Show direction"
                         inputProps={{
-                          name: 'age',
+                          name: 'Direction',
                           id: 'outlined-age-native-simple',
                         }}
                       >

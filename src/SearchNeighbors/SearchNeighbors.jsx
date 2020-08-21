@@ -27,6 +27,9 @@ import {
 import { networkOptions } from '../Graph/config'
 import { SnackbarContext, ScamNeighborContext } from '../App'
 import { getNodesAndEdges } from '../Graph/EthereumGraph'
+import FormControl from '@material-ui/core/FormControl'
+import InputLabel from '@material-ui/core/InputLabel'
+import Select from '@material-ui/core/Select'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -77,6 +80,16 @@ const useStyles = makeStyles(theme => ({
       background,
     })
   ),
+  circleAll: {
+    borderRadius: '50%',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    height: '25px',
+    width: '25px',
+    marginRight: '2px',
+    border: '#2B7CE9',
+    background: '#ffffff',
+  },
 }))
 
 const LABELS = gql`
@@ -90,8 +103,12 @@ const LABELS = gql`
 `
 
 const TEST = gql`
-  mutation FindNeighborsScam($address: String!, $level: Int) {
-    findNeighborsScamThread(address: $address, level: $level) {
+  mutation FindNeighborsScam($address: String!, $level: Int, $direction: Int) {
+    findNeighborsScamThread(
+      address: $address
+      level: $level
+      direction: $direction
+    ) {
       success
       message
     }
@@ -144,6 +161,7 @@ const SearchNeighbors = () => {
   let labelsList = []
   const { setSnackbarMessage } = useContext(SnackbarContext)
   const { neighborsScamFounded } = useContext(ScamNeighborContext)
+  const [direction, setDirection] = useState(0)
   let edges = get(neighborsScamFounded, 'edges') || []
   let nodes = get(neighborsScamFounded, 'nodes') || []
   const startNodeId = get(edges, '[0].from')
@@ -159,6 +177,7 @@ const SearchNeighbors = () => {
     loading: labelLoading,
     data: labelsData,
     called,
+    networkStatus,
     errorLabels,
   } = useQuery(LABELS)
   const [loadNetworkData, { loading, error }] = useMutation(TEST, {
@@ -196,10 +215,14 @@ const SearchNeighbors = () => {
     e => {
       e.preventDefault()
       loadNetworkData({
-        variables: { address: address.toLowerCase(), level: Number(level) },
+        variables: {
+          address: address.toLowerCase(),
+          level: Number(level),
+          direction: Number(direction),
+        },
       })
     },
-    [loadNetworkData, address, level]
+    [loadNetworkData, address, level, direction]
   )
   const loadMore = useCallback(
     addressId => {
@@ -221,22 +244,36 @@ const SearchNeighbors = () => {
     edges = [...edges, ...result.edges]
     nodes = [...nodes, ...result.nodes]
   }
-
+  let labels
   if (called && !labelLoading) {
     labelsList = get(labelsData, 'labels', null)
+    nodes = uniqBy(nodes, 'id')
+    const nodesCounted = countBy(nodes, 'group')
+    const labelsListKeyed = keyBy(labelsList, 'id')
+    const order = [0, 3, 6, 1, 5, 2, 7, 8, 4, 9]
+    labels = labelsList
+      ? map(order, id => (
+          <div className={classes.labelItem} key={`ethereumgraph_${id}`}>
+            <div className={classes[`circle${labelsListKeyed[id].id}`]} />
+            {nodesCounted[id]
+              ? `${labelsListKeyed[id].name} (${nodesCounted[id]})`
+              : labelsListKeyed[id].name}
+          </div>
+        ))
+      : null
+    labels = labels
+      ? [
+          ...labels,
+          <div className={classes.labelItem} key="ethereumgraph_circleAll">
+            <div className={classes.circleAll} />
+            {nodes.length ? `All (${nodes.length})` : 'All'}
+          </div>,
+        ]
+      : labels
+
+    labels =
+      !labels && networkStatus === 8 ? 'Cannot connect to the server.' : labels
   }
-  nodes = uniqBy(nodes, 'id')
-  const nodesCounted = countBy(nodes, 'group')
-  const labelsListKeyed = keyBy(labelsList, 'id')
-  const order = [0, 3, 6, 1, 5, 2, 7, 8, 4, 9]
-  const labels = map(order, id => (
-    <div className={classes.labelItem} key={`searchneighbors_${id}`}>
-      <div className={classes[`circle${labelsListKeyed[id].id}`]} />
-      {nodesCounted[id]
-        ? `${labelsListKeyed[id].name} (${nodesCounted[id]})`
-        : labelsListKeyed[id].name}
-    </div>
-  ))
 
   return (
     <Fragment>
@@ -254,10 +291,10 @@ const SearchNeighbors = () => {
                   <Grid
                     container
                     direction="row"
-                    justify="flex-start"
+                    justify="center"
                     alignItems="center"
                   >
-                    <Grid item xs={10}>
+                    <Grid item xs={9}>
                       <TextField
                         id="address-input"
                         label="Address"
@@ -279,8 +316,33 @@ const SearchNeighbors = () => {
                       />
                     </Grid>
                     <Grid item xs={1}>
+                      <FormControl className={classes.formControl} fullWidth>
+                        <InputLabel htmlFor="outlined-age-native-simple">
+                          Show direction
+                        </InputLabel>
+                        <Select
+                          native
+                          fullWidth
+                          value={direction}
+                          onChange={e => setDirection(e.target.value)}
+                          label="Direction"
+                          inputProps={{
+                            name: 'Direction',
+                            id: 'outlined-age-native-simple',
+                          }}
+                        >
+                          <option value={0}>Output trans.</option>
+                          <option value={1}>Input trans.</option>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={1}>
                       <Button
-                        style={{ marginLeft: 4 }}
+                        style={{
+                          marginLeft: 4,
+                          float: 'right',
+                          marginRight: 5,
+                        }}
                         variant="contained"
                         color="primary"
                         onClick={submit}
@@ -303,6 +365,7 @@ const SearchNeighbors = () => {
                 edges={edges}
                 loadMore={loadMore}
                 labels={labelsList}
+                direction={true}
               />
             </Grid>
           </Grid>

@@ -18,7 +18,7 @@ export const networkOptions = {
     },
   },
   physics: {
-    stabilization: false,
+    stabilization: true,
     barnesHut: {
       gravitationalConstant: -80000,
       springConstant: 0.001,

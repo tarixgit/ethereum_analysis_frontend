@@ -23,6 +23,7 @@ const LOAD_LOGS = gql`
         id
         description
         name
+        threadId
         createdAt
         data {
           edges {
@@ -50,6 +51,7 @@ const headCells = setGraph => [
     label: 'Ids',
   },
   { id: 'name', numeric: false, disablePadding: false, label: 'Name' },
+  { id: 'threadId', numeric: false, disablePadding: false, label: 'ProcessId' },
   {
     id: 'description',
     numeric: false,

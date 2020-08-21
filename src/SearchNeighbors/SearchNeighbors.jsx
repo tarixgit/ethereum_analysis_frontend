@@ -243,6 +243,14 @@ const SearchNeighbors = () => {
     },
     [loadMoreNetworkData]
   )
+  useEffect(() => {
+    let edges = get(neighborsScamFounded, 'edges') || []
+    let nodes = get(neighborsScamFounded, 'nodes') || []
+    const startNode = find(nodes, { main: true })
+    setAddress(get(startNode, 'label'))
+    setEdges(edges)
+    setNodes(uniqBy(nodes, 'id'))
+  }, [neighborsScamFounded])
 
   // nachladen
   const addressAdditional = get(dataAdd, 'address', null)

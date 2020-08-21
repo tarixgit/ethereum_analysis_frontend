@@ -22,6 +22,8 @@ import { networkOptions } from './config'
 import FormControl from '@material-ui/core/FormControl'
 import InputLabel from '@material-ui/core/InputLabel'
 import Select from '@material-ui/core/Select'
+import { CircularProgress } from '@material-ui/core'
+import InputAdornment from '@material-ui/core/InputAdornment'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -250,10 +252,14 @@ const EthereumGraph = () => {
     errorLabels,
     networkStatus,
   } = useQuery(LABELS)
-  const [loadNetworkData, { loading, error, data }] = useLazyQuery(TRANSACTION)
-  const [loadMoreNetworkData, { data: dataAdd }] = useLazyQuery(
-    TRANSACTION_MORE
-  )
+  const [
+    loadNetworkData,
+    { error, data, loading: loadingTrans },
+  ] = useLazyQuery(TRANSACTION)
+  const [
+    loadMoreNetworkData,
+    { data: dataAdd, loading: loadingTransMore },
+  ] = useLazyQuery(TRANSACTION_MORE)
   useEffect(() => {
     if (hash) {
       loadNetworkData({
@@ -279,7 +285,7 @@ const EthereumGraph = () => {
     e => {
       e.preventDefault()
       loadNetworkData({
-        variables: { address: address.toLowerCase() },
+        variables: { address: address.toLowerCase().trim() },
       })
     },
     [loadNetworkData, address]
@@ -339,7 +345,7 @@ const EthereumGraph = () => {
     labels =
       !labels && networkStatus === 8 ? 'Cannot connect to the server.' : labels
   }
-
+  const spinner = loadingTransMore || loadingTrans
   return (
     <Fragment>
       <main className={classes.content}>
@@ -368,7 +374,23 @@ const EthereumGraph = () => {
                       fullWidth
                       value={address}
                       onChange={changeAddress}
+                      InputProps={{
+                        startAdornment: spinner ? (
+                          <InputAdornment
+                            position="start"
+                            style={{ marginBottom: 5 }}
+                          >
+                            <CircularProgress
+                              size={15}
+                              style={{ color: '#3f88ec' }}
+                            />
+                          </InputAdornment>
+                        ) : (
+                          undefined
+                        ),
+                      }}
                     />
+                    {/*<CircularProgress size={15} color="primary" />*/}
                   </Grid>
                   <Grid item xs={1}>
                     <FormControl className={classes.formControl}>
@@ -397,7 +419,6 @@ const EthereumGraph = () => {
               {labels}
             </Grid>
             {error ? <p>Error :(</p> : null}
-            {/* loading=> speening wheel*/}
             <Grid item xs={12} className={classes.networkContainer}>
               <Network
                 nodes={nodes}

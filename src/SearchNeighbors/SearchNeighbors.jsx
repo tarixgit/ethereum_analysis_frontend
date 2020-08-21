@@ -30,6 +30,8 @@ import { getNodesAndEdges } from '../Graph/EthereumGraph'
 import FormControl from '@material-ui/core/FormControl'
 import InputLabel from '@material-ui/core/InputLabel'
 import Select from '@material-ui/core/Select'
+import InputAdornment from '@material-ui/core/InputAdornment'
+import { CircularProgress } from '@material-ui/core'
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -164,11 +166,9 @@ const SearchNeighbors = () => {
   const [direction, setDirection] = useState(0)
   let edges = get(neighborsScamFounded, 'edges') || []
   let nodes = get(neighborsScamFounded, 'nodes') || []
-  const startNodeId = get(edges, '[0].from')
-  const startNode = find(nodes, { id: startNodeId })
-  const [address, setAddress] = useState(
-    get(startNode, 'label') || '0xee18e156a020f2b2b2dcdec3a9476e61fbde1e48'
-  )
+  console.log(nodes)
+  const startNode = find(nodes, { main: true })
+  const [address, setAddress] = useState(get(startNode, 'label') || ' ')
 
   const [level, setLevel] = useState(3)
 
@@ -192,9 +192,10 @@ const SearchNeighbors = () => {
       setSnackbarMessage(dataMessage)
     },
   })
-  const [loadMoreNetworkData, { data: dataAdd }] = useLazyQuery(
-    TRANSACTION_MORE
-  )
+  const [
+    loadMoreNetworkData,
+    { data: dataAdd, loading: loadingTransMore },
+  ] = useLazyQuery(TRANSACTION_MORE)
 
   const changeLevel = useCallback(
     e => {
@@ -216,7 +217,7 @@ const SearchNeighbors = () => {
       e.preventDefault()
       loadNetworkData({
         variables: {
-          address: address.toLowerCase(),
+          address: address.toLowerCase().trim(),
           level: Number(level),
           direction: Number(direction),
         },
@@ -274,7 +275,7 @@ const SearchNeighbors = () => {
     labels =
       !labels && networkStatus === 8 ? 'Cannot connect to the server.' : labels
   }
-
+  const spinner = loadingTransMore
   return (
     <Fragment>
       <main className={classes.content}>
@@ -303,6 +304,21 @@ const SearchNeighbors = () => {
                         autoFocus
                         value={address}
                         onChange={changeAddress}
+                        InputProps={{
+                          startAdornment: spinner ? (
+                            <InputAdornment
+                              position="start"
+                              style={{ marginBottom: 5 }}
+                            >
+                              <CircularProgress
+                                size={15}
+                                style={{ color: '#3f88ec' }}
+                              />
+                            </InputAdornment>
+                          ) : (
+                            undefined
+                          ),
+                        }}
                       />
                     </Grid>
                     <Grid item xs={1}>

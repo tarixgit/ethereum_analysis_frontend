@@ -193,7 +193,7 @@ const Network = ({ nodes, edges, loadMore, labels, direction }) => {
           },
         },
         physics: {
-          stabilization: true,
+          stabilization: false,
           barnesHut: {
             gravitationalConstant: -80000,
             springConstant: 0.001,

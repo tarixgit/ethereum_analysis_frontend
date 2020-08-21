@@ -259,7 +259,7 @@ const SearchNeighbors = () => {
       setEdges([...edges, ...result.edges])
       setNodes(uniqBy([...nodes, ...result.nodes], 'id'))
     }
-    if (!news.length && !loadingTransMore) {
+    if (!news.length && !loadingTransMore && addressAdditional) {
       setSnackbarMessage({
         type: 'warning',
         message: 'No new nodes',

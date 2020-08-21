@@ -261,18 +261,6 @@ export const headCells = [
     label: 'numberOfScamNeighborInput',
   },
   {
-    id: 'numberOfScamNeighborInput',
-    numeric: true,
-    disablePadding: true,
-    label: 'numberOfScamNeighborInput',
-  },
-  {
-    id: 'numberOfScamNeighborInput',
-    numeric: true,
-    disablePadding: true,
-    label: 'numberOfScamNeighborInput',
-  },
-  {
     id: 'numberOfNoneTr',
     numeric: true,
     disablePadding: true,

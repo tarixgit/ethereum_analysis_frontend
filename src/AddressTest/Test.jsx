@@ -13,7 +13,7 @@ import { useLazyQuery } from '@apollo/react-hooks'
 import { gql } from 'apollo-boost'
 import TextField from '@material-ui/core/TextField'
 import { Matrix } from 'ml-matrix' // "ml-matrix": "5.3.0",
-import { fitAndGetFeature } from '../DataAnalyse/ClassificationModel'
+import { fitAndGetFeature } from '../DataAnalyse/ClassificationModelWebWorker'
 import { ConfMatrixContext, ModelContext, StepContext } from '../App'
 import Link from '@material-ui/core/Link'
 import { useHistory } from 'react-router-dom'

@@ -77,7 +77,7 @@ const getSteps = () => ['Black & white addresses', 'Features', 'Model']
 const getStepContent = stepIndex => {
   switch (stepIndex) {
     case 0:
-      return 'Data is from https://etherscamdb.info'
+      return 'Data is from http://etherscamdb.info'
     case 1:
       return 'Features Analyse'
     case 2:

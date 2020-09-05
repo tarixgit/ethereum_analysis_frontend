@@ -326,7 +326,7 @@ const ImportAddressTable = ({ importData, openInfo }) => {
     openInfo({
       title: 'Black and white adresses',
       infoText:
-        'Here you see the addresses that was used for calculation of features. The pool consist of black(scam) and white(not scam) addresses. If you want to import the new black addresses from https://etherscamdb.info please select menu "Import blacklist data" ',
+        'Here you see the addresses that was used for calculation of features. The pool consist of black(scam) and white(not scam) addresses. If you want to import the new black addresses from http://etherscamdb.info please select menu "Import blacklist data" ',
     })
   })
   useEffect(() => {

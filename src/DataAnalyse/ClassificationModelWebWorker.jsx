@@ -488,14 +488,15 @@ const ClassificationModelWebWorker = (callback, deps) => {
       const fullPredictions = map(rowsShuffled, ({ scam }) => (scam ? 1 : 0))
       // data is fitted
       // normalising, to separate function
-      const fullMatrix = new Matrix(fullSet)
+      // by testing of unknown address the adress_feature will be not normalized
+      /*      const fullMatrix = new Matrix(fullSet)
       let x = []
       for (let i = 0; i < fullMatrix.columns; i++) {
         const col = fullMatrix.getColumn(i)
         x = normed(col, { algorithm: 'max' })
         fullMatrix.setColumn(i, normed(col, { algorithm: 'max' }))
       }
-      fullSet = fullMatrix.to2DArray()
+      fullSet = fullMatrix.to2DArray() */
       // now splitting
       if (trainSplit === 1) {
         setTrainingData(fullSet)

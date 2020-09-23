@@ -250,6 +250,16 @@ export const fitAndGetFeature = item => {
     numberOfERC20 +
     numberOfERC721 +
     numberOfTrace
+  const sumOfNeigboursInput =
+    numberOfNoneInput +
+    numberOfOneTimeInput +
+    numberOfExchangeInput +
+    numberOfMiningPoolInput +
+    numberOfMinerInput +
+    numberOfSmContractInput +
+    numberOfERC20Input +
+    numberOfERC721Input +
+    numberOfTraceInput
   return [
     numberOfNone / sumOfNeigbours,
     numberOfOneTime / sumOfNeigbours,
@@ -264,13 +274,13 @@ export const fitAndGetFeature = item => {
     averageOfEthProTrans,
     numberOfTransInput / numberOfTransactions,
     numberOfTransOutput / numberOfTransactions,
-    numberOfNoneInput,
-    numberOfOneTimeInput,
-    numberOfExchangeInput,
-    numberOfMiningPoolInput,
-    numberOfMinerInput,
-    numberOfSmContractInput,
-    numberOfERC20Input,
+    numberOfNoneInput / sumOfNeigboursInput,
+    numberOfOneTimeInput / sumOfNeigboursInput,
+    numberOfExchangeInput / sumOfNeigboursInput,
+    numberOfMiningPoolInput / sumOfNeigboursInput,
+    numberOfMinerInput / sumOfNeigboursInput,
+    numberOfSmContractInput / sumOfNeigboursInput,
+    numberOfERC20Input / sumOfNeigboursInput,
     // numberOfERC721Input,
     // numberOfTraceInput,
     transInputMedian,
